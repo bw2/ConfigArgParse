@@ -579,9 +579,11 @@ try:
     #NS = test.test_argparse.NS
 except ImportError:
     logging.error("\n\n"
-                  "============================\n"
-                  "ERROR: Many tests couldn't be run because 'import test.test_argparse' failed. Try building/installing python from source rather than through a package manager.\n"
-                  "============================\n")
+        "============================\n"
+        "ERROR: Many tests couldn't be run because 'import test.test_argparse' "
+        "failed. Try building/installing python from source rather than through"
+        " a package manager.\n"
+        "============================\n")
 else:
     test_argparse_source_code = inspect.getsource(test.test_argparse)
     test_argparse_source_code = test_argparse_source_code.replace(

@@ -59,14 +59,18 @@ elif command == "coverage":
 
 try:
     import pypandoc 
+    long_description = pypandoc.convert(open('README.md').read(), 'rst', format='md')	
 except ImportError:
-    sys.exit("ERROR: pypandoc module not found, could not convert Markdown to RST for PyPI")
+    if command == "test" or command == "coverage":
+        long_description = ""
+    else:
+        sys.exit("ERROR: pypandoc module not found, could not convert Markdown to RST for PyPI")
 
 setup(
     name='ConfigArgParse',
     version=configargparse.__version__,
     description='A drop-in replacement for argparse that allows options to also be set via config files and/or environment variables.',
-    long_description=pypandoc.convert(open('README.md').read(), 'rst', format='md'),
+    long_description=long_description,
     author='Zorro',
     author_email='zorro3.github@gmail.com',
     url='https://github.com/zorro3/ConfigArgParse',
