@@ -188,8 +188,7 @@ Unit tests:
 
 tests/test_configargparse.py contains custom unittests for features specific to this module (such as config file and env-var support), as well as a hook to load and run argparse unittests (see the built-in test.test_argparse module) but on configargparse in place of argparse. This ensures that configargparse will work as a drop in replacement for argparse.
 
-Are unittests still passing:    ![Travis CI Status for zorro3/ConfigArgParse](https://api.travis-ci.org/zorro3/ConfigArgParse.svg?branch=master)
-
+Are unittests still passing:    ![Travis CI Status for zorro3/ConfigArgParse](https://api.travis-ci.org/zorro3/ConfigArgParse.svg?branch=master)  [![Analytics](https://ga-beacon.appspot.com/UA-52264120-1/ConfigArgParse/ConfigArgParse)](https://github.com/igrigorik/ga-beacon)
 
 Previously existing modules (PyPI search keywords: config argparse):
 
