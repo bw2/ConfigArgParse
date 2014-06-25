@@ -15,16 +15,17 @@ add these features.
 - user can specify a config file path using regular command line syntax
   (eg. -c config.txt) rather than the argparse-style @config.txt
 - all argparse functionality is fully supported, so this module can serve as a
-  drop-in replacement for argparse
+  drop-in replacement
 - env vars and config file keys & syntax are automatically documented in the
-  help message
-- print_values() can be used to log values and their sources (eg. command line,
-  env var, config file, or default) for improved reproducibility.
-- lite-weight (simple API, no dependencies on 3rd-party libraries),  
+  -h help message
+- print_values() reports keys, values and where they were set (eg. command 
+  line, env var, config file, or default) for improved reproducibility.
+- lite-weight (no dependencies on 3rd-party libraries)
 - extensible (the following methods can be over-ridden to change config file
   and environment variable parsing: parse_config_file, get_possible_config_keys,
   convert_setting_to_command_line_arg)
-- unittested using the tests that came with argparse, and using tox to test python versions >= 2.7
+- unittested using the tests that came with argparse, and using tox to test with
+  python2.7+ and python3+ 
 
 
 ### Example
@@ -117,6 +118,7 @@ handled in a special way:
 To make it easier to configure applications that have multiple independent
 modules, configargparse provides globally-available ArgumentParser instances via
 configargparse.getArgumentParser('name') (similar to logging.getLogger('name')).
+For example:
 
 *main.py*
 ```py
@@ -140,9 +142,10 @@ options = p.parse_known_args()
 
 ### Config File Syntax
 
-Any command line arg that has a long version (eg. one that starts with '--')
-can be set in a config file. For example, the arg "--color" can be set by
-putting "color=green" in a config file. Here is the full range of valid syntax:
+Any command line arg with a long version (eg. one that starts with '--')
+can be set in a config file. For example, "--color" can be set by
+putting "color=green" in a config file. 
+The full range of valid config file syntax is:
 
 ```yaml
     # this is a comment
@@ -236,8 +239,8 @@ and call a section "config file keys", with command line args that are just
 to the command line (another benefit of #1). This is an easy-to-implement
 solution and implicitly takes care of checking that all "required" args are
 provied, etc., plus the behavior should be easy for users to understand.
-3. don't override convert_arg_line_to_args so that configargparse can pass all
-argparse unit tests.
+3. configargparse shouldn't override argparse's convert_arg_line_to_args 
+method so that all argparse unit tests can be run on configargparse.
 4. in terms of what to allow for config file keys, the "dest" value of an option
 can't serve as a valid config key because many options can have the same dest.
 Instead, since multiple options can't use the same long arg  (eg.
