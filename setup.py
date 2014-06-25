@@ -67,7 +67,11 @@ elif command == "coverage":
 
 try:
     import pypandoc 
-    long_description = pypandoc.convert(open('README.md').read(), 'rst', format='md')	
+    if os.path.isfile('README.md'):
+        long_description = pypandoc.convert(open('README.md').read(), 'rst', format='md')
+    else:
+        print("WARNING: couldn't find README.md")
+        long_description = ''
 except ImportError:
     if command == "test" or command == "coverage":
         long_description = ""
