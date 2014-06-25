@@ -14,11 +14,19 @@ def launch_http_server(directory):
     assert os.path.isdir(directory)
     
     try:
-        import SimpleHTTPServer
-        import SocketServer
+        try:
+            from SimpleHTTPServer import SimpleHTTPRequestHandler
+        except ImportError:
+            from http.server import SimpleHTTPRequestHandler
+        
+        try: 
+            import SocketServer
+        except ImportError: 
+            import socketserver as SocketServer
+        
         import socket
     
-        for port in [80] + range(8000, 8100):
+        for port in [80] + list(range(8000, 8100)):
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.bind(('localhost', port))
@@ -32,7 +40,7 @@ def launch_http_server(directory):
             
             os.chdir(directory)
             SocketServer.TCPServer(("", port), 
-                SimpleHTTPServer.SimpleHTTPRequestHandler).serve_forever()
+                SimpleHTTPRequestHandler).serve_forever()
         else:
             logging.debug("All network port. ")    
     except Exception as e:
