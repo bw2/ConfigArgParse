@@ -10,7 +10,7 @@ if sys.version_info >= (3, 0):
 else:
     from StringIO import StringIO
 
-__version__ = "0.9"
+__version__ = "0.9.2"
 
 
 ACTION_TYPES_THAT_DONT_NEED_A_VALUE = {argparse._StoreTrueAction,
@@ -508,6 +508,3 @@ argparse._ActionsContainer.add = argparse._ActionsContainer.add_argument
 
 ArgumentParser.parse = ArgumentParser.parse_args
 ArgumentParser.parse_known = ArgumentParser.parse_known_args
-
-
-
