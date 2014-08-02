@@ -1,5 +1,5 @@
 import argparse
-from configargparse import configargparse
+import configargparse
 import functools
 import inspect
 import logging
@@ -612,6 +612,3 @@ else:
     #                    "**" if n2 == n else "  ", n2, line))
     #     #sys.exit()
     #print_source_code(test_argparse_source_code, [4540, 4565])
-
-
-
