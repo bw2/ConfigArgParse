@@ -1,5 +1,3 @@
-# coding: utf-8
-
 Overview
 ~~~~~~~~
 
@@ -7,7 +5,7 @@ Applications with more than a handful of user-settable options are best
 configured through a combination of command line args, config files,
 hard-coded defaults, and in some cases, environment variables.
 
-Python's command line parsing modules like argparse have very limited
+Python's command line parsing modules such as argparse have very limited
 support for config files and environment variables, so this module
 extends argparse to add these features.
 
@@ -15,9 +13,9 @@ Features
 ~~~~~~~~
 
 -  command-line, config file, env var, and default settings can now be
-   defined, documented, and parsed in one go using a single API (the
-   order of precedence is: command line args > environment variables >
-   config file values > defaults)
+   defined, documented, and parsed in one go using a single API (if a 
+   value is specified in more than one way, then command line > 
+   environment variables > config file values > defaults)
 -  config files can have .ini or .yaml style syntax (eg. key=value or
    key: value)
 -  user can specify a config file path using regular command line syntax
@@ -34,8 +32,8 @@ Features
    file and environment variable parsing: parse\_config\_file,
    get\_possible\_config\_keys,
    convert\_setting\_to\_command\_line\_arg)
--  unittested using the tests that came with argparse, and using tox to
-   test with python2.7+ and python3+
+-  unittested by running the unittests that came with argparse but on 
+   configargparse, and using tox to test with python2.7+ and python3+
 
 Example
 ~~~~~~~
@@ -109,20 +107,21 @@ Example
 Special Values
 ~~~~~~~~~~~~~~
 
-Normally, configargparse handles environment variables and config file
+Under the hood, configargparse handles environment variables and config file
 values by converting them to their corresponding command line arg. For
-example, "key = value" results in "--key value" being appended to the
-command line.
+example, "key = value" would be processed as if "--key value" was specified 
+on the command line.
 
 The following values (whether in a config file or an environment
 variable) are handled in a special way:
 
--  key = true - results in "--key" being appended to the command line.
-   Key must be a boolean flag (eg. action="store\_true" or similar).
+-  key = true - is handled as if "--key" was specified on the command line.
+   In your python code this key must be defined as a boolean flag 
+   (eg. action="store\_true" or similar).
 
--  key = [value1, value2, ...] - results in "--key value1 --key value2"
-   etc. being appended to the command line. Key must be defined as a
-   list (eg. action="append").
+-  key = [value1, value2, ...] - is handled as if "--key value1 --key value2"
+   etc. was specified on the command line. In your python code this key must 
+   be defined as a list (eg. action="append").
 
 Global ArgumentParsers
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -156,7 +155,7 @@ ArgumentParser instances via configargparse.getArgumentParser('name')
 Config File Syntax
 ~~~~~~~~~~~~~~~~~~
 
-Any command line arg with a long version (eg. one that starts with '--')
+Only command line args that have a long version (eg. one that starts with '--')
 can be set in a config file. For example, "--color" can be set by
 putting "color=green" in a config file. The full range of valid config
 file syntax is:
@@ -191,9 +190,9 @@ The configargparse.ArgumentParser API inherits its class and method
 names from argparse and also provides the following shorter names for
 convenience:
 
--  configargparse.getArgParser()
--  configargparse.getParser()
--  p = configargparse.ArgParser()
+-  p = configargparse.getArgParser()  # get global singleton instance
+-  p = configargparse.getParser()  
+-  p = configargparse.ArgParser()  # create a new instance
 -  p = configargparse.Parser()
 -  p.add\_arg(..)
 -  p.add(..)
@@ -209,7 +208,7 @@ specific to this module (such as config file and env-var support), as
 well as a hook to load and run argparse unittests (see the built-in
 test.test\_argparse module) but on configargparse in place of argparse.
 This ensures that configargparse will work as a drop in replacement for
-argparse.
+argparse in all usecases.
 
 Are unittests still passing: |Travis CI Status for
 zorro3/ConfigArgParse| |Analytics|
