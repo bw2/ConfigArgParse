@@ -18,8 +18,8 @@ Features
    environment variables > config file values > defaults)
 -  config files can have .ini or .yaml style syntax (eg. key=value or
    key: value)
--  user can specify a config file path using regular command line syntax
-   (eg. -c config.txt) rather than the argparse-style @config.txt
+-  user can provide a config file via a normal-looking command line arg
+   (eg. -c path/to/config.txt) rather than the argparse-style @config.txt
 -  all argparse functionality is fully supported, so this module can
    serve as a drop-in replacement
 -  env vars and config file keys & syntax are automatically documented
