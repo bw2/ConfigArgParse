@@ -65,18 +65,9 @@ elif command == "coverage":
     launch_http_server(directory="htmlcov")
     sys.exit()
 
-try:
-    import pypandoc
-    if os.path.isfile('README.md'):
-        long_description = pypandoc.convert(open('README.md').read(), 'rst', format='md')
-    else:
-        print("WARNING: couldn't find README.md")
-        long_description = ''
-except ImportError:
-    if command == "test" or command == "coverage":
-        long_description = ""
-    else:
-        sys.exit("ERROR: pypandoc module not found, could not convert Markdown to RST for PyPI")
+long_description = ''
+if command not in ['test', 'coverage']:
+    long_description = open('README.rst').read()
 
 setup(
     name='ConfigArgParse',
