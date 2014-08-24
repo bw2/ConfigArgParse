@@ -350,8 +350,8 @@ class ArgumentParser(argparse.ArgumentParser):
             command_line_args: List of all args (already split on spaces)
         """
         # open any default config files
-        config_files = [
-            open(f) for f in self._default_config_files if os.path.isfile(f)]
+        config_files = [open(f) for f in map(
+            os.path.expanduser, self._default_config_files) if os.path.isfile(f)]
 
         if not command_line_args:
             return config_files
@@ -388,7 +388,8 @@ class ArgumentParser(argparse.ArgumentParser):
             user_config_file = getattr(namespace, action.dest, None)
             if not user_config_file:
                 continue
-            # validate the user-provide config file path
+            # validate the user-provided config file path
+            user_config_file = os.path.expanduser(user_config_file)
             if not os.path.isfile(user_config_file):
                 self.error('File not found: %s' % user_config_file)
 
