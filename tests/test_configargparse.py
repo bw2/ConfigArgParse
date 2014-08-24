@@ -152,9 +152,9 @@ class TestBasicUseCases(TestCase):
                       default="BED")
 
         # make sure required args are enforced
-        self.assertParseArgsRaises("argument -g/--my-cfg-file is required"
+        self.assertParseArgsRaises("too few arg"
                                    if sys.version_info < (3,3) else
-                                   "the following arguments are required: -g",
+                                   "the following arguments are required: vcf, -g/--my-cfg-file",
                                    args="--genome hg19")
         self.assertParseArgsRaises("not found: file.txt", args="-g file.txt")
 

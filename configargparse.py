@@ -86,7 +86,7 @@ class ArgumentParser(argparse.ArgumentParser):
         ):
 
         """Supports all the same args as the argparse.ArgumentParser
-        constructor, as well as these additional args.
+        constructor, as well as the following additional args.
 
         Additional Args:
             add_config_file_help: Whether to add a description of config file
@@ -136,7 +136,7 @@ class ArgumentParser(argparse.ArgumentParser):
     def parse_args(self, args = None, namespace = None,
                    config_file_contents = None, env_vars = os.environ):
         """Supports all the same args as the ArgumentParser.parse_args(..),
-        as well as these additional args.
+        as well as the following additional args.
 
         Additional Args:
             config_file_contents: String. Used for testing.
@@ -154,7 +154,7 @@ class ArgumentParser(argparse.ArgumentParser):
     def parse_known_args(self, args = None, namespace = None,
                          config_file_contents = None, env_vars = os.environ):
         """Supports all the same args as the ArgumentParser.parse_args(..),
-        as well as these additional args.
+        as well as the following additional args.
 
         Additional Args:
             config_file_contents: String. Used for testing.
@@ -202,7 +202,7 @@ class ArgumentParser(argparse.ArgumentParser):
             stream.name = "method arg"
             config_streams = [stream]
         else:
-            config_streams = self._get_config_file_streams(args)
+            config_streams = self._open_config_files(args)
 
         # add config file settings to the command line that aren't there already
 
@@ -340,40 +340,61 @@ class ArgumentParser(argparse.ArgumentParser):
         return keys
 
 
-    def _get_config_file_streams(self, command_line_args):
-        # open any default config files
-        cfg = [open(f) for f in self._default_config_files if os.path.isfile(f)]
+    def _open_config_files(self, command_line_args):
+        """Tries to parse config file path(s) from within command_line_args. 
+        Returns a list of opened config files, including files specified on the 
+        command line as well as any default_config_files specified in the 
+        constructor that are present on disk.
 
-        # if there's an arg for specifying config files, try to parse it from
-        # the command line using a clean ArgumentParser that only knows this arg
+        Args:
+            command_line_args: List of all args (already split on spaces)
+        """
+        # open any default config files
+        config_files = [
+            open(f) for f in self._default_config_files if os.path.isfile(f)]
+
+        if not command_line_args:
+            return config_files
+
+        # list actions which had is_config_file=True set. Its possible there is 
+        # more than one such arg (perhaps to have multiple aliases for the file) 
         user_config_file_arg_actions = [
             a for a in self._actions if getattr(a, "is_config_file", False)]
-        if user_config_file_arg_actions and command_line_args:
-            for action in user_config_file_arg_actions:
-                arg_parser = argparse.ArgumentParser(
-                    usage=self.usage,
-                    description=self.description,
-                    epilog=self.epilog,
-                    formatter_class=self.formatter_class,
-                    prefix_chars=self.prefix_chars,
-                    fromfile_prefix_chars=self.fromfile_prefix_chars)
 
-                arg_parser._add_action(action)
-                # make parser not exit on error by replacing its error method
-                def error_method(self, message):
-                    raise argparse.ArgumentError(None, message)
-                arg_parser.error = types.MethodType(error_method, arg_parser)
+        if not user_config_file_arg_actions:
+            return config_files
 
-                namespace, _ = arg_parser.parse_known_args(args=command_line_args)
+        for action in user_config_file_arg_actions:
+            # try to parse out the config file path by using a clean new
+            # ArgumentParser that only knows this one arg/action.
+            arg_parser = argparse.ArgumentParser(
+                prefix_chars=self.prefix_chars,
+                add_help=False)
 
-                user_config_file = getattr(namespace, action.dest, None)
-                if user_config_file:
-                    if os.path.isfile(user_config_file):
-                        cfg += [open(user_config_file)]
-                    else:
-                        self.error('File not found: %s' % user_config_file)
+            arg_parser._add_action(action)
 
-        return cfg
+            # make parser not exit on error by replacing its error method.
+            # Otherwise it sys.exits(..) if, for example, config file 
+            # is_required=True and user doesn't provide it.
+            def error_method(self, message):
+                pass
+            arg_parser.error = types.MethodType(error_method, arg_parser)
+
+            # check whether the user provided a value 
+            parsed_arg = arg_parser.parse_known_args(args=command_line_args)
+            if not parsed_arg:
+                continue
+            namespace, _ = parsed_arg
+            user_config_file = getattr(namespace, action.dest, None)
+            if not user_config_file:
+                continue
+            # validate the user-provide config file path
+            if not os.path.isfile(user_config_file):
+                self.error('File not found: %s' % user_config_file)
+
+            config_files += [open(user_config_file)]
+
+        return config_files
 
     def format_values(self):
         """Returns a string with all args and settings and where they came from
