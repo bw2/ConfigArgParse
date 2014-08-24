@@ -28,10 +28,10 @@ Features
    and where they were set (eg. command line, env var, config file, or default).
 -  lite-weight (no dependencies on 3rd-party libraries)
 -  extensible (the following methods can be over-ridden to change how 
-   config files and environment variable values are paresed: 
-     parse\_config\_file
-     get\_possible\_config\_keys
-     convert\_setting\_to\_command\_line\_arg
+   config files and environment variable values are parsed: 
+     - :code:`parse_config_file()`
+     - :code:`get_possible_config_keys()`
+     - :code:`convert_setting_to_command_line_arg()`
 -  unittested by running the unittests that came with argparse but on 
    configargparse, and using tox to test with python2.7+ and python3+
 
@@ -40,7 +40,7 @@ Example
 
 *my\_script.py*:
 
-This python script defines 4 options and a positional arg. It then parses the values and prints them out. Also, it prints out the help message as well as the string produced by format_values() to show what they look like. 
+This python script defines 4 options and a positional arg. It then parses the values and prints them out. Also, it prints out the help message as well as the string produced by :code:`format_values()` to show what they look like. 
 
 .. code:: py
 
