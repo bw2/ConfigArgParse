@@ -217,7 +217,7 @@ class TestBasicUseCases(TestCase):
             self.assertRegexpMatches(self.format_help(),
                 'usage: .* \[-h\] --genome GENOME \[-v\] -g MY_CFG_FILE'
                 ' \[-d DBSNP\]\s+\[-f FRMT\]\s+vcf \[vcf ...\]\n\n' +
-                6*'.+\s+'+  # repeated 4 times because .+ matches atmost 1 line
+                7*'(.+\s+)'+  # repeated 7 times because .+ matches atmost 1 line
                 'positional arguments:\n'
                 '  vcf \s+ Variant file\(s\)\n\n'
                 'optional arguments:\n'
@@ -231,7 +231,7 @@ class TestBasicUseCases(TestCase):
             self.assertRegexpMatches(self.format_help(),
                 'usage: .* \[-h\] --genome GENOME \[-v\] -g MY_CFG_FILE'
                 ' \[-d DBSNP\]\s+\[-f FRMT\]\s+vcf \[vcf ...\]\n\n'+
-                6*'.+\s+'+  # repeated 4 times because .+ matches atmost 1 line
+                7*'.+\s+'+  # repeated 7 times because .+ matches atmost 1 line
                 'positional arguments:\n'
                 '  vcf \s+ Variant file\(s\)\n\n'
                 'optional arguments:\n'
@@ -293,7 +293,7 @@ class TestBasicUseCases(TestCase):
         self.assertRegexpMatches(self.format_help(),
             'usage: .* \[-h\] --genome GENOME \[-v\]\s+ \(-f1 TYPE1_CFG_FILE \|'
             ' \s*-f2 TYPE2_CFG_FILE\)\s+\(-f FRMT \| -b\)\n\n' +
-            4*'.+\s+'+  # repeated 4 times because .+ matches atmost 1 line
+            5*'.+\s+'+  # repeated 5 times because .+ matches atmost 1 line
             'optional arguments:\n'
             '  -h, --help            show this help message and exit\n'
             '  -f1 TYPE1_CFG_FILE, --type1-cfg-file TYPE1_CFG_FILE\n'
@@ -533,7 +533,7 @@ class TestMisc(TestCase):
 
         self.assertRegexpMatches(self.format_help(),
             'usage: .* \[-h\] -c CONFIG_FILE --genome GENOME\n\n'+
-            4*'.+\s+'+  # repeated 4 times because .+ matches atmost 1 line
+            5*'.+\s+'+  # repeated 5 times because .+ matches atmost 1 line
             'optional arguments:\n'
             '  -h, --help\s+ show this help message and exit\n'
             '  -c CONFIG_FILE, --config CONFIG_FILE\s+ my config file\n'

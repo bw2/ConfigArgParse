@@ -55,6 +55,15 @@ def getArgumentParser(name=None, **kwargs):
     return _parsers[name]
 
 
+
+class ArgumentDefaultsRawHelpFormatter(    
+    argparse.ArgumentDefaultsHelpFormatter, 
+    argparse.RawTextHelpFormatter,
+    argparse.RawDescriptionHelpFormatter):
+    """HelpFormatter that adds default values AND doesn't do line-wrapping"""
+    pass
+
+
 class ArgumentParser(argparse.ArgumentParser):
     """Drop-in replacement for argparse.ArgumentParser that adds support for
     environment variables and .ini or .yaml-style config files.
@@ -139,6 +148,7 @@ class ArgumentParser(argparse.ArgumentParser):
         as well as the following additional args.
 
         Additional Args:
+            args: a list of args as in argparse, or a string (eg. "-x -y bla")
             config_file_contents: String. Used for testing.
             env_vars: Dictionary. Used for testing.
         """
@@ -157,6 +167,7 @@ class ArgumentParser(argparse.ArgumentParser):
         as well as the following additional args.
 
         Additional Args:
+            args: a list of args as in argparse, or a string (eg. "-x -y bla")
             config_file_contents: String. Used for testing.
             env_vars: Dictionary. Used for testing.
         """
@@ -438,7 +449,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 config_arg_string = " or ".join(a.option_strings[0]
                     for a in config_path_actions if a.option_strings)
                 if config_arg_string:
-                    config_arg_string = "provided via " + config_arg_string
+                    config_arg_string = "specified via " + config_arg_string
                 if default_config_files or config_arg_string:
                     msg += " (%s)" % " or ".join(default_config_files +
                                                  [config_arg_string])
@@ -473,7 +484,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 value_sources = ["config file values"] + value_sources
             if added_env_var_help:
                 value_sources = ["environment variables"] + value_sources
-            msg += " Command-line values override %s." % (
+            msg += (" If an arg is specified in more than one place, then "
+                "command-line values override %s.") % (
                 " which override ".join(value_sources))
         if msg:
             self.description = (self.description or "") + " " + msg
@@ -517,6 +529,18 @@ argparse._ActionsContainer.original_add_argument_method = argparse._ActionsConta
 argparse._ActionsContainer.add_argument = add_argument
 
 
+# add all public classes in argparse module's namespace to this namespace so 
+# that the 2 modules are truly interchangeable
+HelpFormatter = argparse.HelpFormatter
+RawDescriptionHelpFormatter = argparse.RawDescriptionHelpFormatter
+RawTextHelpFormatter = argparse.RawTextHelpFormatter
+ArgumentDefaultsHelpFormatter = argparse.ArgumentDefaultsHelpFormatter
+ArgumentError = argparse.ArgumentError
+ArgumentTypeError = argparse.ArgumentTypeError
+Action = argparse.Action
+FileType = argparse.FileType
+Namespace = argparse.Namespace
+
 
 # create shorter aliases for the key methods and class names
 getArgParser = getArgumentParser
@@ -530,3 +554,8 @@ argparse._ActionsContainer.add = argparse._ActionsContainer.add_argument
 
 ArgumentParser.parse = ArgumentParser.parse_args
 ArgumentParser.parse_known = ArgumentParser.parse_known_args
+
+RawFormatter = RawDescriptionHelpFormatter
+DefaultsFormatter = ArgumentDefaultsHelpFormatter
+DefaultsRawFormatter = ArgumentDefaultsRawHelpFormatter
+

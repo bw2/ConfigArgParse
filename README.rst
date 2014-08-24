@@ -29,9 +29,9 @@ Features
 -  lite-weight (no dependencies on 3rd-party libraries)
 -  extensible (the following methods can be over-ridden to change how 
    config files and environment variable values are parsed: 
-     - :code:`parse_config_file()`
-     - :code:`get_possible_config_keys()`
-     - :code:`convert_setting_to_command_line_arg()`
+   - :code:`parse_config_file()`
+   - :code:`get_possible_config_keys()`
+   - :code:`convert_setting_to_command_line_arg()`
 -  unittested by running the unittests that came with argparse but on 
    configargparse, and using tox to test with python2.7+ and python3+
 
@@ -162,21 +162,6 @@ file syntax is:
         fruit = [apple, orange, lemon]
         indexes = [1, 12, 35 , 40]
 
-Aliases
-~~~~~~~
-
-The configargparse.ArgumentParser API inherits its class and method
-names from argparse and also provides the following shorter names for
-convenience:
-
--  p = configargparse.getArgParser()  # get global singleton instance
--  p = configargparse.getParser()  
--  p = configargparse.ArgParser()  # create a new instance
--  p = configargparse.Parser()
--  p.add\_arg(..)
--  p.add(..)
--  options = p.parse(..)
-
 ArgumentParser Singletons
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -185,7 +170,8 @@ configargparse provides globally-available ArgumentParser instances
 via configargparse.getArgumentParser('name') (similar to 
 logging.getLogger('name')). 
 
-For example:
+Here is an example of an application with a utils module that also 
+defines and retrieves its own command-line args.
 
 *main.py*
 
@@ -207,6 +193,33 @@ For example:
     p = configargparse.getArgumentParser()
     p.add_argument("--utils-setting", help="Config-file-settable option for utils")
     options = p.parse_known_args()
+
+Help Formatters
+~~~~~~~~~~~~~~~
+
+:code:`ArgumentDefaultsRawHelpFormatter` - a new HelpFormatter (to be passed to the 
+ArgumentParser constructor's formatter_class arg) which adds default values AND 
+disables line-wrapping.
+
+
+Aliases
+~~~~~~~
+
+The configargparse.ArgumentParser API inherits its class and method
+names from argparse and also provides the following shorter names for
+convenience:
+
+-  p = configargparse.getArgParser()  # get global singleton instance
+-  p = configargparse.getParser()  
+-  p = configargparse.ArgParser()  # create a new instance
+-  p = configargparse.Parser()
+-  p.add\_arg(..)
+-  p.add(..)
+-  options = p.parse(..)
+
+- RawFormatter = RawDescriptionHelpFormatter
+- DefaultsFormatter = ArgumentDefaultsHelpFormatter
+- DefaultsRawFormatter = ArgumentDefaultsRawHelpFormatter
 
 
 Design Notes
