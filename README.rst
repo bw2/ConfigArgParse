@@ -65,7 +65,7 @@ what they look like.
 
 *config.txt:*
 
-Since the script above set a config file as required, lets create a config file to give it:
+Since the script above set the config file as required=True, lets create a config file to give it:
 
 .. code:: py
 
