@@ -74,7 +74,7 @@ Since the script above set a config file as required, lets create a config file 
     dbsnp = /data/dbsnp/variants.vcf
 
 
-*Command line:*
+*command line:*
 
 Now run the script and pass it the config file:
 
@@ -82,7 +82,7 @@ Now run the script and pass it the config file:
 
     python my_script.py --genome hg19 --my-config config.txt  f1.vcf  f2.vcf
 
-*Output:*
+*output:*
 
 Here is the result:
 
