@@ -163,7 +163,7 @@ file syntax is:
         fruit = [apple, orange, lemon]
         indexes = [1, 12, 35 , 40]
 
-ArgumentParser Singletons
+ArgParser Singletons
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To make it easier to configure different modules in an application, 
