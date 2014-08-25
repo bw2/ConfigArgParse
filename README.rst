@@ -20,13 +20,14 @@ Features
    key: value)
 -  user can provide a config file via a normal-looking command line arg
    (eg. -c path/to/config.txt) rather than the argparse-style @config.txt
--  one or more default config file paths can be specified (eg. ~/.my_config)
+-  one or more default config file paths can be specified 
+   (eg. ['/etc/bla.conf', '~/.my_config'] )
 -  all argparse functionality is fully supported, so this module can
    serve as a drop-in replacement (verified by argparse unittests).
 -  env vars and config file keys & syntax are automatically documented
    in the -h help message
--  new method print\_values() can report keys & values and where they 
-   were set (eg. command line, env var, config file, or default).
+-  new method :code:`print_values()` can report keys & values and where 
+   they were set (eg. command line, env var, config file, or default).
 -  lite-weight (no dependencies on 3rd-party libraries)
 -  extensible (the following methods can be over-ridden to change how 
    config files and environment variable values are parsed: 
@@ -38,7 +39,7 @@ Features
 Example
 ~~~~~~~
 
-*my\_script.py*:
+*my_script.py*:
 
 Script that defines 4 options and a positional arg and then parses and prints the values. Also, 
 it prints out the help message as well as the string produced by :code:`format_values()` to show 
@@ -125,11 +126,11 @@ on the command line.
 Also, the following special values (whether in a config file or an environment
 variable) are handled in a special way to support booleans and lists:
 
--  key = true - is handled as if "--key" was specified on the command line.
+-  :code:`key = true` is handled as if "--key" was specified on the command line.
    In your python code this key must be defined as a boolean flag 
-   (eg. action="store\_true" or similar).
+   (eg. action="store_true" or similar).
 
--  key = [value1, value2, ...] - is handled as if "--key value1 --key value2"
+-  :code:`key = [value1, value2, ...]` is handled as if "--key value1 --key value2"
    etc. was specified on the command line. In your python code this key must 
    be defined as a list (eg. action="append").
 
@@ -199,7 +200,7 @@ defines and retrieves its own command-line args.
 Help Formatters
 ~~~~~~~~~~~~~~~
 
-:code:`ArgumentDefaultsRawHelpFormatter` - a new HelpFormatter (to be passed to the 
+:code:`ArgumentDefaultsRawHelpFormatter`  A new HelpFormatter (to be passed to the 
 ArgumentParser constructor's formatter_class arg) which adds default values AND 
 disables line-wrapping.
 
@@ -215,7 +216,7 @@ convenience:
 -  p = configargparse.getParser()  
 -  p = configargparse.ArgParser()  # create a new instance
 -  p = configargparse.Parser()
--  p.add\_arg(..)
+-  p.add_arg(..)
 -  p.add(..)
 -  options = p.parse(..)
 
@@ -229,10 +230,10 @@ Design Notes
 
 Unit tests:
 
-tests/test\_configargparse.py contains custom unittests for features
+tests/test_configargparse.py contains custom unittests for features
 specific to this module (such as config file and env-var support), as
 well as a hook to load and run argparse unittests (see the built-in
-test.test\_argparse module) but on configargparse in place of argparse.
+test.test_argparse module) but on configargparse in place of argparse.
 This ensures that configargparse will work as a drop in replacement for
 argparse in all usecases.
 
@@ -268,7 +269,7 @@ Previously existing modules (PyPI search keywords: config argparse):
    -  Bad:
 
       -  config file values are processed using
-         ArgumentParser.set\_defaults(..) which means "required" and
+         ArgumentParser.set_defaults(..) which means "required" and
          "choices" are not handled as expected. For example, if you
          specify a required value in a config file, you still have to
          specify it again on the command line.
@@ -279,19 +280,19 @@ Previously existing modules (PyPI search keywords: config argparse):
 
    -  Good:
 
-      -  supports config file (yaml format) and env\_var parsing
+      -  supports config file (yaml format) and env_var parsing
       -  supports config-file-only setting for specifying lists and
          dicts
 
    -  Bad:
 
-      -  passes in config file and env settings via parse\_args
+      -  passes in config file and env settings via parse_args
          namespace param
       -  tests not finished and don't work with python3 (import
          StringIO)
 
--  argparse\_config v0.5.1
-   (https://pypi.python.org/pypi/argparse\_config/0.5.1)
+-  argparse_config v0.5.1
+   (https://pypi.python.org/pypi/argparse_config/0.5.1)
 
    -  Good:
 
@@ -319,7 +320,7 @@ Design choices:
    all "required" args are provied, etc., plus the behavior should be
    easy for users to understand.
 3. configargparse shouldn't override argparse's
-   convert\_arg\_line\_to\_args method so that all argparse unit tests
+   convert_arg_line_to_args method so that all argparse unit tests
    can be run on configargparse.
 4. in terms of what to allow for config file keys, the "dest" value of
    an option can't serve as a valid config key because many options can
@@ -337,12 +338,12 @@ Design choices:
    complexity to the implementation.
 6. if necessary, config-file-only args can be added later by
    implementing a separate add method and using the namespace arg as in
-   appsettings\_v0.5
+   appsettings_v0.5
 
 Relevant sites:
 
 -  http://stackoverflow.com/questions/6133517/parse-config-file-environment-and-command-line-arguments-to-get-a-single-coll
--  http://tricksntweaks.blogspot.com/2013\_05\_01\_archive.html
+-  http://tricksntweaks.blogspot.com/2013_05_01_archive.html
 -  http://www.youtube.com/watch?v=vvCwqHgZJc8#t=35
 
 .. |Travis CI Status for zorro3/ConfigArgParse| image:: https://api.travis-ci.org/zorro3/ConfigArgParse.svg?branch=master
