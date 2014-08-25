@@ -220,6 +220,8 @@ convenience:
 -  p.add(..)
 -  options = p.parse(..)
 
+HelpFormatters:
+
 - RawFormatter = RawDescriptionHelpFormatter
 - DefaultsFormatter = ArgumentDefaultsHelpFormatter
 - DefaultsRawFormatter = ArgumentDefaultsRawHelpFormatter
