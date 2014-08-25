@@ -20,12 +20,13 @@ Features
    key: value)
 -  user can provide a config file via a normal-looking command line arg
    (eg. -c path/to/config.txt) rather than the argparse-style @config.txt
+-  one or more default config file paths can be specified (eg. ~/.my_config)
 -  all argparse functionality is fully supported, so this module can
    serve as a drop-in replacement (verified by argparse unittests).
 -  env vars and config file keys & syntax are automatically documented
    in the -h help message
--  new method print\_values() added to the API for reporting keys & values 
-   and where they were set (eg. command line, env var, config file, or default).
+-  new method print\_values() can report keys & values and where they 
+   were set (eg. command line, env var, config file, or default).
 -  lite-weight (no dependencies on 3rd-party libraries)
 -  extensible (the following methods can be over-ridden to change how 
    config files and environment variable values are parsed: 
