@@ -31,7 +31,7 @@ def replace_error_method(arg_parser):
     return arg_parser
 
 
-class TestCase(unittest.case.TestCase):
+class TestCase(unittest.TestCase):
 
     def initParser(self, *args, **kwargs):
         p = configargparse.ArgParser(*args, **kwargs)
@@ -574,6 +574,8 @@ class TestMisc(TestCase):
 # their source code to use configargparse.ArgumentParser
 
 try:
+    #if sys.version_info < (2, 7):
+    #    import   # argaprse package does not export tests...
     import test.test_argparse
     #Sig = test.test_argparse.Sig
     #NS = test.test_argparse.NS

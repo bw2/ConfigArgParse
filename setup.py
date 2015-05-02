@@ -69,6 +69,13 @@ long_description = ''
 if command not in ['test', 'coverage']:
     long_description = open('README.rst').read()
 
+install_requires = []
+if sys.version < (2, 7):
+    install_requires.extend([
+        'argparse',
+        'ordereddict',
+    ])
+
 setup(
     name='ConfigArgParse',
     version=configargparse.__version__,
@@ -96,4 +103,5 @@ setup(
 	'Programming Language :: Python :: Implementation :: PyPy',
     ],
     test_suite='tests',
+    install_requires=install_requires,
 )

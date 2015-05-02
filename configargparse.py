@@ -1,5 +1,4 @@
 import argparse
-from collections import OrderedDict
 import os
 import re
 import sys
@@ -10,12 +9,17 @@ if sys.version_info >= (3, 0):
 else:
     from StringIO import StringIO
 
+if sys.version_info < (2, 7):
+    from ordereddict import OrderedDict
+else:
+    from collections import OrderedDict
+
 __version__ = "0.9.3"
 
 
-ACTION_TYPES_THAT_DONT_NEED_A_VALUE = {argparse._StoreTrueAction,
+ACTION_TYPES_THAT_DONT_NEED_A_VALUE = set([argparse._StoreTrueAction,
     argparse._StoreFalseAction, argparse._CountAction,
-    argparse._StoreConstAction, argparse._AppendConstAction}
+    argparse._StoreConstAction, argparse._AppendConstAction])
 
 
 # global ArgumentParser instances
@@ -124,10 +128,10 @@ class ArgumentParser(argparse.ArgumentParser):
         self._add_env_var_help = add_env_var_help
 
         # extract kwargs that can be passed to the super constructor
-        kwargs_for_super = {k: v for k, v in locals().items() if k in [
+        kwargs_for_super = dict([(k, v) for k, v in locals().items() if k in [
             "prog", "usage", "description", "epilog", "version", "parents",
             "formatter_class", "prefix_chars", "fromfile_prefix_chars",
-            "argument_default", "conflict_handler", "add_help" ]}
+            "argument_default", "conflict_handler", "add_help" ]])
         if sys.version_info >= (3, 3) and "version" in kwargs_for_super:
             del kwargs_for_super["version"]  # version arg deprecated in v3.3
 
@@ -218,8 +222,8 @@ class ArgumentParser(argparse.ArgumentParser):
         # add config file settings to the command line that aren't there already
 
         # for each action, add its possible config keys to a dict
-        possible_config_keys = {config_key: action for action in self._actions
-            for config_key in self.get_possible_config_keys(action)}
+        possible_config_keys = dict([(config_key, action) for action in self._actions
+            for config_key in self.get_possible_config_keys(action)])
 
         # parse each config file
         for stream in config_streams[::-1]:
