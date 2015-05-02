@@ -70,7 +70,7 @@ if command not in ['test', 'coverage']:
     long_description = open('README.rst').read()
 
 install_requires = []
-if sys.version < (2, 7):
+if sys.version_info < (2, 7):
     install_requires.extend([
         'argparse',
         'ordereddict',
