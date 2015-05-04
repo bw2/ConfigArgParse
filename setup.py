@@ -1,4 +1,3 @@
-import configargparse
 import logging
 import os
 import sys
@@ -74,11 +73,13 @@ if sys.version_info < (2, 7):
     install_requires.extend([
         'argparse',
         'ordereddict',
+        'unittest2',
     ])
+
 
 setup(
     name='ConfigArgParse',
-    version=configargparse.__version__,
+    version="0.9.3",
     description='A drop-in replacement for argparse that allows options to also be set via config files and/or environment variables.',
     long_description=long_description,
     author='Zorro',

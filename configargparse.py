@@ -14,8 +14,6 @@ if sys.version_info < (2, 7):
 else:
     from collections import OrderedDict
 
-__version__ = "0.9.3"
-
 
 ACTION_TYPES_THAT_DONT_NEED_A_VALUE = set([argparse._StoreTrueAction,
     argparse._StoreFalseAction, argparse._CountAction,
