@@ -240,7 +240,7 @@ This ensures that configargparse will work as a drop in replacement for
 argparse in all usecases.
 
 Are unittests still passing: |Travis CI Status for
-zorro3/ConfigArgParse| |Analytics|
+bw2/ConfigArgParse| |Analytics|
 
 Previously existing modules (PyPI search keywords: config argparse):
 
