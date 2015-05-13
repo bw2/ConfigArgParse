@@ -239,8 +239,7 @@ test.test_argparse module) but on configargparse in place of argparse.
 This ensures that configargparse will work as a drop in replacement for
 argparse in all usecases.
 
-Are unittests still passing: |Travis CI Status for
-bw2/ConfigArgParse| |Analytics|
+Are unittests still passing: |Travis CI Status for bw2/ConfigArgParse| |Analytics|
 
 Previously existing modules (PyPI search keywords: config argparse):
 
@@ -348,6 +347,6 @@ Relevant sites:
 -  http://tricksntweaks.blogspot.com/2013_05_01_archive.html
 -  http://www.youtube.com/watch?v=vvCwqHgZJc8#t=35
 
-.. |Travis CI Status for zorro3/ConfigArgParse| image:: https://api.travis-ci.org/zorro3/ConfigArgParse.svg?branch=master
+.. |Travis CI Status for bw2/ConfigArgParse| image:: https://travis-ci.org/bw2/ConfigArgParse.svg?branch=master
 .. |Analytics| image:: https://ga-beacon.appspot.com/UA-52264120-1/ConfigArgParse/ConfigArgParse
    :target: https://github.com/igrigorik/ga-beacon
