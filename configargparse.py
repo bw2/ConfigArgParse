@@ -600,25 +600,14 @@ class ArgumentParser(argparse.ArgumentParser):
 
                 msg += ("Args that start with '%s' (eg. %s) can also be set in "
                         "a config file") % (cc, config_settable_args[0][0])
-                config_arg_string = " or one ".join(a.option_strings[0]
+                config_arg_string = " or ".join(a.option_strings[0]
                     for a in config_path_actions if a.option_strings)
                 if config_arg_string:
                     config_arg_string = "specified via " + config_arg_string
                 if default_config_files or config_arg_string:
-                    msg += " (%s)" % " or ".join(default_config_files +
+                    msg += " (%s)." % " or ".join(default_config_files +
                                                  [config_arg_string])
-                msg += " by using .ini or .yaml-style syntax "
-                examples = []
-                key_value_args = [arg for arg, a in config_settable_args
-                    if type(a) not in ACTION_TYPES_THAT_DONT_NEED_A_VALUE]
-                if key_value_args:
-                    examples += ["%s=value" % key_value_args[0].strip(cc)]
-                flag_args = [arg for arg, a in config_settable_args
-                    if type(a) in ACTION_TYPES_THAT_DONT_NEED_A_VALUE]
-                if flag_args:
-                    examples += ["%s=TRUE" % flag_args[0].strip(cc)]
-                if examples:
-                    msg += "(eg. %s)." % " or ".join(examples)
+                msg += " " + self._config_file_parser.get_syntax_description()
 
         if self._add_env_var_help:
             env_var_actions = [(a.env_var, a) for a in self._actions
@@ -694,6 +683,13 @@ class ConfigFileParser(object):
         for key, value in items.items():
             r.write("%s = %s\n" % (key, value))
         return r.getvalue()
+
+    def get_syntax_description(self):
+        msg = ("The recognized syntax for setting (key, value) pairs is based "
+               "on the INI and YAML formats (e.g. key=value or foo=TRUE). "
+               "For full documentation of the differences from the standards "
+               "please refer to the ConfigArgParse documentation.")
+        return msg
 
 class ConfigFileParserException(Exception):
     """Raised when config file parsing failed.
