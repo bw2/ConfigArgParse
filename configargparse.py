@@ -125,6 +125,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 variables whose names are this prefix followed by the config
                 file key, all in upper case. (eg. setting this to "foo_" will
                 allow an arg like "--arg1" to also be set via env. var FOO_ARG1)
+                Any dashes in the arg name are turned into undescores to
+                confirm with ArgParse.
             config_file_parser: An instance of a parser to be used for parsing
                 config files. Default: ConfigFileParser()
             default_config_files: When specified, this list of config files will
@@ -254,7 +256,7 @@ class ArgumentParser(argparse.ArgumentParser):
                     stripped_config_file_key = config_file_keys[0].strip(
                         self.prefix_chars)
                     a.env_var = (self._auto_env_var_prefix +
-                                 stripped_config_file_key).upper()
+                                 stripped_config_file_key).replace('-', '_').upper()
 
         # add env var settings to the commandline that aren't there already
         env_var_args = []

@@ -79,7 +79,7 @@ if sys.version_info < (2, 7):
 
 setup(
     name='ConfigArgParse',
-    version="0.9.4",
+    version="0.10.0",
     description='A drop-in replacement for argparse that allows options to also be set via config files and/or environment variables.',
     long_description=long_description,
     author='Zorro',
