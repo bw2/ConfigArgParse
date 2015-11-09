@@ -15,3 +15,6 @@ python:
 
 # command to run tests: 
 script: python setup.py test
+
+# migrate to container-based travis.ci: http://docs.travis-ci.com/user/migrating-from-legacy
+sudo: false
