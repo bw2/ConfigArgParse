@@ -226,7 +226,7 @@ class TestBasicUseCases(TestCase):
             self.assertRegex(self.format_help(),
                 'usage: .* \[-h\] --genome GENOME \[-v\] -g MY_CFG_FILE'
                 ' \[-d DBSNP\]\s+\[-f FRMT\]\s+vcf \[vcf ...\]\n\n' +
-                7*'(.+\s+)'+  # repeated 7 times because .+ matches atmost 1 line
+                8*'(.+\s+)'+  # repeated 8 times because .+ matches atmost 1 line
                 'positional arguments:\n'
                 '  vcf \s+ Variant file\(s\)\n\n'
                 'optional arguments:\n'
@@ -240,7 +240,7 @@ class TestBasicUseCases(TestCase):
             self.assertRegex(self.format_help(),
                 'usage: .* \[-h\] --genome GENOME \[-v\] -g MY_CFG_FILE'
                 ' \[-d DBSNP\]\s+\[-f FRMT\]\s+vcf \[vcf ...\]\n\n'+
-                7*'.+\s+'+  # repeated 7 times because .+ matches atmost 1 line
+                8*'.+\s+'+  # repeated 8 times because .+ matches atmost 1 line
                 'positional arguments:\n'
                 '  vcf \s+ Variant file\(s\)\n\n'
                 'optional arguments:\n'
@@ -305,7 +305,7 @@ class TestBasicUseCases(TestCase):
         self.assertRegex(self.format_help(),
             'usage: .* \[-h\] --genome GENOME \[-v\]\s+ \(-f1 TYPE1_CFG_FILE \|'
             ' \s*-f2 TYPE2_CFG_FILE\)\s+\(-f FRMT \| -b\)\n\n' +
-            5*'.+\s+'+  # repeated 5 times because .+ matches atmost 1 line
+            7*'.+\s+'+  # repeated 7 times because .+ matches atmost 1 line
             'optional arguments:\n'
             '  -h, --help            show this help message and exit\n'
             '  -f1 TYPE1_CFG_FILE, --type1-cfg-file TYPE1_CFG_FILE\n'
@@ -584,7 +584,7 @@ class TestMisc(TestCase):
 
         self.assertRegex(self.format_help(),
             'usage: .* \[-h\] -c CONFIG_FILE --genome GENOME\n\n'+
-            5*'.+\s+'+  # repeated 5 times because .+ matches atmost 1 line
+            7*'.+\s+'+  # repeated 7 times because .+ matches atmost 1 line
             'optional arguments:\n'
             '  -h, --help\s+ show this help message and exit\n'
             '  -c CONFIG_FILE, --config CONFIG_FILE\s+ my config file\n'
@@ -622,10 +622,13 @@ class TestMisc(TestCase):
             'usage: .* \[-h\] -c CONFIG_FILE\s+'
             '\[-w CONFIG_OUTPUT_PATH\]\s* --arg1 ARG1\s* \[--flag\]\s*'
             'Args that start with \'--\' \(eg. --arg1\) can also be set in a '
-            'config file\s*\(~/.myconfig or specified via -c\)\s* by using '
-            '.ini or .yaml-style syntax \(eg.\s*arg1=value or flag=TRUE\).\s* '
-            'If an arg is specified in more than one place, then\s*'
-            'commandline values override config file values which override '
+            'config file\s*\(~/.myconfig or specified via -c\).\s*'
+            'The recognized syntax for setting \(key,\s*value\) pairs is based on '
+            'the INI and YAML formats \(e.g. key=value or\s*foo=TRUE\). For full '
+            'documentation of the differences from the standards please\s*'
+            'refer to the ConfigArgParse documentation.\s*'
+            'If an arg is specified in more than\s*one place, then '
+            'commandline values override config file values which override\s*'
             'defaults.\s*'
             'optional arguments:\s*'
             '-h, --help \s* show this help message and exit\n\s*'
