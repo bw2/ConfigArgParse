@@ -124,9 +124,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 file-settable options will become also settable via environment
                 variables whose names are this prefix followed by the config
                 file key, all in upper case. (eg. setting this to "foo_" will
-                allow an arg like "--arg1" to also be set via env. var FOO_ARG1)
-                Any dashes in the arg name are turned into undescores to
-                confirm with ArgParse.
+                allow an arg like "--my-arg" to also be set via the FOO_MY_ARG
+                environment variable)
             config_file_parser: An instance of a parser to be used for parsing
                 config files. Default: ConfigFileParser()
             default_config_files: When specified, this list of config files will
