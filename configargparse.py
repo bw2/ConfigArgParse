@@ -1,5 +1,4 @@
 import argparse
-from collections import OrderedDict
 import os
 import re
 import sys
@@ -10,12 +9,15 @@ if sys.version_info >= (3, 0):
 else:
     from StringIO import StringIO
 
-__version__ = "0.9.4"
+if sys.version_info < (2, 7):
+    from ordereddict import OrderedDict
+else:
+    from collections import OrderedDict
 
 
-ACTION_TYPES_THAT_DONT_NEED_A_VALUE = {argparse._StoreTrueAction,
+ACTION_TYPES_THAT_DONT_NEED_A_VALUE = set([argparse._StoreTrueAction,
     argparse._StoreFalseAction, argparse._CountAction,
-    argparse._StoreConstAction, argparse._AppendConstAction}
+    argparse._StoreConstAction, argparse._AppendConstAction])
 
 
 # global ArgumentParser instances
@@ -165,10 +167,10 @@ class ArgumentParser(argparse.ArgumentParser):
         self._auto_env_var_prefix = auto_env_var_prefix
 
         # extract kwargs that can be passed to the super constructor
-        kwargs_for_super = {k: v for k, v in locals().items() if k in [
+        kwargs_for_super = dict((k, v) for k, v in locals().items() if k in [
             "prog", "usage", "description", "epilog", "version", "parents",
             "formatter_class", "prefix_chars", "fromfile_prefix_chars",
-            "argument_default", "conflict_handler", "add_help" ]}
+            "argument_default", "conflict_handler", "add_help" ])
         if sys.version_info >= (3, 3) and "version" in kwargs_for_super:
             del kwargs_for_super["version"]  # version arg deprecated in v3.3
 
@@ -267,8 +269,8 @@ class ArgumentParser(argparse.ArgumentParser):
 
 
         # prepare for reading config file(s)
-        known_config_keys = {config_key: action for action in self._actions
-            for config_key in self.get_possible_config_keys(action)}
+        known_config_keys = dict((config_key, action) for action in self._actions
+            for config_key in self.get_possible_config_keys(action))
 
         # open the config file(s)
         if config_file_contents:

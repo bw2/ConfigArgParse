@@ -6,7 +6,11 @@ import logging
 import sys
 import tempfile
 import types
-import unittest
+
+if sys.version_info < (2, 7):
+    import unittest2 as unittest
+else:
+    import unittest
 
 
 # enable logging to simplify debugging
@@ -32,7 +36,7 @@ def replace_error_method(arg_parser):
     return arg_parser
 
 
-class TestCase(unittest.case.TestCase):
+class TestCase(unittest.TestCase):
 
     def initParser(self, *args, **kwargs):
         p = configargparse.ArgParser(*args, **kwargs)
@@ -748,16 +752,23 @@ class TestMisc(TestCase):
 # their source code to use configargparse.ArgumentParser
 
 try:
+    #if sys.version_info < (2, 7):
+    #    import   # argaprse package does not export tests...
     import test.test_argparse
     #Sig = test.test_argparse.Sig
     #NS = test.test_argparse.NS
 except ImportError:
-    logging.error("\n\n"
-        "============================\n"
-        "ERROR: Many tests couldn't be run because 'import test.test_argparse' "
-        "failed. Try building/installing python from source rather than through"
-        " a package manager.\n"
-        "============================\n")
+    if sys.version_info < (2, 7):
+        logging.info("\n\n" + ("=" * 30) +
+                     "\nINFO: Skipping tests for argparse (Python < 2.7)\n"
+                     + ("=" * 30) + "\n")
+    else:
+        logging.error("\n\n"
+            "============================\n"
+            "ERROR: Many tests couldn't be run because 'import test.test_argparse' "
+            "failed. Try building/installing python from source rather than through"
+            " a package manager.\n"
+            "============================\n")
 else:
     test_argparse_source_code = inspect.getsource(test.test_argparse)
     test_argparse_source_code = test_argparse_source_code.replace(
