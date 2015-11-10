@@ -197,7 +197,9 @@ defines and retrieves its own command-line args.
     import configargparse
     p = configargparse.getArgumentParser()
     p.add_argument("--utils-setting", help="Config-file-settable option for utils")
-    options = p.parse_known_args()
+    
+    if __name__ == "__main__":
+       options = p.parse_known_args()
 
 Help Formatters
 ~~~~~~~~~~~~~~~
