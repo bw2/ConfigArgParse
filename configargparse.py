@@ -109,7 +109,8 @@ class ArgumentParser(argparse.ArgumentParser):
         args_for_writing_out_config_file=[],
         write_out_config_file_arg_help_message="takes the current command line "
             "args and writes them out to a config file at the given path, then "
-            "exits"
+            "exits",
+        allow_abbrev=True,  # new in python 3.5
         ):
 
         """Supports all the same args as the argparse.ArgumentParser
@@ -165,6 +166,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 (eg. ["-w", "--write-out-config-file"]). Default: []
             write_out_config_file_arg_help_message: The help message to use for
                 the args in args_for_writing_out_config_file.
+            allow_abbrev: Allows long options to be abbreviated if the
+                abbreviation is unambiguous. Default: True
         """
         self._add_config_file_help = add_config_file_help
         self._add_env_var_help = add_env_var_help
@@ -174,9 +177,11 @@ class ArgumentParser(argparse.ArgumentParser):
         kwargs_for_super = dict((k, v) for k, v in locals().items() if k in [
             "prog", "usage", "description", "epilog", "version", "parents",
             "formatter_class", "prefix_chars", "fromfile_prefix_chars",
-            "argument_default", "conflict_handler", "add_help" ])
+            "argument_default", "conflict_handler", "add_help"])
         if sys.version_info >= (3, 3) and "version" in kwargs_for_super:
             del kwargs_for_super["version"]  # version arg deprecated in v3.3
+        if sys.version_info >= (3, 5):
+            kwargs_for_super["allow_abbrev"] = allow_abbrev  # new option in v3.5
 
         argparse.ArgumentParser.__init__(self, **kwargs_for_super)
 
