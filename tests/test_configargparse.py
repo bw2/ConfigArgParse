@@ -226,7 +226,7 @@ class TestBasicUseCases(TestCase):
             self.assertRegex(self.format_help(),
                 'usage: .* \[-h\] --genome GENOME \[-v\] -g MY_CFG_FILE'
                 ' \[-d DBSNP\]\s+\[-f FRMT\]\s+vcf \[vcf ...\]\n\n' +
-                8*'(.+\s+)'+  # repeated 8 times because .+ matches atmost 1 line
+                9*'(.+\s+)'+  # repeated 8 times because .+ matches atmost 1 line
                 'positional arguments:\n'
                 '  vcf \s+ Variant file\(s\)\n\n'
                 'optional arguments:\n'
@@ -240,7 +240,7 @@ class TestBasicUseCases(TestCase):
             self.assertRegex(self.format_help(),
                 'usage: .* \[-h\] --genome GENOME \[-v\] -g MY_CFG_FILE'
                 ' \[-d DBSNP\]\s+\[-f FRMT\]\s+vcf \[vcf ...\]\n\n'+
-                8*'.+\s+'+  # repeated 8 times because .+ matches atmost 1 line
+                9*'.+\s+'+  # repeated 8 times because .+ matches atmost 1 line
                 'positional arguments:\n'
                 '  vcf \s+ Variant file\(s\)\n\n'
                 'optional arguments:\n'
