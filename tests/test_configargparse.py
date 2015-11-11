@@ -443,7 +443,7 @@ class TestBasicUseCases(TestCase):
                         env_vars={"bla": "2"})
         self.assertListEqual(args, ["--bla", "3"])
 
-        self.initParser(allow_unknown_config_file_keys=False)
+        self.initParser(ignore_unknown_config_file_keys=False)
         ns, args = self.parse_known(args="-x 1", config_file_contents="bla=3",
             env_vars={"bla": "2"})
         self.assertListEqual(args, ["--bla", "3", "-x", "1"])
@@ -553,7 +553,6 @@ class TestMisc(TestCase):
     def testConstructor_ConfigFileArgs(self):
         # Test constructor args:
         #   args_for_setting_config_path
-        #   allow_unknown_config_file_keys
         #   config_arg_is_required
         #   config_arg_help_message
         temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=True)

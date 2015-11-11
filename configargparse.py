@@ -282,7 +282,6 @@ class ArgumentParser(argparse.ArgumentParser):
 
         default_config_files=[],
         ignore_unknown_config_file_keys=False,
-        allow_unknown_config_file_keys=False,  # deprecated
         config_file_parser_class=DefaultConfigFileParser,
 
         args_for_setting_config_path=[],
@@ -367,8 +366,7 @@ class ArgumentParser(argparse.ArgumentParser):
             self._config_file_parser = config_file_parser_class()
 
         self._default_config_files = default_config_files
-        self._ignore_unknown_config_file_keys = ignore_unknown_config_file_keys \
-                                            or allow_unknown_config_file_keys
+        self._ignore_unknown_config_file_keys = ignore_unknown_config_file_keys
         if args_for_setting_config_path:
             self.add_argument(*args_for_setting_config_path, dest="config_file",
                 required=config_arg_is_required, help=config_arg_help_message,
