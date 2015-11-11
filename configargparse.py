@@ -4,8 +4,6 @@ import re
 import sys
 import types
 
-from abc import ABCMeta, abstractmethod
-
 if sys.version_info >= (3, 0):
     from io import StringIO
 else:
@@ -71,13 +69,10 @@ class ConfigFileParser(object):
     """This abstract class can be extended to add support for new config file
     formats"""
 
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
     def get_syntax_description(self):
         """Returns a string describing the config file syntax."""
+        raise NotImplementedError("get_syntax_description(..) not implemented")
 
-    @abstractmethod
     def parse(self, stream):
         """Parses the keys and values from a config file.
 
@@ -93,8 +88,8 @@ class ConfigFileParser(object):
             values have type either string or list (eg. to support config file
             formats like YAML which allow lists).
         """
+        raise NotImplementedError("parse(..) not implemented")
 
-    @abstractmethod
     def serialize(self, items):
         """Does the inverse of config parsing by taking parsed values and
         converting them back to a string representing config file contents.
@@ -107,6 +102,7 @@ class ConfigFileParser(object):
         Returns:
             Contents of config file as a string
         """
+        raise NotImplementedError("serialize(..) not implemented")
 
 
 class ConfigFileParserException(Exception):
@@ -183,8 +179,6 @@ class DefaultConfigFileParser(ConfigFileParser):
                                             (i, stream.name, line))
         return items
 
-    #def parseValue(self, value):
-
     def serialize(self, items):
         """Does the inverse of config parsing by taking parsed values and
         converting them back to a string representing config file contents.
@@ -203,19 +197,44 @@ class YAMLConfigFileParser(ConfigFileParser):
     https://pypi.python.org/pypi/PyYAML
     """
 
+    def get_syntax_description(self):
+        msg = ("The config file uses YAML syntax and must represent a YAML "
+            "'mapping' (for details, see http://learn.getgrav.org/advanced/yaml).")
+        return msg
+
+    def _load_yaml(self):
+        """lazy-import PyYAML so that configargparse doesn't have to dependend
+        on it unless this parser is used."""
+        try:
+            import yaml
+        except ImportError:
+            raise ConfigFileParserException("Could not import yaml. "
+                "It can be installed by running 'pip install PyYAML'")
+
+        return yaml
+
     def parse(self, stream):
         """Parses the keys and values from a config file."""
+        yaml = self._load_yaml()
 
-        # lazy-import so there's no dependency on yaml unless this class is used
-        import yaml
+        try:
+            parsed_obj = yaml.load(stream)
+        except Exception as e:
+            raise ConfigFileParserException("Couldn't parse config file: %s" % e)
+
+        if type(parsed_obj) != dict:
+            raise ConfigFileParserException("The config file doesn't appear to "
+                "contain 'key: value' pairs (aka. a YAML mapping). "
+                "yaml.load('%s') returned type '%s' instead of 'dict'." % (
+                stream.name, type(parsed_obj).__name__))
 
         result = OrderedDict()
-        for document in yaml.load(stream):
-            for key, value in document:
-                if type(value) not in (str, list):
-                    result[key] = value
-                else:
-                    result[key] = str(value)
+        for key, value in parsed_obj.items():
+            if type(value) == list:
+                result[key] = value
+            else:
+                result[key] = str(value)
+
         return result
 
 
@@ -225,7 +244,7 @@ class YAMLConfigFileParser(ConfigFileParser):
         """
 
         # lazy-import so there's no dependency on yaml unless this class is used
-        import yaml
+        yaml = self._load_yaml()
 
         return str(yaml.dump(items, default_flow_style=False))
 
@@ -261,10 +280,10 @@ class ArgumentParser(argparse.ArgumentParser):
 
         auto_env_var_prefix=None,
 
-        config_file_parser_class=DefaultConfigFileParser,
         default_config_files=[],
         ignore_unknown_config_file_keys=False,
         allow_unknown_config_file_keys=False,  # deprecated
+        config_file_parser_class=DefaultConfigFileParser,
 
         args_for_setting_config_path=[],
         config_arg_is_required=False,
@@ -291,8 +310,6 @@ class ArgumentParser(argparse.ArgumentParser):
                 file key, all in upper case. (eg. setting this to "foo_" will
                 allow an arg like "--my-arg" to also be set via the FOO_MY_ARG
                 environment variable)
-            config_file_parser_class: configargparse.ConfigFileParser subclass
-                which determines the config file format.
             default_config_files: When specified, this list of config files will
                 be parsed in order, with the values from each config file
                 taking precedence over pervious ones. This allows an application
@@ -306,15 +323,9 @@ class ArgumentParser(argparse.ArgumentParser):
                 configargparse args will be ignored. If false, they will be
                 processed and appended to the commandline like other args, and
                 can be retrieved using parse_known_args() instead of parse_args()
-            allow_unknown_config_file_keys:
-                @deprecated
-                Use ignore_unknown_config_file_keys instead.
-
-                If true, settings that are found in a config file but don't
-                correspond to any defined configargparse args, will still be
-                processed and appended to the command line (eg. for
-                parsing with parse_known_args()). If false, they will be ignored.
-
+            config_file_parser_class: configargparse.ConfigFileParser subclass
+                which determines the config file format. configargparse comes
+                with DefaultConfigFileParser and YAMLConfigFileParser.
             args_for_setting_config_path: A list of one or more command line
                 args to be used for specifying the config file path
                 (eg. ["-c", "--config-file"]). Default: []
@@ -423,7 +434,8 @@ class ArgumentParser(argparse.ArgumentParser):
             for a in self._actions:
                 config_file_keys = self.get_possible_config_keys(a)
                 if config_file_keys and not (a.env_var or a.is_positional_arg
-                    or a.is_config_file_arg or a.is_write_out_config_file_arg):
+                    or a.is_config_file_arg or a.is_write_out_config_file_arg or
+                    type(a) == argparse._HelpAction):
                     stripped_config_file_key = config_file_keys[0].strip(
                         self.prefix_chars)
                     a.env_var = (self._auto_env_var_prefix +
@@ -440,7 +452,7 @@ class ArgumentParser(argparse.ArgumentParser):
             env_var_args += self.convert_item_to_command_line_arg(
                 action, key, value)
 
-        args += env_var_args
+        args = env_var_args + args
 
         if env_var_args:
             self._source_to_settings[_ENV_VAR_SOURCE_KEY] = OrderedDict(
@@ -448,16 +460,23 @@ class ArgumentParser(argparse.ArgumentParser):
                     for a in actions_with_env_var_values])
 
 
+        # before parsing any config files, check if -h was specified.
+        supports_help_arg = any(
+            a for a in self._actions if type(a) == argparse._HelpAction)
+        skip_config_file_parsing = supports_help_arg and (
+            "-h" in args or "--help" in args)
+
         # prepare for reading config file(s)
         known_config_keys = dict((config_key, action) for action in self._actions
             for config_key in self.get_possible_config_keys(action))
 
         # open the config file(s)
+        config_streams = []
         if config_file_contents:
             stream = StringIO(config_file_contents)
             stream.name = "method arg"
             config_streams = [stream]
-        else:
+        elif not skip_config_file_parsing:
             config_streams = self._open_config_files(args)
 
         # parse each config file
@@ -492,7 +511,7 @@ class ArgumentParser(argparse.ArgumentParser):
                         self._source_to_settings[source_key] = OrderedDict()
                     self._source_to_settings[source_key][key] = (action, value)
 
-            args += config_args
+            args = config_args + args
 
 
         # save default settings for use by print_values()
@@ -676,9 +695,6 @@ class ArgumentParser(argparse.ArgumentParser):
         config_files = [open(f) for f in map(
             os.path.expanduser, self._default_config_files) if os.path.isfile(f)]
 
-        if not command_line_args:
-            return config_files
-
         # list actions with is_config_file_arg=True. Its possible there is more
         # than one such arg.
         user_config_file_arg_actions = [
@@ -709,6 +725,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 continue
             namespace, _ = parsed_arg
             user_config_file = getattr(namespace, action.dest, None)
+
             if not user_config_file:
                 continue
             # validate the user-provided config file path

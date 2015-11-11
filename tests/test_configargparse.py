@@ -446,7 +446,7 @@ class TestBasicUseCases(TestCase):
         self.initParser(allow_unknown_config_file_keys=False)
         ns, args = self.parse_known(args="-x 1", config_file_contents="bla=3",
             env_vars={"bla": "2"})
-        self.assertListEqual(args, ["-x", "1", "--bla", "3"])
+        self.assertListEqual(args, ["--bla", "3", "-x", "1"])
 
     def testConfigOrEnvValueErrors(self):
         # error should occur when a flag arg is set to something other than "true" or "false"
@@ -785,13 +785,12 @@ else:
     exec(test_argparse_source_code)
 
     # print argparse unittest source code
-    #def print_source_code(source_code, line_numbers, context_lines=10):
-    #     for n in line_numbers:
-    #         logging.debug("##### Code around line %s #####" % n)
-    #         lines_to_print = set(range(n - context_lines, n + context_lines))
-    #         for n2, line in enumerate(source_code.split("\n"), 1):
-    #             if n2 in lines_to_print:
-    #                 logging.debug("%s %5d: %s" % (
-    #                    "**" if n2 == n else "  ", n2, line))
-    #     #sys.exit()
+    def print_source_code(source_code, line_numbers, context_lines=10):
+         for n in line_numbers:
+             logging.debug("##### Code around line %s #####" % n)
+             lines_to_print = set(range(n - context_lines, n + context_lines))
+             for n2, line in enumerate(source_code.split("\n"), 1):
+                 if n2 in lines_to_print:
+                     logging.debug("%s %5d: %s" % (
+                        "**" if n2 == n else "  ", n2, line))
     #print_source_code(test_argparse_source_code, [4540, 4565])
