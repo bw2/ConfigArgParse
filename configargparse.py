@@ -4,6 +4,8 @@ import re
 import sys
 import types
 
+from abc import ABCMeta, abstractmethod
+
 if sys.version_info >= (3, 0):
     from io import StringIO
 else:
@@ -57,13 +59,175 @@ def getArgumentParser(name=None, **kwargs):
     return _parsers[name]
 
 
-
-class ArgumentDefaultsRawHelpFormatter(    
-    argparse.ArgumentDefaultsHelpFormatter, 
+class ArgumentDefaultsRawHelpFormatter(
+    argparse.ArgumentDefaultsHelpFormatter,
     argparse.RawTextHelpFormatter,
     argparse.RawDescriptionHelpFormatter):
     """HelpFormatter that adds default values AND doesn't do line-wrapping"""
     pass
+
+
+class ConfigFileParser(object):
+    """This abstract class can be extended to add support for new config file
+    formats"""
+
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def get_syntax_description(self):
+        """Returns a string describing the config file syntax."""
+
+    @abstractmethod
+    def parse(self, stream):
+        """Parses the keys and values from a config file.
+
+        NOTE: For keys that were specified to configargparse as
+        action="store_true" or "store_false", the config file value must be
+        one of: "yes", "no", "true", "false". Otherwise an error will be raised.
+
+        Args:
+            stream: A config file input stream (such as an open file object).
+
+        Returns:
+            OrderedDict of items where the keys have type string and the
+            values have type either string or list (eg. to support config file
+            formats like YAML which allow lists).
+        """
+
+    @abstractmethod
+    def serialize(self, items):
+        """Does the inverse of config parsing by taking parsed values and
+        converting them back to a string representing config file contents.
+
+        Args:
+            items: an OrderedDict of items to be converted to the config file
+            format. Keys should be strings, and values should be either strings
+            or lists.
+
+        Returns:
+            Contents of config file as a string
+        """
+
+
+class ConfigFileParserException(Exception):
+    """Raised when config file parsing failed."""
+
+
+class DefaultConfigFileParser(ConfigFileParser):
+    """Based on a simplified subset of INI and YAML formats. Here is the
+    supported syntax:
+
+
+        # this is a comment
+        ; this is also a comment (.ini style)
+        ---            # lines that start with --- are ignored (yaml style)
+        -------------------
+        [section]      # .ini-style section names are treated as comments
+
+        # how to specify a key-value pair (all of these are equivalent):
+        name value     # key is case sensitive: "Name" isn't "name"
+        name = value   # (.ini style)  (white space is ignored, so name = value same as name=value)
+        name: value    # (yaml style)
+        --name value   # (argparse style)
+
+        # how to set a flag arg (eg. arg which has action="store_true")
+        --name
+        name
+        name = True    # "True" and "true" are the same
+
+        # how to specify a list arg (eg. arg which has action="append")
+        fruit = [apple, orange, lemon]
+        indexes = [1, 12, 35 , 40]
+
+    """
+
+    def get_syntax_description(self):
+        msg = ("Config file syntax allows: key=value, flag=true, stuff=[a,b,c] "
+               "(for details, see syntax at https://goo.gl/R74nmi).")
+        return msg
+
+    def parse(self, stream):
+        """Parses the keys + values from a config file."""
+
+        items = OrderedDict()
+        for i, line in enumerate(stream):
+            line = line.strip()
+            if not line or line[0] in ["#", ";", "["] or line.startswith("---"):
+                continue
+            white_space = "\\s*"
+            key = "(?P<key>[^:=;#\s]+?)"
+            value1 = white_space+"[:=]"+white_space+"(?P<value>[^;#]+?)"
+            value2 = white_space+"[\s]"+white_space+"(?P<value>[^;#\s]+?)"
+            comment = white_space+"(?P<comment>\\s[;#].*)?"
+
+            key_only_match = re.match("^" + key + comment + "$", line)
+            if key_only_match:
+                key = key_only_match.group("key")
+                items[key] = "true"
+                continue
+
+            key_value_match = re.match("^"+key+value1+comment+"$", line) or \
+                              re.match("^"+key+value2+comment+"$", line)
+            if key_value_match:
+                key = key_value_match.group("key")
+                value = key_value_match.group("value")
+
+                if value.startswith("[") and value.endswith("]"):
+                    # handle special case of lists
+                    value = [elem.strip() for elem in value[1:-1].split(",")]
+
+                items[key] = value
+                continue
+
+            raise ConfigFileParserException("Unexpected line %s in %s: %s" % \
+                                            (i, stream.name, line))
+        return items
+
+    #def parseValue(self, value):
+
+    def serialize(self, items):
+        """Does the inverse of config parsing by taking parsed values and
+        converting them back to a string representing config file contents.
+        """
+        r = StringIO()
+        for key, value in items.items():
+            if type(value) == list:
+                # handle special case of lists
+                value = "["+", ".join(value)+"]"
+            r.write("%s = %s\n" % (key, value))
+        return r.getvalue()
+
+
+class YAMLConfigFileParser(ConfigFileParser):
+    """Parses YAML config files. Depends on the PyYAML module.
+    https://pypi.python.org/pypi/PyYAML
+    """
+
+    def parse(self, stream):
+        """Parses the keys and values from a config file."""
+
+        # lazy-import so there's no dependency on yaml unless this class is used
+        import yaml
+
+        result = OrderedDict()
+        for document in yaml.load(stream):
+            for key, value in document:
+                if type(value) not in (str, list):
+                    result[key] = value
+                else:
+                    result[key] = str(value)
+        return result
+
+
+    def serialize(self, items):
+        """Does the inverse of config parsing by taking parsed values and
+        converting them back to a string representing config file contents.
+        """
+
+        # lazy-import so there's no dependency on yaml unless this class is used
+        import yaml
+
+        return str(yaml.dump(items, default_flow_style=False))
 
 
 # used while parsing args to keep track of where they came from
@@ -97,7 +261,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         auto_env_var_prefix=None,
 
-        config_file_parser=None,
+        config_file_parser_class=DefaultConfigFileParser,
         default_config_files=[],
         ignore_unknown_config_file_keys=False,
         allow_unknown_config_file_keys=False,  # deprecated
@@ -127,8 +291,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 file key, all in upper case. (eg. setting this to "foo_" will
                 allow an arg like "--my-arg" to also be set via the FOO_MY_ARG
                 environment variable)
-            config_file_parser: An instance of a parser to be used for parsing
-                config files. Default: ConfigFileParser()
+            config_file_parser_class: configargparse.ConfigFileParser subclass
+                which determines the config file format.
             default_config_files: When specified, this list of config files will
                 be parsed in order, with the values from each config file
                 taking precedence over pervious ones. This allows an application
@@ -186,10 +350,11 @@ class ArgumentParser(argparse.ArgumentParser):
         argparse.ArgumentParser.__init__(self, **kwargs_for_super)
 
         # parse the additionial args
-        if config_file_parser is None:
-            self._config_file_parser = ConfigFileParser()
+        if config_file_parser_class is None:
+            self._config_file_parser = DefaultConfigFileParser()
         else:
-            self._config_file_parser = config_file_parser
+            self._config_file_parser = config_file_parser_class()
+
         self._default_config_files = default_config_files
         self._ignore_unknown_config_file_keys = ignore_unknown_config_file_keys \
                                             or allow_unknown_config_file_keys
@@ -244,8 +409,10 @@ class ArgumentParser(argparse.ArgumentParser):
         for a in self._actions:
             a.is_positional_arg = not a.option_strings
 
-        # maps string describing the source (eg. env var) to a settings dict
-        # to keep track of where values came from (used by print_values())
+        # maps a string describing the source (eg. env var) to a settings dict
+        # to keep track of where values came from (used by print_values()).
+        # The settings dicts for env vars and config files will then map
+        # the config key to an (argparse Action obj, string value) 2-tuple.
         self._source_to_settings = OrderedDict()
         if args:
             a_v_pair = (None, list(args))  # copy args list to isolate changes
@@ -269,8 +436,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 and not already_on_command_line(args, a.option_strings)]
         for action in actions_with_env_var_values:
             key = action.env_var
-            value = env_vars[key]
-            env_var_args += self.convert_setting_to_command_line_arg(
+            value = env_vars[key]  # TODO parse env var values here to allow lists?
+            env_var_args += self.convert_item_to_command_line_arg(
                 action, key, value)
 
         args += env_var_args
@@ -296,16 +463,16 @@ class ArgumentParser(argparse.ArgumentParser):
         # parse each config file
         for stream in config_streams[::-1]:
             try:
-                config_settings = self._config_file_parser.parse(stream)
+                config_items = self._config_file_parser.parse(stream)
             except ConfigFileParserException as e:
                 self.error(e)
             finally:
                 if hasattr(stream, "close"):
                     stream.close()
 
-            # add each config setting to the commandline unless it's there already
+            # add each config item to the commandline unless it's there already
             config_args = []
-            for key, value in config_settings.items():
+            for key, value in config_items.items():
                 if key in known_config_keys:
                     action = known_config_keys[key]
                     discard_this_key = already_on_command_line(
@@ -318,7 +485,7 @@ class ArgumentParser(argparse.ArgumentParser):
                             self.get_command_line_key_for_unknown_config_file_setting(key))
 
                 if not discard_this_key:
-                    config_args += self.convert_setting_to_command_line_arg(
+                    config_args += self.convert_item_to_command_line_arg(
                         action, key, value)
                     source_key = "%s|%s" %(_CONFIG_FILE_SOURCE_KEY, stream.name)
                     if source_key not in self._source_to_settings:
@@ -374,10 +541,10 @@ class ArgumentParser(argparse.ArgumentParser):
                 # generate the config file contents
                 config_items = self.get_items_for_config_file_output(
                     self._source_to_settings, namespace)
-                contents = self._config_file_parser.serialize(config_items)
+                file_contents = self._config_file_parser.serialize(config_items)
                 for output_file_path in output_file_paths:
                     with open(output_file_path, "w") as output_file:
-                        output_file.write(contents)
+                        output_file.write(file_contents)
                 if len(output_file_paths) == 1:
                     output_file_paths = output_file_paths[0]
                 self.exit(0, "Wrote config file to " + str(output_file_paths))
@@ -398,14 +565,15 @@ class ArgumentParser(argparse.ArgumentParser):
 
     def get_items_for_config_file_output(self, source_to_settings,
                                          parsed_namespace):
-        """Does the inverse of config parsing by taking parsed values and
-        converting them back to a string representing config file contents.
+        """Converts the given settings back to dictionary that can be passed to
+        ConfigFormatParser.serialize(..).
 
         Args:
-            source_to_settings: the dictionary created within parse_known_args()
+            source_to_settings: the dictionary described in parse_known_args()
             parsed_namespace: namespace object created within parse_known_args()
         Returns:
-            an OrderedDict with the items to be written to the config file
+            an OrderedDict where keys are strings and values are either strings
+            or lists
         """
         config_file_items = OrderedDict()
         for source, settings in source_to_settings.items():
@@ -420,8 +588,6 @@ class ArgumentParser(argparse.ArgumentParser):
                         if value is not None:
                             if type(value) is bool:
                                 value = str(value).lower()
-                            elif type(value) is list:
-                                value = "["+", ".join(map(str, value))+"]"
                             config_file_items[config_file_keys[0]] = value
 
             elif source == _ENV_VAR_SOURCE_KEY:
@@ -443,20 +609,17 @@ class ArgumentParser(argparse.ArgumentParser):
                             config_file_items[config_file_keys[0]] = value
         return config_file_items
 
-    def convert_setting_to_command_line_arg(self, action, key, value):
-        """Converts a config file or env var key/value to a list of
+    def convert_item_to_command_line_arg(self, action, key, value):
+        """Converts a config file or env var key + value to a list of
         commandline args to append to the commandline.
 
         Args:
-            action: The action corresponding to this setting, or None if this
-                is a config file setting that doesn't correspond to any
-                defined configargparse arg.
-            key: The config file key or env var name
-            value: The raw value string from the config file or env var
+            action: The argparse Action object for this setting, or None if this
+                config file setting doesn't correspond to any defined
+                configargparse arg.
+            key: string (config file key or env var name)
+            value: parsed value of type string or list
         """
-        if type(value) != str:
-            raise ValueError("type(value) != str: %s" % str(value))
-
         args = []
         if action is None:
             command_line_key = \
@@ -464,26 +627,27 @@ class ArgumentParser(argparse.ArgumentParser):
         else:
             command_line_key = action.option_strings[-1]
 
-        if value.lower() == "true":
-            if action is not None:
-                if type(action) not in ACTION_TYPES_THAT_DONT_NEED_A_VALUE:
-                    self.error("%s set to 'True' rather than a value" % key)
-            args.append( command_line_key )
-        elif value.startswith("[") and value.endswith("]"):
-            if action is not None:
-                if type(action) != argparse._AppendAction:
+        # handle boolean value
+        if action is not None and type(action) in ACTION_TYPES_THAT_DONT_NEED_A_VALUE:
+            if value.lower() in ("true", "false", "yes", "no"):
+                args.append( command_line_key )
+            else:
+                self.error("Unexpected value for %s: '%s'. Expecting 'true', "
+                           "'false', 'yes', or 'no'" % (key, value))
+        elif type(value) == list:
+            if action is not None and type(action) != argparse._AppendAction:
                     self.error(("%s can't be set to a list '%s' unless its "
                         "action type is changed to 'append'") % (key, value))
-            for list_elem in value[1:-1].split(","):
+            for list_elem in value:
                 args.append( command_line_key )
-                args.append( list_elem.strip() )
-        else:
-            if action is not None:
-                if type(action) in ACTION_TYPES_THAT_DONT_NEED_A_VALUE:
-                    self.error("%s is a flag but is being set to '%s'" % (
-                        key, value))
+                args.append( str(list_elem) )
+        elif type(value) == str:
             args.append( command_line_key )
             args.append( value )
+        else:
+            raise ValueError("Unexpected value type %s for value: %s" % (
+                type(value), value))
+
         return args
 
     def get_possible_config_keys(self, action):
@@ -500,8 +664,8 @@ class ArgumentParser(argparse.ArgumentParser):
 
 
     def _open_config_files(self, command_line_args):
-        """Tries to parse config file path(s) from within command_line_args. 
-        Returns a list of opened config files, including files specified on the 
+        """Tries to parse config file path(s) from within command_line_args.
+        Returns a list of opened config files, including files specified on the
         commandline as well as any default_config_files specified in the
         constructor that are present on disk.
 
@@ -533,13 +697,13 @@ class ArgumentParser(argparse.ArgumentParser):
             arg_parser._add_action(action)
 
             # make parser not exit on error by replacing its error method.
-            # Otherwise it sys.exits(..) if, for example, config file 
+            # Otherwise it sys.exits(..) if, for example, config file
             # is_required=True and user doesn't provide it.
             def error_method(self, message):
                 pass
             arg_parser.error = types.MethodType(error_method, arg_parser)
 
-            # check whether the user provided a value 
+            # check whether the user provided a value
             parsed_arg = arg_parser.parse_known_args(args=command_line_args)
             if not parsed_arg:
                 continue
@@ -644,68 +808,6 @@ class ArgumentParser(argparse.ArgumentParser):
         return argparse.ArgumentParser.format_help(self)
 
 
-class ConfigFileParser(object):
-
-    def parse(self, stream):
-        """Parses a config file and return a dictionary of settings"""
-
-        settings = OrderedDict()
-        for i, line in enumerate(stream):
-            line = line.strip()
-            if not line or line[0] in ["#", ";", "["] or line.startswith("---"):
-                continue
-            white_space = "\\s*"
-            key = "(?P<key>[^:=;#\s]+?)"
-            value1 = white_space+"[:=]"+white_space+"(?P<value>[^;#]+?)"
-            value2 = white_space+"[\s]"+white_space+"(?P<value>[^;#\s]+?)"
-            comment = white_space+"(?P<comment>\\s[;#].*)?"
-
-            key_only_match = re.match("^" + key + comment + "$", line)
-            if key_only_match:
-                key = key_only_match.group("key")
-                settings[key] = "true"
-                continue
-
-            key_value_match = re.match("^"+key+value1+comment+"$", line) or \
-                                re.match("^"+key+value2+comment+"$", line)
-            if key_value_match:
-                key = key_value_match.group("key")
-                value = key_value_match.group("value")
-                settings[key] = value
-                continue
-
-            raise ConfigFileParserException("Unexpected line %s in %s: %s" % \
-                                            (i, stream.name, line))
-        return settings
-
-    def serialize(self, items):
-        """Does the inverse of config parsing by taking parsed values and
-        converting them back to a string representing config file contents.
-
-        Args:
-            items: an OrderedDict with items to be written to the config file
-        Returns:
-            contents of config file as a string
-        """
-        r = StringIO()
-        for key, value in items.items():
-            r.write("%s = %s\n" % (key, value))
-        return r.getvalue()
-
-    def get_syntax_description(self):
-        msg = ("The recognized syntax for setting (key, value) pairs is based "
-               "on the INI and YAML formats (e.g. key=value or foo=TRUE). "
-               "For full documentation of the differences from the standards "
-               "please refer to the ConfigArgParse documentation.")
-        return msg
-
-class ConfigFileParserException(Exception):
-    """Raised when config file parsing failed.
-    """
-    pass
-
-
-
 def add_argument(self, *args, **kwargs):
     """
     This method supports the same args as ArgumentParser.add_argument(..)
@@ -760,11 +862,11 @@ def add_argument(self, *args, **kwargs):
     return action
 
 
-def already_on_command_line(existing_args, potential_command_line_args):
-    """Utility method for checking if any of the existing_args is
-    already present in existing_args
+def already_on_command_line(existing_args_list, potential_command_line_args):
+    """Utility method for checking if any of the potential_command_line_args is
+    already present in existing_args.
     """
-    return any(potential_arg in existing_args
+    return any(potential_arg in existing_args_list
                for potential_arg in potential_command_line_args)
 
 

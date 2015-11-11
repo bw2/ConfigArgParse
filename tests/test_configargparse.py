@@ -449,23 +449,23 @@ class TestBasicUseCases(TestCase):
         self.assertListEqual(args, ["-x", "1", "--bla", "3"])
 
     def testConfigOrEnvValueErrors(self):
-        # error should occur when a non-flag arg is set to True
+        # error should occur when a flag arg is set to something other than "true" or "false"
         self.initParser()
         self.add_arg("--height", env_var = "HEIGHT", required=True)
-        self.assertParseArgsRaises("HEIGHT set to 'True' rather than a value",
-            env_vars={"HEIGHT" : "true"})
-        self.assertParseArgsRaises("HEIGHT can't be set to a list '\[1,2,3\]'",
-            env_vars={"HEIGHT" : "[1,2,3]"})
-        ns = self.parse("", env_vars = {"HEIGHT" : "tall", "VERBOSE": ""})
+        self.add_arg("--do-it", dest="x", env_var = "FLAG1", action="store_true")
+        self.add_arg("--dont-do-it", dest="x", env_var = "FLAG2", action="store_false")
+        ns = self.parse("", env_vars = {"HEIGHT": "tall", "FLAG1": "yes"})
         self.assertEqual(ns.height, "tall")
+        self.assertEqual(ns.x, True)
+        ns = self.parse("", env_vars = {"HEIGHT": "tall", "FLAG2": "no"})
+        self.assertEqual(ns.x, False)
 
         # error should occur when flag arg is given a value
         self.initParser()
         self.add_arg("-v", "--verbose", env_var="VERBOSE", action="store_true")
-        self.assertParseArgsRaises("VERBOSE is a flag but is being set to 'bla'",
+        self.assertParseArgsRaises("Unexpected value for VERBOSE: 'bla'. "
+                                   "Expecting 'true', 'false', 'yes', or 'no'",
             env_vars={"VERBOSE" : "bla"})
-        self.assertParseArgsRaises("VERBOSE can't be set to a list '\[1,2,3\]'",
-            env_vars={"VERBOSE" : "[1,2,3]"})
         ns = self.parse("",
                         config_file_contents="verbose=true",
                         env_vars={"HEIGHT": "true"})
@@ -485,10 +485,6 @@ class TestBasicUseCases(TestCase):
         self.add_arg("-f", "--file", env_var="FILES", action="append", type=int)
         ns = self.parse("", env_vars = {"file": "[1,2,3]", "VERBOSE": "true"})
         self.assertEqual(ns.file, None)
-        ns = self.parse("", env_vars = {"FILES": "[1,2,3]", "VERBOSE": "true"})
-        self.assertEqual(ns.file, [1,2,3])
-        ns = self.parse("", config_file_contents="file=[1,2,3, 5]")
-        self.assertEqual(ns.file, [1,2,3,5])
 
     def testAutoEnvVarPrefix(self):
         self.initParser(auto_env_var_prefix="TEST_")
@@ -503,13 +499,11 @@ class TestBasicUseCases(TestCase):
             "TEST_ARG1": "1",
             "TEST_ARG2": "2",
             "TEST2": "22",
-            "TEST_ARG3": "[1,2,3]",
             "TEST_ARG4": "arg4_value",
             "TEST_ARG4_MORE": "magic"})
         self.assertEqual(ns.arg0, None)
         self.assertEqual(ns.arg1, None)
         self.assertEqual(ns.arg2, 22)
-        self.assertListEqual(ns.arg3, [1,2,3])
         self.assertEqual(ns.arg4, "arg4_value")
         self.assertEqual(ns.arg4_more, "magic")
 
@@ -623,15 +617,13 @@ class TestMisc(TestCase):
 
         self.assertRegex(self.format_help(),
             'usage: .* \[-h\] -c CONFIG_FILE\s+'
-            '\[-w CONFIG_OUTPUT_PATH\]\s* --arg1 ARG1\s* \[--flag\]\s*'
+            '\[-w CONFIG_OUTPUT_PATH\]\s* --arg1 ARG1\s*\[--flag\]\s*'
             'Args that start with \'--\' \(eg. --arg1\) can also be set in a '
             'config file\s*\(~/.myconfig or specified via -c\).\s*'
-            'The recognized syntax for setting \(key,\s*value\) pairs is based on '
-            'the INI and YAML formats \(e.g. key=value or\s*foo=TRUE\). For full '
-            'documentation of the differences from the standards please\s*'
-            'refer to the ConfigArgParse documentation.\s*'
+            'Config file syntax allows: key=value,\s*flag=true, stuff=\[a,b,c\] '
+            '\(for details, see syntax at https://goo.gl/R74nmi\).\s*'
             'If an arg is specified in more than\s*one place, then '
-            'commandline values override config file values which override\s*'
+            'commandline values\s*override config file values which override\s*'
             'defaults.\s*'
             'optional arguments:\s*'
             '-h, --help \s* show this help message and exit\n\s*'
