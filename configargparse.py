@@ -175,8 +175,8 @@ class DefaultConfigFileParser(ConfigFileParser):
                 items[key] = value
                 continue
 
-            raise ConfigFileParserException("Unexpected line %s in %s: %s" % \
-                                            (i, stream.name, line))
+            raise ConfigFileParserException("Unexpected line %s in %s: %s" % (i,
+                getattr(stream, 'name', 'stream'), line))
         return items
 
     def serialize(self, items):
@@ -226,7 +226,7 @@ class YAMLConfigFileParser(ConfigFileParser):
             raise ConfigFileParserException("The config file doesn't appear to "
                 "contain 'key: value' pairs (aka. a YAML mapping). "
                 "yaml.load('%s') returned type '%s' instead of 'dict'." % (
-                stream.name, type(parsed_obj).__name__))
+                getattr(stream, 'name', 'stream'),  type(parsed_obj).__name__))
 
         result = OrderedDict()
         for key, value in parsed_obj.items():
@@ -238,15 +238,20 @@ class YAMLConfigFileParser(ConfigFileParser):
         return result
 
 
-    def serialize(self, items):
+    def serialize(self, items, default_flow_style=False):
         """Does the inverse of config parsing by taking parsed values and
         converting them back to a string representing config file contents.
+
+        Args:
+            default_flow_style: defines serialization format (see PyYAML docs)
         """
 
         # lazy-import so there's no dependency on yaml unless this class is used
         yaml = self._load_yaml()
 
-        return str(yaml.dump(items, default_flow_style=False))
+        # it looks like ordering can't be preserved: http://pyyaml.org/ticket/29
+        items = dict(items)
+        return yaml.dump(items, default_flow_style=default_flow_style)
 
 
 # used while parsing args to keep track of where they came from
@@ -582,8 +587,8 @@ class ArgumentParser(argparse.ArgumentParser):
 
     def get_items_for_config_file_output(self, source_to_settings,
                                          parsed_namespace):
-        """Converts the given settings back to dictionary that can be passed to
-        ConfigFormatParser.serialize(..).
+        """Converts the given settings back to a dictionary that can be passed
+        to ConfigFormatParser.serialize(..).
 
         Args:
             source_to_settings: the dictionary described in parse_known_args()

@@ -12,6 +12,10 @@ if sys.version_info < (2, 7):
 else:
     import unittest
 
+if sys.version_info >= (3, 0):
+    from io import StringIO
+else:
+    from StringIO import StringIO
 
 # enable logging to simplify debugging
 logger = logging.getLogger()
@@ -742,6 +746,113 @@ class TestMisc(TestCase):
         self.assertDictEqual(vars(options), {})
 
 
+class TestConfigFileParsers(TestCase):
+    """Test ConfigFileParser subclasses in isolation"""
+
+    def testDefaultConfigFileParser_Basic(self):
+        p = configargparse.DefaultConfigFileParser()
+        self.assertTrue(len(p.get_syntax_description()) > 0)
+
+        # test the simplest case
+        input_config_str = StringIO("""a: 3\n""")
+        parsed_obj = p.parse(input_config_str)
+        output_config_str = p.serialize(parsed_obj)
+
+        self.assertEqual(input_config_str.getvalue().replace(": ", " = "),
+                         output_config_str)
+
+        self.assertDictEqual(parsed_obj, dict([('a', '3')]))
+
+    def testDefaultConfigFileParser_All(self):
+        p = configargparse.DefaultConfigFileParser()
+
+        # test the all syntax case
+        config_lines = [
+            "# comment1 ",
+            "[ some section ]",
+            "----",
+            "---------",
+            "_a: 3",
+            "; comment2 ",
+            "_b = c",
+            "_list_arg1 = [a, b, c]",
+            "_str_arg = true",
+            "_list_arg2 = [1, 2, 3]",
+        ]
+
+        # test parse
+        input_config_str = StringIO("\n".join(config_lines)+"\n")
+        parsed_obj = p.parse(input_config_str)
+
+        # test serialize
+        output_config_str = p.serialize(parsed_obj)
+        self.assertEqual("\n".join(
+            l.replace(': ', ' = ') for l in config_lines if l.startswith('_'))+"\n",
+            output_config_str)
+
+        self.assertDictEqual(parsed_obj, dict([
+            ('_a', '3'),
+            ('_b', 'c'),
+            ('_list_arg1', ['a', 'b', 'c']),
+            ('_str_arg', 'true'),
+            ('_list_arg2', ['1', '2', '3']),
+        ]))
+
+        self.assertListEqual(parsed_obj['_list_arg1'], ['a', 'b', 'c'])
+        self.assertListEqual(parsed_obj['_list_arg2'], ['1', '2', '3'])
+
+    def testYAMLConfigFileParser_Basic(self):
+        try:
+            import yaml
+        except:
+            logging.warning("WARNING: PyYAML not installed. "
+                            "Couldn't test YAMLConfigFileParser")
+            return
+
+        p = configargparse.YAMLConfigFileParser()
+        self.assertTrue(len(p.get_syntax_description()) > 0)
+
+        input_config_str = StringIO("""a: '3'\n""")
+        parsed_obj = p.parse(input_config_str)
+        output_config_str = p.serialize(dict(parsed_obj))
+
+        self.assertEqual(input_config_str.getvalue(), output_config_str)
+
+        self.assertDictEqual(parsed_obj, dict([('a', '3')]))
+
+    def testYAMLConfigFileParser_All(self):
+        try:
+            import yaml
+        except:
+            logging.warning("WARNING: PyYAML not installed. "
+                            "Couldn't test YAMLConfigFileParser")
+            return
+
+        p = configargparse.YAMLConfigFileParser()
+
+        # test the all syntax case
+        config_lines = [
+            "a: '3'",
+            "list_arg:",
+            "- 1",
+            "- 2",
+            "- 3",
+        ]
+
+        # test parse
+        input_config_str = StringIO("\n".join(config_lines)+"\n")
+        parsed_obj = p.parse(input_config_str)
+
+        # test serialize
+        output_config_str = p.serialize(parsed_obj)
+        self.assertEqual(input_config_str.getvalue(), output_config_str)
+
+        self.assertDictEqual(parsed_obj, dict([
+            ('a', '3'),
+            ('list_arg', [1,2,3]),
+        ]))
+
+
 
 ################################################################################
 # since configargparse should work as a drop-in replacement for argparse
@@ -749,8 +860,6 @@ class TestMisc(TestCase):
 # their source code to use configargparse.ArgumentParser
 
 try:
-    #if sys.version_info < (2, 7):
-    #    import   # argaprse package does not export tests...
     import test.test_argparse
     #Sig = test.test_argparse.Sig
     #NS = test.test_argparse.NS
