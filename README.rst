@@ -310,6 +310,21 @@ Previously existing modules (PyPI search keywords: config argparse):
 -  hieropt v0.3 - (https://pypi.python.org/pypi/hieropt) - doesn't
    appear to be maintained, couldn't find documentation
 
+-  configurati v0.2.3 - (https://pypi.python.org/pypi/configurati)
+
+   -  Good:
+
+      -  JSON, YAML, or Python configuration files
+      -  handles rich data structures such as dictionaries
+      -  can group configuration names into sections (like .ini files)
+
+   -  Bad:
+
+      -  doesn't work with python3
+      -  2+ years since last release to PyPI
+      -  apparently unmaintained
+
+
 Design choices:
 
 1. all options must be settable via command line. Having options that
