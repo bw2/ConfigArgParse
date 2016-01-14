@@ -241,6 +241,15 @@ class ArgumentParser(argparse.ArgumentParser):
         else:
             args = list(args)
 
+        for index, arg in enumerate(args):
+            try:
+                key, value = arg.split("=")
+                del args[index]
+                args.append(key)
+                args.append(value)
+            except:
+                pass
+
         for a in self._actions:
             a.is_positional_arg = not a.option_strings
 
