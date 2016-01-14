@@ -247,9 +247,8 @@ class ArgumentParser(argparse.ArgumentParser):
             match = long_arg_re.match(arg)
             if match:
                 parts = match.groupdict()
-                if "key" in parts and "value" in parts:
-                    new_args.append(parts["key"])
-                    new_args.append(parts["value"])
+                new_args.append(parts["key"])
+                new_args.append(parts["value"])
             else:
                 new_args.append(arg)
         args = new_args
