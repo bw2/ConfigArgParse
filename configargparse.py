@@ -241,14 +241,15 @@ class ArgumentParser(argparse.ArgumentParser):
         else:
             args = list(args)
 
+        long_arg_re = re.compile(r"^(?P<key>--[^=]+)=(?P<value>.+)$")
         for index, arg in enumerate(args):
-            try:
-                key, value = arg.split("=")
-                del args[index]
-                args.append(key)
-                args.append(value)
-            except:
-                pass
+            match = long_arg_re.match(arg)
+            if match:
+                parts = match.groupdict()
+                if "key" in parts and "value" in parts:
+                    del args[index]
+                    args.append(parts["key"])
+                    args.append(parts["value"])
 
         for a in self._actions:
             a.is_positional_arg = not a.option_strings
