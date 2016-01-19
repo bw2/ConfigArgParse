@@ -420,17 +420,16 @@ class ArgumentParser(argparse.ArgumentParser):
         else:
             args = list(args)
 
-        new_args = list()
-        long_arg_re = re.compile(r"^(?P<key>--[^=]+)=(?P<value>.+)$")
-        for index, arg in enumerate(args):
-            match = long_arg_re.match(arg)
-            if match:
-                parts = match.groupdict()
-                new_args.append(parts["key"])
-                new_args.append(parts["value"])
+        # normalize args by converting args like --key=value to --key value
+        normalized_args = list()
+        for arg in args:
+            if arg[0] in self.prefix_chars and '=' in arg:
+                key, value =  arg.split('=', 1)
+                normalized_args.append(key)
+                normalized_args.append(value)
             else:
-                new_args.append(arg)
-        args = new_args
+                normalized_args.append(arg)
+        args = normalized_args
 
         for a in self._actions:
             a.is_positional_arg = not a.option_strings
