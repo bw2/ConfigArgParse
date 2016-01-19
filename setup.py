@@ -79,16 +79,18 @@ if sys.version_info < (2, 7):
 
 setup(
     name='ConfigArgParse',
-    version="0.10.1",
-    description='A drop-in replacement for argparse that allows options to also be set via config files and/or environment variables.',
+    version="0.11.0",
+    description='A drop-in replacement for argparse that allows options to '
+                'also be set via config files and/or environment variables.',
     long_description=long_description,
     author='Zorro',
     author_email='zorro3.github@gmail.com',
-    url='https://github.com/zorro3/ConfigArgParse',
+    url='https://github.com/bw2/ConfigArgParse',
     py_modules=['configargparse'],
     include_package_data=True,
     license="MIT",
-    keywords='options, argparse, ConfigArgParse, config, environment variables, envvars, ENV, environment, optparse',
+    keywords='options, argparse, ConfigArgParse, config, environment variables, '
+             'envvars, ENV, environment, optparse, YAML, INI',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
@@ -107,4 +109,7 @@ setup(
     ],
     test_suite='tests',
     install_requires=install_requires,
+    extras_require = {
+        'yaml': ["PyYAML"],
+    }
 )

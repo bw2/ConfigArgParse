@@ -12,6 +12,10 @@ if sys.version_info < (2, 7):
 else:
     import unittest
 
+if sys.version_info >= (3, 0):
+    from io import StringIO
+else:
+    from StringIO import StringIO
 
 # enable logging to simplify debugging
 logger = logging.getLogger()
@@ -443,29 +447,29 @@ class TestBasicUseCases(TestCase):
                         env_vars={"bla": "2"})
         self.assertListEqual(args, ["--bla", "3"])
 
-        self.initParser(allow_unknown_config_file_keys=False)
+        self.initParser(ignore_unknown_config_file_keys=False)
         ns, args = self.parse_known(args="-x 1", config_file_contents="bla=3",
             env_vars={"bla": "2"})
-        self.assertListEqual(args, ["-x", "1", "--bla", "3"])
+        self.assertListEqual(args, ["--bla", "3", "-x", "1"])
 
     def testConfigOrEnvValueErrors(self):
-        # error should occur when a non-flag arg is set to True
+        # error should occur when a flag arg is set to something other than "true" or "false"
         self.initParser()
         self.add_arg("--height", env_var = "HEIGHT", required=True)
-        self.assertParseArgsRaises("HEIGHT set to 'True' rather than a value",
-            env_vars={"HEIGHT" : "true"})
-        self.assertParseArgsRaises("HEIGHT can't be set to a list '\[1,2,3\]'",
-            env_vars={"HEIGHT" : "[1,2,3]"})
-        ns = self.parse("", env_vars = {"HEIGHT" : "tall", "VERBOSE": ""})
+        self.add_arg("--do-it", dest="x", env_var = "FLAG1", action="store_true")
+        self.add_arg("--dont-do-it", dest="x", env_var = "FLAG2", action="store_false")
+        ns = self.parse("", env_vars = {"HEIGHT": "tall", "FLAG1": "yes"})
         self.assertEqual(ns.height, "tall")
+        self.assertEqual(ns.x, True)
+        ns = self.parse("", env_vars = {"HEIGHT": "tall", "FLAG2": "no"})
+        self.assertEqual(ns.x, False)
 
         # error should occur when flag arg is given a value
         self.initParser()
         self.add_arg("-v", "--verbose", env_var="VERBOSE", action="store_true")
-        self.assertParseArgsRaises("VERBOSE is a flag but is being set to 'bla'",
+        self.assertParseArgsRaises("Unexpected value for VERBOSE: 'bla'. "
+                                   "Expecting 'true', 'false', 'yes', or 'no'",
             env_vars={"VERBOSE" : "bla"})
-        self.assertParseArgsRaises("VERBOSE can't be set to a list '\[1,2,3\]'",
-            env_vars={"VERBOSE" : "[1,2,3]"})
         ns = self.parse("",
                         config_file_contents="verbose=true",
                         env_vars={"HEIGHT": "true"})
@@ -485,10 +489,6 @@ class TestBasicUseCases(TestCase):
         self.add_arg("-f", "--file", env_var="FILES", action="append", type=int)
         ns = self.parse("", env_vars = {"file": "[1,2,3]", "VERBOSE": "true"})
         self.assertEqual(ns.file, None)
-        ns = self.parse("", env_vars = {"FILES": "[1,2,3]", "VERBOSE": "true"})
-        self.assertEqual(ns.file, [1,2,3])
-        ns = self.parse("", config_file_contents="file=[1,2,3, 5]")
-        self.assertEqual(ns.file, [1,2,3,5])
 
     def testAutoEnvVarPrefix(self):
         self.initParser(auto_env_var_prefix="TEST_")
@@ -503,13 +503,11 @@ class TestBasicUseCases(TestCase):
             "TEST_ARG1": "1",
             "TEST_ARG2": "2",
             "TEST2": "22",
-            "TEST_ARG3": "[1,2,3]",
             "TEST_ARG4": "arg4_value",
             "TEST_ARG4_MORE": "magic"})
         self.assertEqual(ns.arg0, None)
         self.assertEqual(ns.arg1, None)
         self.assertEqual(ns.arg2, 22)
-        self.assertListEqual(ns.arg3, [1,2,3])
         self.assertEqual(ns.arg4, "arg4_value")
         self.assertEqual(ns.arg4_more, "magic")
 
@@ -559,7 +557,6 @@ class TestMisc(TestCase):
     def testConstructor_ConfigFileArgs(self):
         # Test constructor args:
         #   args_for_setting_config_path
-        #   allow_unknown_config_file_keys
         #   config_arg_is_required
         #   config_arg_help_message
         temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=True)
@@ -623,15 +620,13 @@ class TestMisc(TestCase):
 
         self.assertRegex(self.format_help(),
             'usage: .* \[-h\] -c CONFIG_FILE\s+'
-            '\[-w CONFIG_OUTPUT_PATH\]\s* --arg1 ARG1\s* \[--flag\]\s*'
+            '\[-w CONFIG_OUTPUT_PATH\]\s* --arg1 ARG1\s*\[--flag\]\s*'
             'Args that start with \'--\' \(eg. --arg1\) can also be set in a '
             'config file\s*\(~/.myconfig or specified via -c\).\s*'
-            'The recognized syntax for setting \(key,\s*value\) pairs is based on '
-            'the INI and YAML formats \(e.g. key=value or\s*foo=TRUE\). For full '
-            'documentation of the differences from the standards please\s*'
-            'refer to the ConfigArgParse documentation.\s*'
+            'Config file syntax allows: key=value,\s*flag=true, stuff=\[a,b,c\] '
+            '\(for details, see syntax at https://goo.gl/R74nmi\).\s*'
             'If an arg is specified in more than\s*one place, then '
-            'commandline values override config file values which override\s*'
+            'commandline values\s*override config file values which override\s*'
             'defaults.\s*'
             'optional arguments:\s*'
             '-h, --help \s* show this help message and exit\n\s*'
@@ -751,6 +746,113 @@ class TestMisc(TestCase):
         self.assertDictEqual(vars(options), {})
 
 
+class TestConfigFileParsers(TestCase):
+    """Test ConfigFileParser subclasses in isolation"""
+
+    def testDefaultConfigFileParser_Basic(self):
+        p = configargparse.DefaultConfigFileParser()
+        self.assertTrue(len(p.get_syntax_description()) > 0)
+
+        # test the simplest case
+        input_config_str = StringIO("""a: 3\n""")
+        parsed_obj = p.parse(input_config_str)
+        output_config_str = p.serialize(parsed_obj)
+
+        self.assertEqual(input_config_str.getvalue().replace(": ", " = "),
+                         output_config_str)
+
+        self.assertDictEqual(parsed_obj, dict([('a', '3')]))
+
+    def testDefaultConfigFileParser_All(self):
+        p = configargparse.DefaultConfigFileParser()
+
+        # test the all syntax case
+        config_lines = [
+            "# comment1 ",
+            "[ some section ]",
+            "----",
+            "---------",
+            "_a: 3",
+            "; comment2 ",
+            "_b = c",
+            "_list_arg1 = [a, b, c]",
+            "_str_arg = true",
+            "_list_arg2 = [1, 2, 3]",
+        ]
+
+        # test parse
+        input_config_str = StringIO("\n".join(config_lines)+"\n")
+        parsed_obj = p.parse(input_config_str)
+
+        # test serialize
+        output_config_str = p.serialize(parsed_obj)
+        self.assertEqual("\n".join(
+            l.replace(': ', ' = ') for l in config_lines if l.startswith('_'))+"\n",
+            output_config_str)
+
+        self.assertDictEqual(parsed_obj, dict([
+            ('_a', '3'),
+            ('_b', 'c'),
+            ('_list_arg1', ['a', 'b', 'c']),
+            ('_str_arg', 'true'),
+            ('_list_arg2', ['1', '2', '3']),
+        ]))
+
+        self.assertListEqual(parsed_obj['_list_arg1'], ['a', 'b', 'c'])
+        self.assertListEqual(parsed_obj['_list_arg2'], ['1', '2', '3'])
+
+    def testYAMLConfigFileParser_Basic(self):
+        try:
+            import yaml
+        except:
+            logging.warning("WARNING: PyYAML not installed. "
+                            "Couldn't test YAMLConfigFileParser")
+            return
+
+        p = configargparse.YAMLConfigFileParser()
+        self.assertTrue(len(p.get_syntax_description()) > 0)
+
+        input_config_str = StringIO("""a: '3'\n""")
+        parsed_obj = p.parse(input_config_str)
+        output_config_str = p.serialize(dict(parsed_obj))
+
+        self.assertEqual(input_config_str.getvalue(), output_config_str)
+
+        self.assertDictEqual(parsed_obj, dict([('a', '3')]))
+
+    def testYAMLConfigFileParser_All(self):
+        try:
+            import yaml
+        except:
+            logging.warning("WARNING: PyYAML not installed. "
+                            "Couldn't test YAMLConfigFileParser")
+            return
+
+        p = configargparse.YAMLConfigFileParser()
+
+        # test the all syntax case
+        config_lines = [
+            "a: '3'",
+            "list_arg:",
+            "- 1",
+            "- 2",
+            "- 3",
+        ]
+
+        # test parse
+        input_config_str = StringIO("\n".join(config_lines)+"\n")
+        parsed_obj = p.parse(input_config_str)
+
+        # test serialize
+        output_config_str = p.serialize(parsed_obj)
+        self.assertEqual(input_config_str.getvalue(), output_config_str)
+
+        self.assertDictEqual(parsed_obj, dict([
+            ('a', '3'),
+            ('list_arg', [1,2,3]),
+        ]))
+
+
 
 ################################################################################
 # since configargparse should work as a drop-in replacement for argparse
@@ -758,8 +860,6 @@ class TestMisc(TestCase):
 # their source code to use configargparse.ArgumentParser
 
 try:
-    #if sys.version_info < (2, 7):
-    #    import   # argaprse package does not export tests...
     import test.test_argparse
     #Sig = test.test_argparse.Sig
     #NS = test.test_argparse.NS
@@ -793,13 +893,12 @@ else:
     exec(test_argparse_source_code)
 
     # print argparse unittest source code
-    #def print_source_code(source_code, line_numbers, context_lines=10):
-    #     for n in line_numbers:
-    #         logging.debug("##### Code around line %s #####" % n)
-    #         lines_to_print = set(range(n - context_lines, n + context_lines))
-    #         for n2, line in enumerate(source_code.split("\n"), 1):
-    #             if n2 in lines_to_print:
-    #                 logging.debug("%s %5d: %s" % (
-    #                    "**" if n2 == n else "  ", n2, line))
-    #     #sys.exit()
+    def print_source_code(source_code, line_numbers, context_lines=10):
+         for n in line_numbers:
+             logging.debug("##### Code around line %s #####" % n)
+             lines_to_print = set(range(n - context_lines, n + context_lines))
+             for n2, line in enumerate(source_code.split("\n"), 1):
+                 if n2 in lines_to_print:
+                     logging.debug("%s %5d: %s" % (
+                        "**" if n2 == n else "  ", n2, line))
     #print_source_code(test_argparse_source_code, [4540, 4565])
