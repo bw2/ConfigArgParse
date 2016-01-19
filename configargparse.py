@@ -420,6 +420,17 @@ class ArgumentParser(argparse.ArgumentParser):
         else:
             args = list(args)
 
+        # normalize args by converting args like --key=value to --key value
+        normalized_args = list()
+        for arg in args:
+            if arg and arg[0] in self.prefix_chars and '=' in arg:
+                key, value =  arg.split('=', 1)
+                normalized_args.append(key)
+                normalized_args.append(value)
+            else:
+                normalized_args.append(arg)
+        args = normalized_args
+
         for a in self._actions:
             a.is_positional_arg = not a.option_strings
 
