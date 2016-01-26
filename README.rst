@@ -80,7 +80,7 @@ Since the script above set the config file as required=True, lets create a confi
 
 Now run the script and pass it the config file:
 
-.. code:: py
+.. code:: bash
 
     python my_script.py --genome hg19 --my-config config.txt  f1.vcf  f2.vcf
 
@@ -88,7 +88,7 @@ Now run the script and pass it the config file:
 
 Here is the result:
 
-.. code:: py
+.. code:: bash
 
     Namespace(dbsnp='/data/dbsnp/variants.vcf', genome='hg19', my_config='config.txt', vcf=['f1.vcf', 'f2.vcf'], verbose=False)
     ----------
