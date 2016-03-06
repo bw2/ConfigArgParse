@@ -218,7 +218,7 @@ class YAMLConfigFileParser(ConfigFileParser):
         yaml = self._load_yaml()
 
         try:
-            parsed_obj = yaml.load(stream)
+            parsed_obj = yaml.safe_load(stream)
         except Exception as e:
             raise ConfigFileParserException("Couldn't parse config file: %s" % e)
 
