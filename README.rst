@@ -276,7 +276,7 @@ Previously existing modules (PyPI search keywords: config argparse):
       -  no support for environment variables
 
 -  ConfArgParse v1.0.15
-   (https://pypi.python.org/pypi/ConfArgParse/1.0.15)
+   (https://pypi.python.org/pypi/ConfArgParse)
 
    -  Good:
 
@@ -310,7 +310,7 @@ Previously existing modules (PyPI search keywords: config argparse):
          StringIO)
 
 -  argparse_config v0.5.1
-   (https://pypi.python.org/pypi/argparse_config/0.5.1)
+   (https://pypi.python.org/pypi/argparse_config)
 
    -  Good:
 
@@ -320,7 +320,7 @@ Previously existing modules (PyPI search keywords: config argparse):
 
       -  doesn't work with python3 (error during pip install)
 
--  yconf v0.3.2 - (https://pypi.python.org/pypi/yconf/0.3.2) - features
+-  yconf v0.3.2 - (https://pypi.python.org/pypi/yconf) - features
    and interface not that great
 -  hieropt v0.3 - (https://pypi.python.org/pypi/hieropt) - doesn't
    appear to be maintained, couldn't find documentation
