@@ -69,10 +69,15 @@ if command not in ['test', 'coverage']:
     long_description = open('README.rst').read()
 
 install_requires = []
+tests_require = [
+    'PyYAML',
+]
 if sys.version_info < (2, 7):
     install_requires.extend([
         'argparse',
         'ordereddict',
+    ])
+    tests_require.extend([
         'unittest2',
     ])
 
@@ -109,6 +114,7 @@ setup(
     ],
     test_suite='tests',
     install_requires=install_requires,
+    tests_require=tests_require,
     extras_require = {
         'yaml': ["PyYAML"],
     }
