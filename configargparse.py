@@ -152,8 +152,7 @@ class DefaultConfigFileParser(ConfigFileParser):
                 continue
             white_space = "\\s*"
             key = "(?P<key>[^:=;#\s]+?)"
-            value1 = white_space+"[:=]"+white_space+"(?P<value>[^;#]+?)"
-            value2 = white_space+"[\s]"+white_space+"(?P<value>[^;#\s]+?)"
+            value = white_space+"[:=\s]"+white_space+"(?P<value>[^;#]+?)"
             comment = white_space+"(?P<comment>\\s[;#].*)?"
 
             key_only_match = re.match("^" + key + comment + "$", line)
@@ -162,8 +161,7 @@ class DefaultConfigFileParser(ConfigFileParser):
                 items[key] = "true"
                 continue
 
-            key_value_match = re.match("^"+key+value1+comment+"$", line) or \
-                              re.match("^"+key+value2+comment+"$", line)
+            key_value_match = re.match("^"+key+value+comment+"$", line)
             if key_value_match:
                 key = key_value_match.group("key")
                 value = key_value_match.group("value")

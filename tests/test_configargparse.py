@@ -372,6 +372,7 @@ class TestBasicUseCases(TestCase):
         self.add_arg('-x', required=True, type=int)
         self.add_arg('--y', required=True, type=float)
         self.add_arg('--z')
+        self.add_arg('--c')
         self.add_arg('--b', action="store_true")
         self.add_arg('--a', action="append", type=int)
 
@@ -407,11 +408,14 @@ class TestBasicUseCases(TestCase):
         b: True
         ----
         a = 33
+        ---
+        z z 1
         """)
 
         self.assertEqual(ns.x, 1)
         self.assertEqual(ns.y, 12.1)
-        self.assertEqual(ns.z, None)
+        self.assertEqual(ns.z, 'z 1')
+        self.assertEqual(ns.c, None)
         self.assertEqual(ns.b, True)
         self.assertEqual(ns.a, [33])
         self.assertRegex(self.format_values(),
@@ -419,7 +423,9 @@ class TestBasicUseCases(TestCase):
             'Config File \(method arg\):\n'
             '  y: \s+ 12.1\n'
             '  b: \s+ True\n'
-            '  a: \s+ 33\n')
+            '  a: \s+ 33\n'
+            '  z: \s+ z 1\n')
+
 
         # -x is not a long arg so can't be set via config file
         self.assertParseArgsRaises("argument -x is required"
@@ -435,7 +441,7 @@ class TestBasicUseCases(TestCase):
                                    args="-x 5",
                                    config_file_contents="z: 1")
         self.assertParseArgsRaises("Unexpected line 0",
-                                   config_file_contents="z z 1")
+                                   config_file_contents="z z#")
 
         # test unknown config file args
         self.assertParseArgsRaises("bla",
