@@ -56,10 +56,11 @@ class TestCase(unittest.TestCase):
         if not hasattr(self, "assertRaisesRegex"):
             self.assertRaisesRegex = self.assertRaisesRegexp
 
-        self.assertParseArgsRaises = functools.partial(self.assertRaisesRegex,
-            argparse.ArgumentError, callable_obj = self.parse)
-
         return self.parser
+
+    def assertParseArgsRaises(self, regex, *args, **kwargs):
+        self.assertRaisesRegex(argparse.ArgumentError, regex, self.parse,
+                               *args, **kwargs)
 
 
 class TestBasicUseCases(TestCase):
