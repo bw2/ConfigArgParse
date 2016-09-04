@@ -185,7 +185,7 @@ class DefaultConfigFileParser(ConfigFileParser):
         for key, value in items.items():
             if type(value) == list:
                 # handle special case of lists
-                value = "["+", ".join(value)+"]"
+                value = "["+", ".join(map(str, value))+"]"
             r.write("%s = %s\n" % (key, value))
         return r.getvalue()
 
