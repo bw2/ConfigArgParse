@@ -550,7 +550,6 @@ class ArgumentParser(argparse.ArgumentParser):
         # parse all args (including commandline, config file, and env var)
         namespace, unknown_args = argparse.ArgumentParser.parse_known_args(
             self, args=args, namespace=namespace)
-
         # handle any args that have is_write_out_config_file_arg set to true
         user_write_out_config_file_arg_actions = [a for a in self._actions
             if getattr(a, "is_write_out_config_file_arg", False)]
@@ -666,12 +665,18 @@ class ArgumentParser(argparse.ArgumentParser):
                 self.error("Unexpected value for %s: '%s'. Expecting 'true', "
                            "'false', 'yes', or 'no'" % (key, value))
         elif type(value) == list:
-            if action is not None and type(action) != argparse._AppendAction:
-                    self.error(("%s can't be set to a list '%s' unless its "
-                        "action type is changed to 'append'") % (key, value))
-            for list_elem in value:
+            if action is None or type(action) == argparse._AppendAction:
+                for list_elem in value:
+                    args.append( command_line_key )
+                    args.append( str(list_elem) )
+            elif (type(action) == argparse._StoreAction and action.nargs in ('+', '*')) or (
+                type(action.nargs) is int and action.nargs > 1):
                 args.append( command_line_key )
-                args.append( str(list_elem) )
+                for list_elem in value:
+                    args.append( str(list_elem) )
+            else:
+                self.error(("%s can't be set to a list '%s' unless its action type is changed "
+                            "to 'append' or nargs is set to '*', '+', or > 1") % (key, value))
         elif type(value) == str:
             args.append( command_line_key )
             args.append( value )
