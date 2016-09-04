@@ -152,7 +152,7 @@ class DefaultConfigFileParser(ConfigFileParser):
                 continue
             white_space = "\\s*"
             key = "(?P<key>[^:=;#\s]+?)"
-            value = white_space+"[:=\s]"+white_space+"(?P<value>[^;#]+?)"
+            value = white_space+"[:=\s]"+white_space+"(?P<value>.+?)"
             comment = white_space+"(?P<comment>\\s[;#].*)?"
 
             key_only_match = re.match("^" + key + comment + "$", line)

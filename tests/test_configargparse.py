@@ -441,8 +441,6 @@ class TestBasicUseCases(TestCase):
                                    "the following arguments are required: --y",
                                    args="-x 5",
                                    config_file_contents="z: 1")
-        self.assertParseArgsRaises("Unexpected line 0",
-                                   config_file_contents="z z#")
 
         # test unknown config file args
         self.assertParseArgsRaises("bla",
