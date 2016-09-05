@@ -1,4 +1,5 @@
 import argparse
+import glob
 import os
 import re
 import sys
@@ -316,8 +317,11 @@ class ArgumentParser(argparse.ArgumentParser):
                 be parsed in order, with the values from each config file
                 taking precedence over pervious ones. This allows an application
                 to look for config files in multiple standard locations such as
-                the install directory, home directory, and current directory:
-                ["<install dir>/app_config.ini",
+                the install directory, home directory, and current directory. 
+                Also, shell * syntax can be used to specify all conf files in a 
+                directory. For exmaple:
+                ["/etc/conf/app_config.ini",
+                 "/etc/conf/conf-enabled/*.ini",
                 "~/.my_app_config.ini",
                 "./app_config.txt"]
             ignore_unknown_config_file_keys: If true, settings that are found
@@ -709,8 +713,8 @@ class ArgumentParser(argparse.ArgumentParser):
             command_line_args: List of all args (already split on spaces)
         """
         # open any default config files
-        config_files = [open(f) for f in map(
-            os.path.expanduser, self._default_config_files) if os.path.isfile(f)]
+        config_files = [open(f) for files in map(glob.glob, map(os.path.expanduser, self._default_config_files)) 
+                        for f in files]
 
         # list actions with is_config_file_arg=True. Its possible there is more
         # than one such arg.
