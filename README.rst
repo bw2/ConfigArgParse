@@ -49,7 +49,7 @@ what they look like.
 
    import configargparse
 
-   p = configargparse.ArgParser(default_config_files=['/etc/settings.ini', '~/.my_settings'])
+   p = configargparse.ArgParser(default_config_files=['/etc/app/conf.d/*.conf', '~/.my_settings'])
    p.add('-c', '--my-config', required=True, is_config_file=True, help='config file path')
    p.add('--genome', required=True, help='path to genome file')  # this option can be set in a config file because it starts with '--'
    p.add('-v', help='verbose', action='store_true')
@@ -187,7 +187,7 @@ ArgParser Singletons
 
 To make it easier to configure different modules in an application,
 configargparse provides globally-available ArgumentParser instances
-via configargparse.getArgumentParser('name') (similar to
+via configargparse.get_argument_parser('name') (similar to
 logging.getLogger('name')).
 
 Here is an example of an application with a utils module that also
@@ -200,7 +200,7 @@ defines and retrieves its own command-line args.
     import configargparse
     import utils
 
-    p = configargparse.getArgumentParser()
+    p = configargparse.get_argument_parser()
     p.add_argument("-x", help="Main module setting")
     p.add_argument("--m-setting", help="Main module setting")
     options = p.parse_known_args()   # using p.parse_args() here may raise errors.
@@ -210,7 +210,7 @@ defines and retrieves its own command-line args.
 .. code:: py
 
     import configargparse
-    p = configargparse.getArgumentParser()
+    p = configargparse.get_argument_parser()
     p.add_argument("--utils-setting", help="Config-file-settable option for utils")
 
     if __name__ == "__main__":
@@ -231,8 +231,8 @@ The configargparse.ArgumentParser API inherits its class and method
 names from argparse and also provides the following shorter names for
 convenience:
 
--  p = configargparse.getArgParser()  # get global singleton instance
--  p = configargparse.getParser()
+-  p = configargparse.get_arg_parser()  # get global singleton instance
+-  p = configargparse.get_parser()
 -  p = configargparse.ArgParser()  # create a new instance
 -  p = configargparse.Parser()
 -  p.add_arg(..)
