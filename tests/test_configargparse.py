@@ -643,6 +643,15 @@ class TestMisc(TestCase):
             '--flag \s*Flag help text'
         )
 
+    class CustomClass(object):
+        def __init__(self, name):
+            self.name = name
+
+    @staticmethod
+    def valid_custom(s):
+        if s == "invalid": raise Exception("invalid name")
+        return TestMisc.CustomClass(s)
+
     def testConstructor_WriteOutConfigFileArgs(self):
         # Test constructor args:
         #   args_for_writing_out_config_file
@@ -656,12 +665,14 @@ class TestMisc(TestCase):
         self.add_arg("--config-file-settable-arg", type=int)
         self.add_arg("--config-file-settable-arg2", type=int, default=3)
         self.add_arg("--config-file-settable-flag", action="store_true")
+        self.add_arg("--config-file-settable-custom", type=TestMisc.valid_custom)
         self.add_arg("-l", "--config-file-settable-list", action="append")
 
         # write out a config file
         command_line_args = "-w %s " % cfg_f.name
         command_line_args += "--config-file-settable-arg 1 "
         command_line_args += "--config-file-settable-flag "
+        command_line_args += "--config-file-settable-custom custom_value "
         command_line_args += "-l a -l b -l c -l d "
 
         self.assertFalse(self.parser._exit_method_called)
@@ -672,6 +683,7 @@ class TestMisc(TestCase):
         cfg_f.seek(0)
         expected_config_file_contents = "config-file-settable-arg = 1\n"
         expected_config_file_contents += "config-file-settable-flag = true\n"
+        expected_config_file_contents += "config-file-settable-custom = custom_value\n"
         expected_config_file_contents += "config-file-settable-list = [a, b, c, d]\n"
         expected_config_file_contents += "config-file-settable-arg2 = 3\n"
 

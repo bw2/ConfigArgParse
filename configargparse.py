@@ -622,6 +622,10 @@ class ArgumentParser(argparse.ArgumentParser):
                         if value is not None:
                             if type(value) is bool:
                                 value = str(value).lower()
+                            elif callable(action.type):
+                                found = [i for i in range(0, len(existing_command_line_args)-1) if existing_command_line_args[i] in config_file_keys]
+                                if found:
+                                    value = existing_command_line_args[found[-1] + 1]
                             config_file_items[config_file_keys[0]] = value
 
             elif source == _ENV_VAR_SOURCE_KEY:
