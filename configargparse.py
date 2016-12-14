@@ -24,6 +24,12 @@ ACTION_TYPES_THAT_DONT_NEED_A_VALUE = set([argparse._StoreTrueAction,
 # global ArgumentParser instances
 _parsers = {}
 
+
+def is_action_dont_need_value(action):
+    return any(issubclass(type(action), action_type)
+               for action_type in ACTION_TYPES_THAT_DONT_NEED_A_VALUE)
+
+
 def init_argument_parser(name=None, **kwargs):
     """Creates a global ArgumentParser instance with the given name,
     passing any args other than "name" to the ArgumentParser constructor.
@@ -539,7 +545,7 @@ class ArgumentParser(argparse.ArgumentParser):
                     not cares_about_default_value or
                     action.default is None or
                     action.default == SUPPRESS or
-                    type(action) in ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
+                    is_action_dont_need_value(action)):
                 continue
             else:
                 if action.option_strings:
@@ -662,7 +668,7 @@ class ArgumentParser(argparse.ArgumentParser):
             command_line_key = action.option_strings[-1]
 
         # handle boolean value
-        if action is not None and type(action) in ACTION_TYPES_THAT_DONT_NEED_A_VALUE:
+        if action is not None and is_action_dont_need_value(action):
             if value.lower() in ("true", "false", "yes", "no"):
                 args.append( command_line_key )
             else:
