@@ -451,7 +451,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 config_file_keys = self.get_possible_config_keys(a)
                 if config_file_keys and not (a.env_var or a.is_positional_arg
                     or a.is_config_file_arg or a.is_write_out_config_file_arg or
-                    type(a) == argparse._HelpAction):
+                    issubclass(type(a), argparse._HelpAction)):
                     stripped_config_file_key = config_file_keys[0].strip(
                         self.prefix_chars)
                     a.env_var = (self._auto_env_var_prefix +
@@ -478,7 +478,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # before parsing any config files, check if -h was specified.
         supports_help_arg = any(
-            a for a in self._actions if type(a) == argparse._HelpAction)
+            a for a in self._actions if issubclass(type(a), argparse._HelpAction))
         skip_config_file_parsing = supports_help_arg and (
             "-h" in args or "--help" in args)
 
@@ -669,11 +669,11 @@ class ArgumentParser(argparse.ArgumentParser):
                 self.error("Unexpected value for %s: '%s'. Expecting 'true', "
                            "'false', 'yes', or 'no'" % (key, value))
         elif type(value) == list:
-            if action is None or type(action) == argparse._AppendAction:
+            if action is None or issubclass(type(action), argparse._AppendAction):
                 for list_elem in value:
                     args.append( command_line_key )
                     args.append( str(list_elem) )
-            elif (type(action) == argparse._StoreAction and action.nargs in ('+', '*')) or (
+            elif (issubclass(type(action), argparse._StoreAction) and action.nargs in ('+', '*')) or (
                 type(action.nargs) is int and action.nargs > 1):
                 args.append( command_line_key )
                 for list_elem in value:
@@ -886,12 +886,12 @@ def add_argument(self, *args, **kwargs):
 
     if action.is_positional_arg and env_var:
         raise ValueError("env_var can't be set for a positional arg.")
-    if action.is_config_file_arg and type(action) != argparse._StoreAction:
+    if action.is_config_file_arg and not issubclass(type(action), argparse._StoreAction):
         raise ValueError("arg with is_config_file_arg=True must have "
                          "action='store'")
     if action.is_write_out_config_file_arg:
         error_prefix = "arg with is_write_out_config_file_arg=True "
-        if type(action) != argparse._StoreAction:
+        if not issubclass(type(action), argparse._StoreAction):
             raise ValueError(error_prefix + "must have action='store'")
         if is_config_file_arg:
                 raise ValueError(error_prefix + "can't also have "
