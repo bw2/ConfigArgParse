@@ -317,8 +317,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 be parsed in order, with the values from each config file
                 taking precedence over pervious ones. This allows an application
                 to look for config files in multiple standard locations such as
-                the install directory, home directory, and current directory. 
-                Also, shell * syntax can be used to specify all conf files in a 
+                the install directory, home directory, and current directory.
+                Also, shell * syntax can be used to specify all conf files in a
                 directory. For exmaple:
                 ["/etc/conf/app_config.ini",
                  "/etc/conf/conf-enabled/*.ini",
@@ -696,6 +696,11 @@ class ArgumentParser(argparse.ArgumentParser):
         can be used to set the given action's value in a config file.
         """
         keys = []
+
+        # Do not write out the config options for writing out a config file
+        if getattr(action, 'is_write_out_config_file_arg', None):
+            return keys
+
         for arg in action.option_strings:
             if any([arg.startswith(2*c) for c in self.prefix_chars]):
                 keys += [arg[2:], arg] # eg. for '--bla' return ['bla', '--bla']
@@ -713,7 +718,7 @@ class ArgumentParser(argparse.ArgumentParser):
             command_line_args: List of all args (already split on spaces)
         """
         # open any default config files
-        config_files = [open(f) for files in map(glob.glob, map(os.path.expanduser, self._default_config_files)) 
+        config_files = [open(f) for files in map(glob.glob, map(os.path.expanduser, self._default_config_files))
                         for f in files]
 
         # list actions with is_config_file_arg=True. Its possible there is more
