@@ -612,6 +612,27 @@ class TestMisc(TestCase):
         ns, args = self.parse_known(config_file_contents="arg1 = 3")
         self.assertEqual(getattr(ns, "arg1", ""), "")
 
+    def test_AbbrevConfigFileArgs(self):
+        """Tests that abbreviated values don't get pulled from config file.
+
+        """
+        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=True)
+        temp_cfg.write("a2a = 0.5\n")
+        temp_cfg.write("a3a = 0.5\n")
+        temp_cfg.flush()
+
+        self.initParser()
+
+        self.add_arg('-c', '--config_file', required=False, is_config_file=True,
+                     help='config file path')
+
+        self.add_arg('--hello', type=int, required=False)
+
+        command = '-c {} --hello 2'.format(temp_cfg.name)
+
+        known, unknown = self.parse_known(command)
+
+        self.assertListEqual(unknown, ['--a2a', '0.5', '--a3a', '0.5'])
 
     def test_FormatHelp(self):
         self.initParser(args_for_setting_config_path=["-c", "--config"],
