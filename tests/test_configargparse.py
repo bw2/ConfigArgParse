@@ -628,7 +628,7 @@ class TestMisc(TestCase):
 
         self.add_arg('--hello', type=int, required=False)
 
-        command = '-c {} --hello 2'.format(temp_cfg.name)
+        command = '-c {0} --hello 2'.format(temp_cfg.name)
 
         known, unknown = self.parse_known(command)
 
