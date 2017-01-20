@@ -16,19 +16,13 @@ else:
     from collections import OrderedDict
 
 
-ACTION_TYPES_THAT_DONT_NEED_A_VALUE = set([argparse._StoreTrueAction,
+ACTION_TYPES_THAT_DONT_NEED_A_VALUE = (argparse._StoreTrueAction,
     argparse._StoreFalseAction, argparse._CountAction,
-    argparse._StoreConstAction, argparse._AppendConstAction])
+    argparse._StoreConstAction, argparse._AppendConstAction)
 
 
 # global ArgumentParser instances
 _parsers = {}
-
-
-def is_action_dont_need_value(action):
-    return any(issubclass(type(action), action_type)
-               for action_type in ACTION_TYPES_THAT_DONT_NEED_A_VALUE)
-
 
 def init_argument_parser(name=None, **kwargs):
     """Creates a global ArgumentParser instance with the given name,
@@ -457,7 +451,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 config_file_keys = self.get_possible_config_keys(a)
                 if config_file_keys and not (a.env_var or a.is_positional_arg
                     or a.is_config_file_arg or a.is_write_out_config_file_arg or
-                    issubclass(type(a), argparse._HelpAction)):
+                    isinstance(a, argparse._HelpAction)):
                     stripped_config_file_key = config_file_keys[0].strip(
                         self.prefix_chars)
                     a.env_var = (self._auto_env_var_prefix +
@@ -484,7 +478,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # before parsing any config files, check if -h was specified.
         supports_help_arg = any(
-            a for a in self._actions if issubclass(type(a), argparse._HelpAction))
+            a for a in self._actions if isinstance(a, argparse._HelpAction))
         skip_config_file_parsing = supports_help_arg and (
             "-h" in args or "--help" in args)
 
@@ -545,7 +539,7 @@ class ArgumentParser(argparse.ArgumentParser):
                     not cares_about_default_value or
                     action.default is None or
                     action.default == SUPPRESS or
-                    is_action_dont_need_value(action)):
+                    isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE)):
                 continue
             else:
                 if action.option_strings:
@@ -668,18 +662,18 @@ class ArgumentParser(argparse.ArgumentParser):
             command_line_key = action.option_strings[-1]
 
         # handle boolean value
-        if action is not None and is_action_dont_need_value(action):
+        if action is not None and isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
             if value.lower() in ("true", "false", "yes", "no"):
                 args.append( command_line_key )
             else:
                 self.error("Unexpected value for %s: '%s'. Expecting 'true', "
                            "'false', 'yes', or 'no'" % (key, value))
         elif type(value) == list:
-            if action is None or issubclass(type(action), argparse._AppendAction):
+            if action is None or isinstance(action, argparse._AppendAction):
                 for list_elem in value:
                     args.append( command_line_key )
                     args.append( str(list_elem) )
-            elif (issubclass(type(action), argparse._StoreAction) and action.nargs in ('+', '*')) or (
+            elif (isinstance(action, argparse._StoreAction) and action.nargs in ('+', '*')) or (
                 type(action.nargs) is int and action.nargs > 1):
                 args.append( command_line_key )
                 for list_elem in value:
@@ -892,12 +886,12 @@ def add_argument(self, *args, **kwargs):
 
     if action.is_positional_arg and env_var:
         raise ValueError("env_var can't be set for a positional arg.")
-    if action.is_config_file_arg and not issubclass(type(action), argparse._StoreAction):
+    if action.is_config_file_arg and not isinstance(action, argparse._StoreAction):
         raise ValueError("arg with is_config_file_arg=True must have "
                          "action='store'")
     if action.is_write_out_config_file_arg:
         error_prefix = "arg with is_write_out_config_file_arg=True "
-        if not issubclass(type(action), argparse._StoreAction):
+        if not isinstance(action, argparse._StoreAction):
             raise ValueError(error_prefix + "must have action='store'")
         if is_config_file_arg:
                 raise ValueError(error_prefix + "can't also have "
