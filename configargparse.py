@@ -184,7 +184,7 @@ class DefaultConfigFileParser(ConfigFileParser):
         """
         r = StringIO()
         for key, value in items.items():
-            if type(value) == list:
+            if isinstance(value, list):
                 # handle special case of lists
                 value = "["+", ".join(map(str, value))+"]"
             r.write("%s = %s\n" % (key, value))
@@ -221,7 +221,7 @@ class YAMLConfigFileParser(ConfigFileParser):
         except Exception as e:
             raise ConfigFileParserException("Couldn't parse config file: %s" % e)
 
-        if type(parsed_obj) != dict:
+        if not isinstance(parsed_obj, dict):
             raise ConfigFileParserException("The config file doesn't appear to "
                 "contain 'key: value' pairs (aka. a YAML mapping). "
                 "yaml.load('%s') returned type '%s' instead of 'dict'." % (
@@ -229,7 +229,7 @@ class YAMLConfigFileParser(ConfigFileParser):
 
         result = OrderedDict()
         for key, value in parsed_obj.items():
-            if type(value) == list:
+            if isinstance(value, list):
                 result[key] = value
             else:
                 result[key] = str(value)
@@ -417,7 +417,7 @@ class ArgumentParser(argparse.ArgumentParser):
         """
         if args is None:
             args = sys.argv[1:]
-        elif type(args) == str:
+        elif isinstance(args, str):
             args = args.split()
         else:
             args = list(args)
@@ -620,7 +620,7 @@ class ArgumentParser(argparse.ArgumentParser):
                                                 action.option_strings):
                         value = getattr(parsed_namespace, action.dest, None)
                         if value is not None:
-                            if type(value) is bool:
+                            if isinstance(value, bool):
                                 value = str(value).lower()
                             config_file_items[config_file_keys[0]] = value
 
@@ -668,20 +668,20 @@ class ArgumentParser(argparse.ArgumentParser):
             else:
                 self.error("Unexpected value for %s: '%s'. Expecting 'true', "
                            "'false', 'yes', or 'no'" % (key, value))
-        elif type(value) == list:
+        elif isinstance(value, list):
             if action is None or isinstance(action, argparse._AppendAction):
                 for list_elem in value:
                     args.append( command_line_key )
                     args.append( str(list_elem) )
             elif (isinstance(action, argparse._StoreAction) and action.nargs in ('+', '*')) or (
-                type(action.nargs) is int and action.nargs > 1):
+                isinstance(action.nargs, int) and action.nargs > 1):
                 args.append( command_line_key )
                 for list_elem in value:
                     args.append( str(list_elem) )
             else:
                 self.error(("%s can't be set to a list '%s' unless its action type is changed "
                             "to 'append' or nargs is set to '*', '+', or > 1") % (key, value))
-        elif type(value) == str:
+        elif isinstance(value, str):
             args.append( command_line_key )
             args.append( value )
         else:
@@ -778,9 +778,9 @@ class ArgumentParser(argparse.ArgumentParser):
                 if key:
                     r.write("  %-19s%s\n" % (key+":", value))
                 else:
-                    if type(value) is str:
+                    if isinstance(value, str):
                         r.write("  %s\n" % value)
-                    elif type(value) is list:
+                    elif isinstance(value, list):
                         r.write("  %s\n" % ' '.join(value))
 
         return r.getvalue()
