@@ -663,8 +663,11 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # handle boolean value
         if action is not None and type(action) in ACTION_TYPES_THAT_DONT_NEED_A_VALUE:
-            if value.lower() in ("true", "false", "yes", "no"):
+            if value.lower() in ("true", "yes"):
                 args.append( command_line_key )
+            elif value.lower() in ("false", "no"):
+                # don't append when set to "false" / "no"
+                pass
             else:
                 self.error("Unexpected value for %s: '%s'. Expecting 'true', "
                            "'false', 'yes', or 'no'" % (key, value))

@@ -462,12 +462,14 @@ class TestBasicUseCases(TestCase):
         self.initParser()
         self.add_arg("--height", env_var = "HEIGHT", required=True)
         self.add_arg("--do-it", dest="x", env_var = "FLAG1", action="store_true")
-        self.add_arg("--dont-do-it", dest="x", env_var = "FLAG2", action="store_false")
+        self.add_arg("--dont-do-it", dest="y", env_var = "FLAG2", action="store_false")
         ns = self.parse("", env_vars = {"HEIGHT": "tall", "FLAG1": "yes"})
         self.assertEqual(ns.height, "tall")
         self.assertEqual(ns.x, True)
+        ns = self.parse("", env_vars = {"HEIGHT": "tall", "FLAG2": "yes"})
+        self.assertEqual(ns.y, False)
         ns = self.parse("", env_vars = {"HEIGHT": "tall", "FLAG2": "no"})
-        self.assertEqual(ns.x, False)
+        self.assertEqual(ns.y, True)
 
         # error should occur when flag arg is given a value
         self.initParser()
@@ -485,6 +487,8 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.verbose, True)
         ns = self.parse("", env_vars = {"HEIGHT": "true", "VERBOSE": "true"})
         self.assertEqual(ns.verbose, True)
+        ns = self.parse("", env_vars = {"HEIGHT": "true", "VERBOSE": "false"})
+        self.assertEqual(ns.verbose, False)
         ns = self.parse("", config_file_contents="--verbose",
                         env_vars = {"HEIGHT": "true"})
         self.assertEqual(ns.verbose, True)
