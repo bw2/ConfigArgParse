@@ -517,7 +517,7 @@ class ArgumentParser(argparse.ArgumentParser):
                     discard_this_key = self._ignore_unknown_config_file_keys or \
                         already_on_command_line(
                             args,
-                            self.get_command_line_key_for_unknown_config_file_setting(key))
+                            [self.get_command_line_key_for_unknown_config_file_setting(key)])
 
                 if not discard_this_key:
                     config_args += self.convert_item_to_command_line_arg(
