@@ -815,8 +815,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 if config_arg_string:
                     config_arg_string = "specified via " + config_arg_string
                 if default_config_files or config_arg_string:
-                    msg += " (%s)." % " or ".join(default_config_files +
-                                                  list(filter(None, [config_arg_string])))
+                    msg += " (%s)." % " or ".join(tuple(default_config_files) +
+                                                  tuple(filter(None, [config_arg_string])))
                 msg += " " + self._config_file_parser.get_syntax_description()
 
         if self._add_env_var_help:
