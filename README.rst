@@ -9,6 +9,8 @@ Python's command line parsing modules such as argparse have very limited
 support for config files and environment variables, so this module
 extends argparse to add these features.
 
+Available on PyPI: http://pypi.python.org/pypi/ConfigArgParse
+
 .. image:: https://travis-ci.org/bw2/ConfigArgParse.svg?branch=master
     :target: https://travis-ci.org/bw2/ConfigArgParse
 
