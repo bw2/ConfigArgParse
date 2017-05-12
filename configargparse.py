@@ -317,8 +317,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 be parsed in order, with the values from each config file
                 taking precedence over pervious ones. This allows an application
                 to look for config files in multiple standard locations such as
-                the install directory, home directory, and current directory. 
-                Also, shell * syntax can be used to specify all conf files in a 
+                the install directory, home directory, and current directory.
+                Also, shell * syntax can be used to specify all conf files in a
                 directory. For exmaple:
                 ["/etc/conf/app_config.ini",
                  "/etc/conf/conf-enabled/*.ini",
@@ -517,7 +517,7 @@ class ArgumentParser(argparse.ArgumentParser):
                     discard_this_key = self._ignore_unknown_config_file_keys or \
                         already_on_command_line(
                             args,
-                            self.get_command_line_key_for_unknown_config_file_setting(key))
+                            [self.get_command_line_key_for_unknown_config_file_setting(key)])
 
                 if not discard_this_key:
                     config_args += self.convert_item_to_command_line_arg(
@@ -622,6 +622,10 @@ class ArgumentParser(argparse.ArgumentParser):
                         if value is not None:
                             if isinstance(value, bool):
                                 value = str(value).lower()
+                            elif callable(action.type):
+                                found = [i for i in range(0, len(existing_command_line_args)-1) if existing_command_line_args[i] in config_file_keys]
+                                if found:
+                                    value = existing_command_line_args[found[-1] + 1]
                             config_file_items[config_file_keys[0]] = value
 
             elif source == _ENV_VAR_SOURCE_KEY:
@@ -663,8 +667,11 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # handle boolean value
         if action is not None and isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
-            if value.lower() in ("true", "false", "yes", "no"):
+            if value.lower() in ("true", "yes"):
                 args.append( command_line_key )
+            elif value.lower() in ("false", "no"):
+                # don't append when set to "false" / "no"
+                pass
             else:
                 self.error("Unexpected value for %s: '%s'. Expecting 'true', "
                            "'false', 'yes', or 'no'" % (key, value))
@@ -696,6 +703,11 @@ class ArgumentParser(argparse.ArgumentParser):
         can be used to set the given action's value in a config file.
         """
         keys = []
+
+        # Do not write out the config options for writing out a config file
+        if getattr(action, 'is_write_out_config_file_arg', None):
+            return keys
+
         for arg in action.option_strings:
             if any([arg.startswith(2*c) for c in self.prefix_chars]):
                 keys += [arg[2:], arg] # eg. for '--bla' return ['bla', '--bla']
@@ -713,7 +725,7 @@ class ArgumentParser(argparse.ArgumentParser):
             command_line_args: List of all args (already split on spaces)
         """
         # open any default config files
-        config_files = [open(f) for files in map(glob.glob, map(os.path.expanduser, self._default_config_files)) 
+        config_files = [open(f) for files in map(glob.glob, map(os.path.expanduser, self._default_config_files))
                         for f in files]
 
         # list actions with is_config_file_arg=True. Its possible there is more
@@ -815,8 +827,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 if config_arg_string:
                     config_arg_string = "specified via " + config_arg_string
                 if default_config_files or config_arg_string:
-                    msg += " (%s)." % " or ".join(default_config_files +
-                                                  list(filter(None, [config_arg_string])))
+                    msg += " (%s)." % " or ".join(tuple(default_config_files) +
+                                                  tuple(filter(None, [config_arg_string])))
                 msg += " " + self._config_file_parser.get_syntax_description()
 
         if self._add_env_var_help:

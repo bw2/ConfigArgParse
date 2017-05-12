@@ -462,12 +462,14 @@ class TestBasicUseCases(TestCase):
         self.initParser()
         self.add_arg("--height", env_var = "HEIGHT", required=True)
         self.add_arg("--do-it", dest="x", env_var = "FLAG1", action="store_true")
-        self.add_arg("--dont-do-it", dest="x", env_var = "FLAG2", action="store_false")
+        self.add_arg("--dont-do-it", dest="y", env_var = "FLAG2", action="store_false")
         ns = self.parse("", env_vars = {"HEIGHT": "tall", "FLAG1": "yes"})
         self.assertEqual(ns.height, "tall")
         self.assertEqual(ns.x, True)
+        ns = self.parse("", env_vars = {"HEIGHT": "tall", "FLAG2": "yes"})
+        self.assertEqual(ns.y, False)
         ns = self.parse("", env_vars = {"HEIGHT": "tall", "FLAG2": "no"})
-        self.assertEqual(ns.x, False)
+        self.assertEqual(ns.y, True)
 
         # error should occur when flag arg is given a value
         self.initParser()
@@ -485,6 +487,8 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.verbose, True)
         ns = self.parse("", env_vars = {"HEIGHT": "true", "VERBOSE": "true"})
         self.assertEqual(ns.verbose, True)
+        ns = self.parse("", env_vars = {"HEIGHT": "true", "VERBOSE": "false"})
+        self.assertEqual(ns.verbose, False)
         ns = self.parse("", config_file_contents="--verbose",
                         env_vars = {"HEIGHT": "true"})
         self.assertEqual(ns.verbose, True)
@@ -612,6 +616,27 @@ class TestMisc(TestCase):
         ns, args = self.parse_known(config_file_contents="arg1 = 3")
         self.assertEqual(getattr(ns, "arg1", ""), "")
 
+    def test_AbbrevConfigFileArgs(self):
+        """Tests that abbreviated values don't get pulled from config file.
+
+        """
+        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=True)
+        temp_cfg.write("a2a = 0.5\n")
+        temp_cfg.write("a3a = 0.5\n")
+        temp_cfg.flush()
+
+        self.initParser()
+
+        self.add_arg('-c', '--config_file', required=False, is_config_file=True,
+                     help='config file path')
+
+        self.add_arg('--hello', type=int, required=False)
+
+        command = '-c {0} --hello 2'.format(temp_cfg.name)
+
+        known, unknown = self.parse_known(command)
+
+        self.assertListEqual(unknown, ['--a2a', '0.5', '--a3a', '0.5'])
 
     def test_FormatHelp(self):
         self.initParser(args_for_setting_config_path=["-c", "--config"],
@@ -643,6 +668,15 @@ class TestMisc(TestCase):
             '--flag \s*Flag help text'
         )
 
+    class CustomClass(object):
+        def __init__(self, name):
+            self.name = name
+
+    @staticmethod
+    def valid_custom(s):
+        if s == "invalid": raise Exception("invalid name")
+        return TestMisc.CustomClass(s)
+
     def testConstructor_WriteOutConfigFileArgs(self):
         # Test constructor args:
         #   args_for_writing_out_config_file
@@ -656,12 +690,14 @@ class TestMisc(TestCase):
         self.add_arg("--config-file-settable-arg", type=int)
         self.add_arg("--config-file-settable-arg2", type=int, default=3)
         self.add_arg("--config-file-settable-flag", action="store_true")
+        self.add_arg("--config-file-settable-custom", type=TestMisc.valid_custom)
         self.add_arg("-l", "--config-file-settable-list", action="append")
 
         # write out a config file
         command_line_args = "-w %s " % cfg_f.name
         command_line_args += "--config-file-settable-arg 1 "
         command_line_args += "--config-file-settable-flag "
+        command_line_args += "--config-file-settable-custom custom_value "
         command_line_args += "-l a -l b -l c -l d "
 
         self.assertFalse(self.parser._exit_method_called)
@@ -672,6 +708,7 @@ class TestMisc(TestCase):
         cfg_f.seek(0)
         expected_config_file_contents = "config-file-settable-arg = 1\n"
         expected_config_file_contents += "config-file-settable-flag = true\n"
+        expected_config_file_contents += "config-file-settable-custom = custom_value\n"
         expected_config_file_contents += "config-file-settable-list = [a, b, c, d]\n"
         expected_config_file_contents += "config-file-settable-arg2 = 3\n"
 
@@ -723,6 +760,49 @@ class TestMisc(TestCase):
                          expected_config_file_contents.strip())
         self.assertRaisesRegex(ValueError, "Couldn't open / for writing:",
                                 self.parse, args = command_line_args + " -w /")
+
+    def testConstructor_WriteOutConfigFileArgsLong(self):
+        """Test config writing with long version of arg
+
+        There was a bug where the long version of the
+        args_for_writing_out_config_file was being dumped into the resultant
+        output config file
+        """
+        # Test constructor args:
+        #   args_for_writing_out_config_file
+        #   write_out_config_file_arg_help_message
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=True)
+        self.initParser(args_for_writing_out_config_file=["--write-config"],
+                        write_out_config_file_arg_help_message="write config")
+
+
+        self.add_arg("-not-config-file-settable")
+        self.add_arg("--config-file-settable-arg", type=int)
+        self.add_arg("--config-file-settable-arg2", type=int, default=3)
+        self.add_arg("--config-file-settable-flag", action="store_true")
+        self.add_arg("-l", "--config-file-settable-list", action="append")
+
+        # write out a config file
+        command_line_args = "--write-config %s " % cfg_f.name
+        command_line_args += "--config-file-settable-arg 1 "
+        command_line_args += "--config-file-settable-flag "
+        command_line_args += "-l a -l b -l c -l d "
+
+        self.assertFalse(self.parser._exit_method_called)
+
+        ns = self.parse(command_line_args)
+        self.assertTrue(self.parser._exit_method_called)
+
+        cfg_f.seek(0)
+        expected_config_file_contents = "config-file-settable-arg = 1\n"
+        expected_config_file_contents += "config-file-settable-flag = true\n"
+        expected_config_file_contents += "config-file-settable-list = [a, b, c, d]\n"
+        expected_config_file_contents += "config-file-settable-arg2 = 3\n"
+
+        self.assertEqual(cfg_f.read().strip(),
+            expected_config_file_contents.strip())
+        self.assertRaisesRegex(ValueError, "Couldn't open / for writing:",
+            self.parse, args = command_line_args + " --write-config /")
 
     def testMethodAliases(self):
         p = self.parser
