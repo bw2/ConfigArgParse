@@ -16,9 +16,9 @@ else:
     from collections import OrderedDict
 
 
-ACTION_TYPES_THAT_DONT_NEED_A_VALUE = set([argparse._StoreTrueAction,
+ACTION_TYPES_THAT_DONT_NEED_A_VALUE = (argparse._StoreTrueAction,
     argparse._StoreFalseAction, argparse._CountAction,
-    argparse._StoreConstAction, argparse._AppendConstAction])
+    argparse._StoreConstAction, argparse._AppendConstAction)
 
 
 # global ArgumentParser instances
@@ -184,7 +184,7 @@ class DefaultConfigFileParser(ConfigFileParser):
         """
         r = StringIO()
         for key, value in items.items():
-            if type(value) == list:
+            if isinstance(value, list):
                 # handle special case of lists
                 value = "["+", ".join(map(str, value))+"]"
             r.write("%s = %s\n" % (key, value))
@@ -221,7 +221,7 @@ class YAMLConfigFileParser(ConfigFileParser):
         except Exception as e:
             raise ConfigFileParserException("Couldn't parse config file: %s" % e)
 
-        if type(parsed_obj) != dict:
+        if not isinstance(parsed_obj, dict):
             raise ConfigFileParserException("The config file doesn't appear to "
                 "contain 'key: value' pairs (aka. a YAML mapping). "
                 "yaml.load('%s') returned type '%s' instead of 'dict'." % (
@@ -229,7 +229,7 @@ class YAMLConfigFileParser(ConfigFileParser):
 
         result = OrderedDict()
         for key, value in parsed_obj.items():
-            if type(value) == list:
+            if isinstance(value, list):
                 result[key] = value
             else:
                 result[key] = str(value)
@@ -417,7 +417,7 @@ class ArgumentParser(argparse.ArgumentParser):
         """
         if args is None:
             args = sys.argv[1:]
-        elif type(args) == str:
+        elif isinstance(args, str):
             args = args.split()
         else:
             args = list(args)
@@ -451,7 +451,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 config_file_keys = self.get_possible_config_keys(a)
                 if config_file_keys and not (a.env_var or a.is_positional_arg
                     or a.is_config_file_arg or a.is_write_out_config_file_arg or
-                    type(a) == argparse._HelpAction):
+                    isinstance(a, argparse._HelpAction)):
                     stripped_config_file_key = config_file_keys[0].strip(
                         self.prefix_chars)
                     a.env_var = (self._auto_env_var_prefix +
@@ -478,7 +478,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # before parsing any config files, check if -h was specified.
         supports_help_arg = any(
-            a for a in self._actions if type(a) == argparse._HelpAction)
+            a for a in self._actions if isinstance(a, argparse._HelpAction))
         skip_config_file_parsing = supports_help_arg and (
             "-h" in args or "--help" in args)
 
@@ -539,7 +539,7 @@ class ArgumentParser(argparse.ArgumentParser):
                     not cares_about_default_value or
                     action.default is None or
                     action.default == SUPPRESS or
-                    type(action) in ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
+                    isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE)):
                 continue
             else:
                 if action.option_strings:
@@ -620,7 +620,7 @@ class ArgumentParser(argparse.ArgumentParser):
                                                 action.option_strings):
                         value = getattr(parsed_namespace, action.dest, None)
                         if value is not None:
-                            if type(value) is bool:
+                            if isinstance(value, bool):
                                 value = str(value).lower()
                             elif callable(action.type):
                                 found = [i for i in range(0, len(existing_command_line_args)-1) if existing_command_line_args[i] in config_file_keys]
@@ -666,7 +666,7 @@ class ArgumentParser(argparse.ArgumentParser):
             command_line_key = action.option_strings[-1]
 
         # handle boolean value
-        if action is not None and type(action) in ACTION_TYPES_THAT_DONT_NEED_A_VALUE:
+        if action is not None and isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
             if value.lower() in ("true", "yes"):
                 args.append( command_line_key )
             elif value.lower() in ("false", "no"):
@@ -675,20 +675,20 @@ class ArgumentParser(argparse.ArgumentParser):
             else:
                 self.error("Unexpected value for %s: '%s'. Expecting 'true', "
                            "'false', 'yes', or 'no'" % (key, value))
-        elif type(value) == list:
-            if action is None or type(action) == argparse._AppendAction:
+        elif isinstance(value, list):
+            if action is None or isinstance(action, argparse._AppendAction):
                 for list_elem in value:
                     args.append( command_line_key )
                     args.append( str(list_elem) )
-            elif (type(action) == argparse._StoreAction and action.nargs in ('+', '*')) or (
-                type(action.nargs) is int and action.nargs > 1):
+            elif (isinstance(action, argparse._StoreAction) and action.nargs in ('+', '*')) or (
+                isinstance(action.nargs, int) and action.nargs > 1):
                 args.append( command_line_key )
                 for list_elem in value:
                     args.append( str(list_elem) )
             else:
                 self.error(("%s can't be set to a list '%s' unless its action type is changed "
                             "to 'append' or nargs is set to '*', '+', or > 1") % (key, value))
-        elif type(value) == str:
+        elif isinstance(value, str):
             args.append( command_line_key )
             args.append( value )
         else:
@@ -790,9 +790,9 @@ class ArgumentParser(argparse.ArgumentParser):
                 if key:
                     r.write("  %-19s%s\n" % (key+":", value))
                 else:
-                    if type(value) is str:
+                    if isinstance(value, str):
                         r.write("  %s\n" % value)
-                    elif type(value) is list:
+                    elif isinstance(value, list):
                         r.write("  %s\n" % ' '.join(value))
 
         return r.getvalue()
@@ -898,12 +898,12 @@ def add_argument(self, *args, **kwargs):
 
     if action.is_positional_arg and env_var:
         raise ValueError("env_var can't be set for a positional arg.")
-    if action.is_config_file_arg and type(action) != argparse._StoreAction:
+    if action.is_config_file_arg and not isinstance(action, argparse._StoreAction):
         raise ValueError("arg with is_config_file_arg=True must have "
                          "action='store'")
     if action.is_write_out_config_file_arg:
         error_prefix = "arg with is_write_out_config_file_arg=True "
-        if type(action) != argparse._StoreAction:
+        if not isinstance(action, argparse._StoreAction):
             raise ValueError(error_prefix + "must have action='store'")
         if is_config_file_arg:
                 raise ValueError(error_prefix + "can't also have "
