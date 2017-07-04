@@ -662,7 +662,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # Make list-string into list.
         element_capture = re.match('\[(.*)\]', value)
-        value = [val.strip() for val in element_capture.group(1).split(',')] if element_capture is not None else value
+        value = [val.strip() for val in element_capture.group(1).split(',')] if element_capture else value
 
         if action is None:
             command_line_key = \
