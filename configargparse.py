@@ -659,6 +659,11 @@ class ArgumentParser(argparse.ArgumentParser):
             value: parsed value of type string or list
         """
         args = []
+
+        # Make list-string into list.
+        element_capture = re.match('\[(.*)\]', value)
+        value = [val.strip() for val in element_capture.group(1).split(',')] if element_capture is not None else value
+
         if action is None:
             command_line_key = \
                 self.get_command_line_key_for_unknown_config_file_setting(key)
