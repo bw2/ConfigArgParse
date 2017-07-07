@@ -464,7 +464,11 @@ class ArgumentParser(argparse.ArgumentParser):
                 and not already_on_command_line(args, a.option_strings)]
         for action in actions_with_env_var_values:
             key = action.env_var
-            value = env_vars[key]  # TODO parse env var values here to allow lists?
+            value = env_vars[key]
+            # Make list-string into list.
+            element_capture = re.match('\[(.*)\]', value)
+            if element_capture:
+                value = [val.strip() for val in element_capture.group(1).split(',') if val.strip()]
             env_var_args += self.convert_item_to_command_line_arg(
                 action, key, value)
 
@@ -659,6 +663,7 @@ class ArgumentParser(argparse.ArgumentParser):
             value: parsed value of type string or list
         """
         args = []
+
         if action is None:
             command_line_key = \
                 self.get_command_line_key_for_unknown_config_file_setting(key)

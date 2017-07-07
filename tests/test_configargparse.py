@@ -520,6 +520,21 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.arg4, "arg4_value")
         self.assertEqual(ns.arg4_more, "magic")
 
+    def testEnvVarLists(self):
+        self.initParser()
+        self.add_arg("-x", "--arg2", env_var="TEST2")
+        self.add_arg("-y", "--arg3", env_var="TEST3", type=int)
+        self.add_arg("-z", "--arg4", env_var="TEST4", nargs="+")
+        self.add_arg("-u", "--arg5", env_var="TEST5", nargs="+", type=int)
+        ns = self.parse("", env_vars={"TEST2": "22",
+                                      "TEST3": "22",
+                                      "TEST4": "[Shell, someword, anotherword]",
+                                      "TEST5": "[22, 99, 33]"})
+        self.assertEqual(ns.arg2, "22")
+        self.assertEqual(ns.arg3, 22)
+        self.assertEqual(ns.arg4, ['Shell', 'someword', 'anotherword'])
+        self.assertEqual(ns.arg5, [22, 99, 33])
+
 class TestMisc(TestCase):
     # TODO test different action types with config file, env var
 
