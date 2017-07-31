@@ -529,7 +529,8 @@ class TestBasicUseCases(TestCase):
         ns = self.parse("", env_vars={"TEST2": "22",
                                       "TEST3": "22",
                                       "TEST4": "[Shell, someword, anotherword]",
-                                      "TEST5": "[22, 99, 33]"})
+                                      "TEST5": "[22, 99, 33]",
+                                      })
         self.assertEqual(ns.arg2, "22")
         self.assertEqual(ns.arg3, 22)
         self.assertEqual(ns.arg4, ['Shell', 'someword', 'anotherword'])
