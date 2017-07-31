@@ -526,15 +526,21 @@ class TestBasicUseCases(TestCase):
         self.add_arg("-y", "--arg3", env_var="TEST3", type=int)
         self.add_arg("-z", "--arg4", env_var="TEST4", nargs="+")
         self.add_arg("-u", "--arg5", env_var="TEST5", nargs="+", type=int)
+        self.add_arg("--arg6", env_var="TEST6")
+        self.add_arg("--arg7", env_var="TEST7", action="append")
         ns = self.parse("", env_vars={"TEST2": "22",
                                       "TEST3": "22",
                                       "TEST4": "[Shell, someword, anotherword]",
                                       "TEST5": "[22, 99, 33]",
+                                      "TEST6": "[value6.1, value6.2, value6.3]",
+                                      "TEST7": "[value7.1, value7.2, value7.3]",
                                       })
         self.assertEqual(ns.arg2, "22")
         self.assertEqual(ns.arg3, 22)
         self.assertEqual(ns.arg4, ['Shell', 'someword', 'anotherword'])
         self.assertEqual(ns.arg5, [22, 99, 33])
+        self.assertEqual(ns.arg6, "[value6.1, value6.2, value6.3]")
+        self.assertEqual(ns.arg7, ["value7.1", "value7.2", "value7.3"])
 
 class TestMisc(TestCase):
     # TODO test different action types with config file, env var
