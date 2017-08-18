@@ -492,7 +492,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # open the config file(s)
         config_streams = []
-        if config_file_contents:
+        if config_file_contents is not None:
             stream = StringIO(config_file_contents)
             stream.name = "method arg"
             config_streams = [stream]
