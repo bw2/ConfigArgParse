@@ -465,7 +465,7 @@ class TestBasicUseCases(TestCase):
         self.initParser(ignore_unknown_config_file_keys=False)
         ns, args = self.parse_known(args="-x 1", config_file_contents="bla=3",
             env_vars={"bla": "2"})
-        self.assertEqual(set(args), {"--bla", "3", "-x", "1"})
+        self.assertEqual(set(args), set(["--bla", "3", "-x", "1"]))
 
     def testConfigOrEnvValueErrors(self):
         # error should occur when a flag arg is set to something other than "true" or "false"
