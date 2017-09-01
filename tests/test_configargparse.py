@@ -462,32 +462,32 @@ class TestBasicUseCases(TestCase):
         store_true_env_var_name = "STORE_TRUE"
         self.add_arg("--boolean_store_true", action="store_true", env_var=store_true_env_var_name)
 
-        result_namespace = self.parse(config_file_contents="""boolean_store_true = 1""")
+        result_namespace = self.parse("", config_file_contents="""boolean_store_true = 1""")
         self.assertTrue(result_namespace.boolean_store_true)
 
-        result_namespace = self.parse(config_file_contents="""boolean_store_true = 0""")
+        result_namespace = self.parse("", config_file_contents="""boolean_store_true = 0""")
         self.assertFalse(result_namespace.boolean_store_true)
 
-        result_namespace = self.parse(env_vars={store_true_env_var_name: "1"})
+        result_namespace = self.parse("", env_vars={store_true_env_var_name: "1"})
         self.assertTrue(result_namespace.boolean_store_true)
 
-        result_namespace = self.parse(env_vars={store_true_env_var_name: "0"})
+        result_namespace = self.parse("", env_vars={store_true_env_var_name: "0"})
         self.assertFalse(result_namespace.boolean_store_true)
 
         self.initParser()
         store_false_env_var_name = "STORE_FALSE"
         self.add_arg("--boolean_store_false", action="store_false", env_var=store_false_env_var_name)
 
-        result_namespace = self.parse(config_file_contents="""boolean_store_false = 1""")
+        result_namespace = self.parse("", config_file_contents="""boolean_store_false = 1""")
         self.assertFalse(result_namespace.boolean_store_false)
 
-        result_namespace = self.parse(config_file_contents="""boolean_store_false = 0""")
+        result_namespace = self.parse("", config_file_contents="""boolean_store_false = 0""")
         self.assertTrue(result_namespace.boolean_store_false)
 
-        result_namespace = self.parse(env_vars={store_false_env_var_name: "1"})
+        result_namespace = self.parse("", env_vars={store_false_env_var_name: "1"})
         self.assertFalse(result_namespace.boolean_store_false)
 
-        result_namespace = self.parse(env_vars={store_false_env_var_name: "0"})
+        result_namespace = self.parse("", env_vars={store_false_env_var_name: "0"})
         self.assertTrue(result_namespace.boolean_store_false)
 
     def testConfigOrEnvValueErrors(self):
