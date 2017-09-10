@@ -466,9 +466,10 @@ class ArgumentParser(argparse.ArgumentParser):
             key = action.env_var
             value = env_vars[key]
             # Make list-string into list.
-            element_capture = re.match('\[(.*)\]', value)
-            if element_capture:
-                value = [val.strip() for val in element_capture.group(1).split(',') if val.strip()]
+            if action.nargs or isinstance(action, argparse._AppendAction):
+                element_capture = re.match('\[(.*)\]', value)
+                if element_capture:
+                    value = [val.strip() for val in element_capture.group(1).split(',') if val.strip()]
             env_var_args += self.convert_item_to_command_line_arg(
                 action, key, value)
 
@@ -970,4 +971,3 @@ ArgumentParser.parse_known = ArgumentParser.parse_known_args
 RawFormatter = RawDescriptionHelpFormatter
 DefaultsFormatter = ArgumentDefaultsHelpFormatter
 DefaultsRawFormatter = ArgumentDefaultsRawHelpFormatter
-
