@@ -673,14 +673,14 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # handle boolean value
         if action is not None and isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
-            if value.lower() in ("true", "yes"):
+            if value.lower() in ("true", "yes", "1"):
                 args.append( command_line_key )
-            elif value.lower() in ("false", "no"):
+            elif value.lower() in ("false", "no", "0"):
                 # don't append when set to "false" / "no"
                 pass
             else:
                 self.error("Unexpected value for %s: '%s'. Expecting 'true', "
-                           "'false', 'yes', or 'no'" % (key, value))
+                           "'false', 'yes', 'no', '1' or '0'" % (key, value))
         elif isinstance(value, list):
             if action is None or isinstance(action, argparse._AppendAction):
                 for list_elem in value:
