@@ -270,6 +270,16 @@ class TestBasicUseCases(TestCase):
     def testBasicCase2_WithGroups(self):
         self.testBasicCase2(use_groups=True)
 
+    def testPositionalAndConfigVarLists(self):
+        self.initParser()
+        self.add_arg("a")
+        self.add_arg("-x", "--arg", nargs="+")
+
+        ns = self.parse("positional_value", config_file_contents="""arg = [Shell, someword, anotherword]""")
+
+        self.assertEqual(ns.arg, ['Shell', 'someword', 'anotherword'])
+        self.assertEqual(ns.a, "positional_value")
+
 
     def testMutuallyExclusiveArgs(self):
         config_file = tempfile.NamedTemporaryFile(mode="w", delete=True)
@@ -455,7 +465,7 @@ class TestBasicUseCases(TestCase):
         self.initParser(ignore_unknown_config_file_keys=False)
         ns, args = self.parse_known(args="-x 1", config_file_contents="bla=3",
             env_vars={"bla": "2"})
-        self.assertListEqual(args, ["--bla", "3", "-x", "1"])
+        self.assertEqual(set(args), set(["--bla", "3", "-x", "1"]))
 
     def testBooleanValuesCanBeExpressedAsNumbers(self):
         self.initParser()
@@ -574,6 +584,16 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.arg5, [22, 99, 33])
         self.assertEqual(ns.arg6, "[value6.1, value6.2, value6.3]")
         self.assertEqual(ns.arg7, ["value7.1", "value7.2", "value7.3"])
+
+    def testPositionalAndEnvVarLists(self):
+        self.initParser()
+        self.add_arg("a")
+        self.add_arg("-x", "--arg", env_var="TEST", nargs="+")
+
+        ns = self.parse("positional_value", env_vars={"TEST": "[Shell, someword, anotherword]"})
+
+        self.assertEqual(ns.arg, ['Shell', 'someword', 'anotherword'])
+        self.assertEqual(ns.a, "positional_value")
 
 class TestMisc(TestCase):
     # TODO test different action types with config file, env var
