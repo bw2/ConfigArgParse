@@ -437,13 +437,14 @@ class ArgumentParser(argparse.ArgumentParser):
             key = action.env_var
             value = env_vars[key]
             # Make list-string into list.
-            element_capture = re.match('\[(.*)\]', value)
-            if element_capture:
-                value = [val.strip() for val in element_capture.group(1).split(',') if val.strip()]
+            if action.nargs or isinstance(action, argparse._AppendAction):
+                element_capture = re.match('\[(.*)\]', value)
+                if element_capture:
+                    value = [val.strip() for val in element_capture.group(1).split(',') if val.strip()]
             env_var_args += self.convert_item_to_command_line_arg(
                 action, key, value)
 
-        args = env_var_args + args
+        args = args + env_var_args
 
         if env_var_args:
             self._source_to_settings[_ENV_VAR_SOURCE_KEY] = OrderedDict(
@@ -463,7 +464,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # open the config file(s)
         config_streams = []
-        if config_file_contents:
+        if config_file_contents is not None:
             stream = StringIO(config_file_contents)
             stream.name = "method arg"
             config_streams = [stream]
@@ -502,7 +503,7 @@ class ArgumentParser(argparse.ArgumentParser):
                         self._source_to_settings[source_key] = OrderedDict()
                     self._source_to_settings[source_key][key] = (action, value)
 
-            args = config_args + args
+            args = args + config_args
 
 
         # save default settings for use by print_values()
@@ -643,14 +644,14 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # handle boolean value
         if action is not None and isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
-            if value.lower() in ("true", "yes"):
+            if value.lower() in ("true", "yes", "1"):
                 args.append( command_line_key )
-            elif value.lower() in ("false", "no"):
+            elif value.lower() in ("false", "no", "0"):
                 # don't append when set to "false" / "no"
                 pass
             else:
                 self.error("Unexpected value for %s: '%s'. Expecting 'true', "
-                           "'false', 'yes', or 'no'" % (key, value))
+                           "'false', 'yes', 'no', '1' or '0'" % (key, value))
         elif isinstance(value, list):
             if action is None or isinstance(action, argparse._AppendAction):
                 for list_elem in value:
@@ -941,4 +942,3 @@ ArgumentParser.parse_known = ArgumentParser.parse_known_args
 RawFormatter = RawDescriptionHelpFormatter
 DefaultsFormatter = ArgumentDefaultsHelpFormatter
 DefaultsRawFormatter = ArgumentDefaultsRawHelpFormatter
-

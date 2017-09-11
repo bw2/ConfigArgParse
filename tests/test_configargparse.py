@@ -270,6 +270,16 @@ class TestBasicUseCases(TestCase):
     def testBasicCase2_WithGroups(self):
         self.testBasicCase2(use_groups=True)
 
+    def testPositionalAndConfigVarLists(self):
+        self.initParser()
+        self.add_arg("a")
+        self.add_arg("-x", "--arg", nargs="+")
+
+        ns = self.parse("positional_value", config_file_contents="""arg = [Shell, someword, anotherword]""")
+
+        self.assertEqual(ns.arg, ['Shell', 'someword', 'anotherword'])
+        self.assertEqual(ns.a, "positional_value")
+
 
     def testMutuallyExclusiveArgs(self):
         config_file = tempfile.NamedTemporaryFile(mode="w", delete=True)
@@ -455,7 +465,40 @@ class TestBasicUseCases(TestCase):
         self.initParser(ignore_unknown_config_file_keys=False)
         ns, args = self.parse_known(args="-x 1", config_file_contents="bla=3",
             env_vars={"bla": "2"})
-        self.assertListEqual(args, ["--bla", "3", "-x", "1"])
+        self.assertEqual(set(args), set(["--bla", "3", "-x", "1"]))
+
+    def testBooleanValuesCanBeExpressedAsNumbers(self):
+        self.initParser()
+        store_true_env_var_name = "STORE_TRUE"
+        self.add_arg("--boolean_store_true", action="store_true", env_var=store_true_env_var_name)
+
+        result_namespace = self.parse("", config_file_contents="""boolean_store_true = 1""")
+        self.assertTrue(result_namespace.boolean_store_true)
+
+        result_namespace = self.parse("", config_file_contents="""boolean_store_true = 0""")
+        self.assertFalse(result_namespace.boolean_store_true)
+
+        result_namespace = self.parse("", env_vars={store_true_env_var_name: "1"})
+        self.assertTrue(result_namespace.boolean_store_true)
+
+        result_namespace = self.parse("", env_vars={store_true_env_var_name: "0"})
+        self.assertFalse(result_namespace.boolean_store_true)
+
+        self.initParser()
+        store_false_env_var_name = "STORE_FALSE"
+        self.add_arg("--boolean_store_false", action="store_false", env_var=store_false_env_var_name)
+
+        result_namespace = self.parse("", config_file_contents="""boolean_store_false = 1""")
+        self.assertFalse(result_namespace.boolean_store_false)
+
+        result_namespace = self.parse("", config_file_contents="""boolean_store_false = 0""")
+        self.assertTrue(result_namespace.boolean_store_false)
+
+        result_namespace = self.parse("", env_vars={store_false_env_var_name: "1"})
+        self.assertFalse(result_namespace.boolean_store_false)
+
+        result_namespace = self.parse("", env_vars={store_false_env_var_name: "0"})
+        self.assertTrue(result_namespace.boolean_store_false)
 
     def testConfigOrEnvValueErrors(self):
         # error should occur when a flag arg is set to something other than "true" or "false"
@@ -475,7 +518,7 @@ class TestBasicUseCases(TestCase):
         self.initParser()
         self.add_arg("-v", "--verbose", env_var="VERBOSE", action="store_true")
         self.assertParseArgsRaises("Unexpected value for VERBOSE: 'bla'. "
-                                   "Expecting 'true', 'false', 'yes', or 'no'",
+                                   "Expecting 'true', 'false', 'yes', 'no', '1' or '0'",
             env_vars={"VERBOSE" : "bla"})
         ns = self.parse("",
                         config_file_contents="verbose=true",
@@ -526,14 +569,31 @@ class TestBasicUseCases(TestCase):
         self.add_arg("-y", "--arg3", env_var="TEST3", type=int)
         self.add_arg("-z", "--arg4", env_var="TEST4", nargs="+")
         self.add_arg("-u", "--arg5", env_var="TEST5", nargs="+", type=int)
+        self.add_arg("--arg6", env_var="TEST6")
+        self.add_arg("--arg7", env_var="TEST7", action="append")
         ns = self.parse("", env_vars={"TEST2": "22",
                                       "TEST3": "22",
                                       "TEST4": "[Shell, someword, anotherword]",
-                                      "TEST5": "[22, 99, 33]"})
+                                      "TEST5": "[22, 99, 33]",
+                                      "TEST6": "[value6.1, value6.2, value6.3]",
+                                      "TEST7": "[value7.1, value7.2, value7.3]",
+                                      })
         self.assertEqual(ns.arg2, "22")
         self.assertEqual(ns.arg3, 22)
         self.assertEqual(ns.arg4, ['Shell', 'someword', 'anotherword'])
         self.assertEqual(ns.arg5, [22, 99, 33])
+        self.assertEqual(ns.arg6, "[value6.1, value6.2, value6.3]")
+        self.assertEqual(ns.arg7, ["value7.1", "value7.2", "value7.3"])
+
+    def testPositionalAndEnvVarLists(self):
+        self.initParser()
+        self.add_arg("a")
+        self.add_arg("-x", "--arg", env_var="TEST", nargs="+")
+
+        ns = self.parse("positional_value", env_vars={"TEST": "[Shell, someword, anotherword]"})
+
+        self.assertEqual(ns.arg, ['Shell', 'someword', 'anotherword'])
+        self.assertEqual(ns.a, "positional_value")
 
 class TestMisc(TestCase):
     # TODO test different action types with config file, env var
