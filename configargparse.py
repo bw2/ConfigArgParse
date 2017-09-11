@@ -337,7 +337,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         argparse.ArgumentParser.__init__(self, **kwargs)
 
-        # parse the additionial args
+        # parse the additional args
         if config_file_parser_class is None:
             self._config_file_parser = DefaultConfigFileParser()
         else:
