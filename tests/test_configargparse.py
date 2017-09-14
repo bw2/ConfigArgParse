@@ -1,11 +1,15 @@
 import argparse
 import configargparse
-import functools
 import inspect
 import logging
 import sys
 import tempfile
 import types
+
+try:
+    import mock
+except ImportError:
+    from unittest import mock
 
 if sys.version_info < (2, 7):
     import unittest2 as unittest
@@ -601,6 +605,14 @@ class TestMisc(TestCase):
     """Test edge cases"""
     def setUp(self):
         self.initParser(args_for_setting_config_path=[])
+
+    @mock.patch('argparse.ArgumentParser.__init__')
+    def testKwrgsArePassedToArgParse(self, argparse_init):
+        kwargs_for_argparse = {"allow_abbrev": False, "whatever_other_arg": "something"}
+
+        parser = configargparse.ArgumentParser(add_config_file_help=False, **kwargs_for_argparse)
+
+        argparse_init.assert_called_with(parser, **kwargs_for_argparse)
 
     def testGlobalInstances(self, name=None):
         p = configargparse.getArgumentParser(name, prog="prog", usage="test")

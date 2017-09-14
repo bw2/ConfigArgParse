@@ -266,41 +266,24 @@ class ArgumentParser(argparse.ArgumentParser):
     """
 
     def __init__(self,
-        prog=None,
-        usage=None,
-        description=None,
-        epilog=None,
-        version=None,
-        parents=[],
-        formatter_class=argparse.HelpFormatter,
-        prefix_chars='-',
-        fromfile_prefix_chars=None,
-        argument_default=None,
-        conflict_handler='error',
-        add_help=True,
-
         add_config_file_help=True,
         add_env_var_help=True,
-
         auto_env_var_prefix=None,
-
         default_config_files=[],
         ignore_unknown_config_file_keys=False,
         config_file_parser_class=DefaultConfigFileParser,
-
         args_for_setting_config_path=[],
         config_arg_is_required=False,
         config_arg_help_message="config file path",
-
         args_for_writing_out_config_file=[],
         write_out_config_file_arg_help_message="takes the current command line "
             "args and writes them out to a config file at the given path, then "
             "exits",
-        allow_abbrev=True,  # new in python 3.5
+        **kwargs
         ):
 
-        """Supports all the same args as the argparse.ArgumentParser
-        constructor, as well as the following additional args.
+        """Supports args of the argparse.ArgumentParser constructor
+        as **kwargs, as well as the following additional args.
 
         Additional Args:
             add_config_file_help: Whether to add a description of config file
@@ -347,26 +330,14 @@ class ArgumentParser(argparse.ArgumentParser):
                 (eg. ["-w", "--write-out-config-file"]). Default: []
             write_out_config_file_arg_help_message: The help message to use for
                 the args in args_for_writing_out_config_file.
-            allow_abbrev: Allows long options to be abbreviated if the
-                abbreviation is unambiguous. Default: True
         """
         self._add_config_file_help = add_config_file_help
         self._add_env_var_help = add_env_var_help
         self._auto_env_var_prefix = auto_env_var_prefix
 
-        # extract kwargs that can be passed to the super constructor
-        kwargs_for_super = dict((k, v) for k, v in locals().items() if k in [
-            "prog", "usage", "description", "epilog", "version", "parents",
-            "formatter_class", "prefix_chars", "fromfile_prefix_chars",
-            "argument_default", "conflict_handler", "add_help"])
-        if sys.version_info >= (3, 3) and "version" in kwargs_for_super:
-            del kwargs_for_super["version"]  # version arg deprecated in v3.3
-        if sys.version_info >= (3, 5):
-            kwargs_for_super["allow_abbrev"] = allow_abbrev  # new option in v3.5
+        argparse.ArgumentParser.__init__(self, **kwargs)
 
-        argparse.ArgumentParser.__init__(self, **kwargs_for_super)
-
-        # parse the additionial args
+        # parse the additional args
         if config_file_parser_class is None:
             self._config_file_parser = DefaultConfigFileParser()
         else:
