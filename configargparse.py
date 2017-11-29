@@ -272,6 +272,7 @@ class ArgumentParser(argparse.ArgumentParser):
         default_config_files=[],
         ignore_unknown_config_file_keys=False,
         config_file_parser_class=DefaultConfigFileParser,
+        user_config_file_suffix_to_append="",
         args_for_setting_config_path=[],
         config_arg_is_required=False,
         config_arg_help_message="config file path",
@@ -315,6 +316,8 @@ class ArgumentParser(argparse.ArgumentParser):
             config_file_parser_class: configargparse.ConfigFileParser subclass
                 which determines the config file format. configargparse comes
                 with DefaultConfigFileParser and YAMLConfigFileParser.
+            config_file_suffix_to_append: A string suffix to append to config
+                files provided as arguments. Default: ""
             args_for_setting_config_path: A list of one or more command line
                 args to be used for specifying the config file path
                 (eg. ["-c", "--config-file"]). Default: []
@@ -334,6 +337,7 @@ class ArgumentParser(argparse.ArgumentParser):
         self._add_config_file_help = add_config_file_help
         self._add_env_var_help = add_env_var_help
         self._auto_env_var_prefix = auto_env_var_prefix
+        self.user_config_file_suffix_to_append = user_config_file_suffix_to_append
 
         argparse.ArgumentParser.__init__(self, **kwargs)
 
@@ -539,6 +543,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 # check if the user specified this arg on the commandline
                 output_file_path = getattr(namespace, action.dest, None)
                 if output_file_path:
+                    output_file_path += self.user_config_file_suffix_to_append
                     # validate the output file path
                     try:
                         with open(output_file_path, "w") as output_file:
@@ -738,6 +743,8 @@ class ArgumentParser(argparse.ArgumentParser):
 
             if not user_config_file:
                 continue
+
+            user_config_file += self.user_config_file_suffix_to_append
             # validate the user-provided config file path
             user_config_file = os.path.expanduser(user_config_file)
             if not os.path.isfile(user_config_file):
