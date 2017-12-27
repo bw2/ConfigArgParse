@@ -531,34 +531,43 @@ class ArgumentParser(argparse.ArgumentParser):
         namespace, unknown_args = argparse.ArgumentParser.parse_known_args(
             self, args=args, namespace=namespace)
         # handle any args that have is_write_out_config_file_arg set to true
-        user_write_out_config_file_arg_actions = [a for a in self._actions
-            if getattr(a, "is_write_out_config_file_arg", False)]
-        if user_write_out_config_file_arg_actions:
-            output_file_paths = []
-            for action in user_write_out_config_file_arg_actions:
-                # check if the user specified this arg on the commandline
-                output_file_path = getattr(namespace, action.dest, None)
-                if output_file_path:
-                    # validate the output file path
-                    try:
-                        with open(output_file_path, "w") as output_file:
-                            output_file_paths.append(output_file_path)
-                    except IOError as e:
-                        raise ValueError("Couldn't open %s for writing: %s" % (
-                            output_file_path, e))
-
-            if output_file_paths:
-                # generate the config file contents
-                config_items = self.get_items_for_config_file_output(
-                    self._source_to_settings, namespace)
-                file_contents = self._config_file_parser.serialize(config_items)
-                for output_file_path in output_file_paths:
-                    with open(output_file_path, "w") as output_file:
-                        output_file.write(file_contents)
-                if len(output_file_paths) == 1:
-                    output_file_paths = output_file_paths[0]
-                self.exit(0, "Wrote config file to " + str(output_file_paths))
+        # check if the user specified this arg on the commandline
+        output_file_paths = [getattr(namespace, a.dest, None) for a in self._actions
+                             if getattr(a, "is_write_out_config_file_arg", False)]
+        output_file_paths = [a for a in output_file_paths if a is not None]
+        self.write_config_file(namespace, output_file_paths, exit_after=True)
         return namespace, unknown_args
+
+    def write_config_file(self, parsed_namespace, output_file_paths, exit_after=False):
+        """Write the given settings to output files.
+
+        Args:
+            parsed_namespace: namespace object created within parse_known_args()
+            output_file_paths: any number of file paths to write the config to
+            exit_after: whether to exit the program after writing the config files
+        """
+        for output_file_path in output_file_paths:
+            # validate the output file path
+            try:
+                with open(output_file_path, "w") as output_file:
+                    pass
+            except IOError as e:
+                raise ValueError("Couldn't open %s for writing: %s" % (
+                    output_file_path, e))
+        if output_file_paths:
+            # generate the config file contents
+            config_items = self.get_items_for_config_file_output(
+                self._source_to_settings, parsed_namespace)
+            file_contents = self._config_file_parser.serialize(config_items)
+            for output_file_path in output_file_paths:
+                with open(output_file_path, "w") as output_file:
+                    output_file.write(file_contents)
+            message = "Wrote config file to " + ", ".join(output_file_paths)
+            if exit_after:
+                self.exit(0, message)
+            else:
+                print(message)
+
 
     def get_command_line_key_for_unknown_config_file_setting(self, key):
         """Compute a commandline arg key to be used for a config file setting
