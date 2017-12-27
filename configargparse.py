@@ -532,11 +532,10 @@ class ArgumentParser(argparse.ArgumentParser):
             self, args=args, namespace=namespace)
         # handle any args that have is_write_out_config_file_arg set to true
         # check if the user specified this arg on the commandline
-        user_write_out_config_file_arg_values = list(filter(None,
-            (getattr(namespace, a.dest, None) for a in self._actions
-            if getattr(a, "is_write_out_config_file_arg", False))))
-        self.write_config_file(namespace, user_write_out_config_file_arg_values,
-                               exit_after=True)
+        output_file_paths = [getattr(namespace, a.dest, None) for a in self._actions
+                             if getattr(a, "is_write_out_config_file_arg", False)]
+        output_file_paths = [a for a in output_file_paths if a is not None]
+        self.write_config_file(namespace, output_file_paths, exit_after=True)
         return namespace, unknown_args
 
     def write_config_file(self, parsed_namespace, output_file_paths, exit_after=False):
@@ -563,9 +562,7 @@ class ArgumentParser(argparse.ArgumentParser):
             for output_file_path in output_file_paths:
                 with open(output_file_path, "w") as output_file:
                     output_file.write(file_contents)
-            message = "Wrote config file to " + str(
-                output_file_paths[0] if len(output_file_paths) == 1 else
-                output_file_paths)
+            message = "Wrote config file to " + ", ".join(output_file_paths)
             if exit_after:
                 self.exit(0, message)
             else:
