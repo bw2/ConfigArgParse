@@ -422,6 +422,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 config_file_keys = self.get_possible_config_keys(a)
                 if config_file_keys and not (a.env_var or a.is_positional_arg
                     or a.is_config_file_arg or a.is_write_out_config_file_arg or
+                    isinstance(a, argparse._VersionAction) or
                     isinstance(a, argparse._HelpAction)):
                     stripped_config_file_key = config_file_keys[0].strip(
                         self.prefix_chars)
