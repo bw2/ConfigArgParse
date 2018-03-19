@@ -72,14 +72,6 @@ install_requires = []
 tests_require = [
     'PyYAML',
 ]
-if sys.version_info < (2, 7):
-    install_requires.extend([
-        'argparse',
-        'ordereddict',
-    ])
-    tests_require.extend([
-        'unittest2',
-    ])
 
 
 setup(
@@ -102,11 +94,8 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: Implementation :: CPython',

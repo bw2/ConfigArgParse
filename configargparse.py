@@ -4,16 +4,12 @@ import os
 import re
 import sys
 import types
+from collections import OrderedDict
 
 if sys.version_info >= (3, 0):
     from io import StringIO
 else:
     from StringIO import StringIO
-
-if sys.version_info < (2, 7):
-    from ordereddict import OrderedDict
-else:
-    from collections import OrderedDict
 
 
 ACTION_TYPES_THAT_DONT_NEED_A_VALUE = (argparse._StoreTrueAction,

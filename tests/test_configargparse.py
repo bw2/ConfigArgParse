@@ -5,16 +5,12 @@ import logging
 import sys
 import tempfile
 import types
+import unittest
 
 try:
     import mock
 except ImportError:
     from unittest import mock
-
-if sys.version_info < (2, 7):
-    import unittest2 as unittest
-else:
-    import unittest
 
 if sys.version_info >= (3, 0):
     from io import StringIO
@@ -80,14 +76,14 @@ class TestBasicUseCases(TestCase):
 
         # make sure required args are enforced
         self.assertParseArgsRaises("too few arg"
-            if sys.version_info < (3,3) else
+            if sys.version_info.major < 3 else
             "the following arguments are required",  args="")
         self.assertParseArgsRaises("argument -y/--arg-y is required"
-            if sys.version_info < (3,3) else
+            if sys.version_info.major < 3 else
             "the following arguments are required: -y/--arg-y",
             args="-x --arg-z 11 file1.txt")
         self.assertParseArgsRaises("argument --arg-z is required"
-            if sys.version_info < (3,3) else
+            if sys.version_info.major < 3 else
             "the following arguments are required: --arg-z",
             args="file1.txt file2.txt file3.txt -x -y 1")
 
@@ -171,7 +167,7 @@ class TestBasicUseCases(TestCase):
 
         # make sure required args are enforced
         self.assertParseArgsRaises("too few arg"
-                                   if sys.version_info < (3,3) else
+                                   if sys.version_info.major < 3 else
                                    "the following arguments are required: vcf, -g/--my-cfg-file",
                                    args="--genome hg19")
         self.assertParseArgsRaises("not found: file.txt", args="-g file.txt")
@@ -444,14 +440,14 @@ class TestBasicUseCases(TestCase):
 
         # -x is not a long arg so can't be set via config file
         self.assertParseArgsRaises("argument -x is required"
-                                   if sys.version_info < (3,3) else
+                                   if sys.version_info.major < 3 else
                                    "the following arguments are required: -x, --y",
                                    config_file_contents="-x 3")
         self.assertParseArgsRaises("invalid float value: 'abc'",
                                    args="-x 5",
                                    config_file_contents="y: abc")
         self.assertParseArgsRaises("argument --y is required"
-                                   if sys.version_info < (3,3) else
+                                   if sys.version_info.major < 3 else
                                    "the following arguments are required: --y",
                                    args="-x 5",
                                    config_file_contents="z: 1")
@@ -665,7 +661,7 @@ class TestMisc(TestCase):
                         default_config_files=[temp_cfg.name])
         self.add_arg('--genome', help='Path to genome file', required=True)
         self.assertParseArgsRaises("argument -c/--config is required"
-                                   if sys.version_info < (3,3) else
+                                   if sys.version_info.major < 3 else
                                    "arguments are required: -c/--config",)
 
         temp_cfg2 = tempfile.NamedTemporaryFile(mode="w", delete=True)
@@ -1039,17 +1035,12 @@ try:
     #Sig = test.test_argparse.Sig
     #NS = test.test_argparse.NS
 except ImportError:
-    if sys.version_info < (2, 7):
-        logging.info("\n\n" + ("=" * 30) +
-                     "\nINFO: Skipping tests for argparse (Python < 2.7)\n"
-                     + ("=" * 30) + "\n")
-    else:
-        logging.error("\n\n"
-            "============================\n"
-            "ERROR: Many tests couldn't be run because 'import test.test_argparse' "
-            "failed. Try building/installing python from source rather than through"
-            " a package manager.\n"
-            "============================\n")
+    logging.error("\n\n"
+        "============================\n"
+        "ERROR: Many tests couldn't be run because 'import test.test_argparse' "
+        "failed. Try building/installing python from source rather than through"
+        " a package manager.\n"
+        "============================\n")
 else:
     test_argparse_source_code = inspect.getsource(test.test_argparse)
     test_argparse_source_code = test_argparse_source_code.replace(
