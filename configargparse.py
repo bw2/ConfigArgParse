@@ -456,8 +456,8 @@ class ArgumentParser(argparse.ArgumentParser):
             "-h" in args or "--help" in args)
 
         # prepare for reading config file(s)
-        known_config_keys = dict((config_key, action) for action in self._actions
-            for config_key in self.get_possible_config_keys(action))
+        known_config_keys = {config_key: action for action in self._actions
+            for config_key in self.get_possible_config_keys(action)}
 
         # open the config file(s)
         config_streams = []
