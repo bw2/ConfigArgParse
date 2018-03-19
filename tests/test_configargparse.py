@@ -932,7 +932,7 @@ class TestConfigFileParsers(TestCase):
         self.assertEqual(input_config_str.getvalue().replace(": ", " = "),
                          output_config_str)
 
-        self.assertDictEqual(parsed_obj, dict([('a', '3')]))
+        self.assertDictEqual(parsed_obj, {'a': '3'})
 
     def testDefaultConfigFileParser_All(self):
         p = configargparse.DefaultConfigFileParser()
@@ -961,13 +961,13 @@ class TestConfigFileParsers(TestCase):
             l.replace(': ', ' = ') for l in config_lines if l.startswith('_'))+"\n",
             output_config_str)
 
-        self.assertDictEqual(parsed_obj, dict([
-            ('_a', '3'),
-            ('_b', 'c'),
-            ('_list_arg1', ['a', 'b', 'c']),
-            ('_str_arg', 'true'),
-            ('_list_arg2', ['1', '2', '3']),
-        ]))
+        self.assertDictEqual(parsed_obj, {
+            '_a': '3',
+            '_b': 'c',
+            '_list_arg1': ['a', 'b', 'c'],
+            '_str_arg': 'true',
+            '_list_arg2': ['1', '2', '3'],
+        })
 
         self.assertListEqual(parsed_obj['_list_arg1'], ['a', 'b', 'c'])
         self.assertListEqual(parsed_obj['_list_arg2'], ['1', '2', '3'])
@@ -989,7 +989,7 @@ class TestConfigFileParsers(TestCase):
 
         self.assertEqual(input_config_str.getvalue(), output_config_str)
 
-        self.assertDictEqual(parsed_obj, dict([('a', '3')]))
+        self.assertDictEqual(parsed_obj, {'a': '3'})
 
     def testYAMLConfigFileParser_All(self):
         try:
@@ -1018,10 +1018,7 @@ class TestConfigFileParsers(TestCase):
         output_config_str = p.serialize(parsed_obj)
         self.assertEqual(input_config_str.getvalue(), output_config_str)
 
-        self.assertDictEqual(parsed_obj, dict([
-            ('a', '3'),
-            ('list_arg', [1,2,3]),
-        ]))
+        self.assertDictEqual(parsed_obj, {'a': '3', 'list_arg': [1,2,3]})
 
 
 
