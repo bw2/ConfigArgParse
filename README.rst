@@ -1,3 +1,18 @@
+ConfigArgParse
+--------------
+
+.. image:: https://img.shields.io/pypi/v/ConfigArgParse.svg?style=flat
+    :alt: PyPI version
+    :target: https://pypi.python.org/pypi/ConfigArgParse
+
+.. image:: https://img.shields.io/pypi/pyversions/ConfigArgParse.svg
+    :alt: Supported Python versions
+    :target: https://pypi.python.org/pypi/ConfigArgParse
+
+.. image:: https://travis-ci.org/bw2/ConfigArgParse.svg?branch=master
+    :alt: Travis CI build
+    :target: https://travis-ci.org/bw2/ConfigArgParse
+
 Overview
 ~~~~~~~~
 
