@@ -688,7 +688,7 @@ class ArgumentParser(argparse.ArgumentParser):
             return keys
 
         for arg in action.option_strings:
-            if any([arg.startswith(2*c) for c in self.prefix_chars]):
+            if any(arg.startswith(2*c) for c in self.prefix_chars):
                 keys += [arg[2:], arg] # eg. for '--bla' return ['bla', '--bla']
 
         return keys
