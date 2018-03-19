@@ -179,7 +179,7 @@ class TestBasicUseCases(TestCase):
         ns = self.parse(args="--genome hg19 -g %s bla.vcf " % config_file2.name)
         self.assertEqual(ns.genome, "hg19")
         self.assertEqual(ns.verbose, False)
-        self.assertEqual(ns.dbsnp, None)
+        self.assertIsNone(ns.dbsnp)
         self.assertEqual(ns.fmt, "BED")
         self.assertListEqual(ns.vcf, ["bla.vcf"])
 
@@ -426,7 +426,7 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.x, 1)
         self.assertEqual(ns.y, 12.1)
         self.assertEqual(ns.z, 'z 1')
-        self.assertEqual(ns.c, None)
+        self.assertIsNone(ns.c)
         self.assertEqual(ns.b, True)
         self.assertEqual(ns.a, [33])
         self.assertRegex(self.format_values(),
@@ -540,7 +540,7 @@ class TestBasicUseCases(TestCase):
         self.initParser()
         self.add_arg("-f", "--file", env_var="FILES", action="append", type=int)
         ns = self.parse("", env_vars = {"file": "[1,2,3]", "VERBOSE": "true"})
-        self.assertEqual(ns.file, None)
+        self.assertIsNone(ns.file)
 
     def testAutoEnvVarPrefix(self):
         self.initParser(auto_env_var_prefix="TEST_")
@@ -557,8 +557,8 @@ class TestBasicUseCases(TestCase):
             "TEST2": "22",
             "TEST_ARG4": "arg4_value",
             "TEST_ARG4_MORE": "magic"})
-        self.assertEqual(ns.arg0, None)
-        self.assertEqual(ns.arg1, None)
+        self.assertIsNone(ns.arg0)
+        self.assertIsNone(ns.arg1)
         self.assertEqual(ns.arg2, 22)
         self.assertEqual(ns.arg4, "arg4_value")
         self.assertEqual(ns.arg4_more, "magic")
@@ -683,7 +683,7 @@ class TestMisc(TestCase):
             '  --genome GENOME\s+ Path to genome file\n')
 
         # just run print_values() to make sure it completes and returns None
-        self.assertEqual(self.parser.print_values(file=sys.stderr), None)
+        self.assertIsNone(self.parser.print_values(file=sys.stderr))
 
         # test ignore_unknown_config_file_keys=False
         self.initParser(ignore_unknown_config_file_keys=False)
@@ -922,7 +922,7 @@ class TestConfigFileParsers(TestCase):
 
     def testDefaultConfigFileParser_Basic(self):
         p = configargparse.DefaultConfigFileParser()
-        self.assertTrue(len(p.get_syntax_description()) > 0)
+        self.assertGreater(len(p.get_syntax_description()), 0)
 
         # test the simplest case
         input_config_str = StringIO("""a: 3\n""")
@@ -981,7 +981,7 @@ class TestConfigFileParsers(TestCase):
             return
 
         p = configargparse.YAMLConfigFileParser()
-        self.assertTrue(len(p.get_syntax_description()) > 0)
+        self.assertGreater(len(p.get_syntax_description()), 0)
 
         input_config_str = StringIO("""a: '3'\n""")
         parsed_obj = p.parse(input_config_str)
