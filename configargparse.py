@@ -390,7 +390,7 @@ class ArgumentParser(argparse.ArgumentParser):
             args = list(args)
 
         # normalize args by converting args like --key=value to --key value
-        normalized_args = list()
+        normalized_args = []
         for arg in args:
             if arg and arg[0] in self.prefix_chars and '=' in arg:
                 key, value =  arg.split('=', 1)
