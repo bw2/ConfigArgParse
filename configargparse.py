@@ -231,6 +231,8 @@ class YAMLConfigFileParser(ConfigFileParser):
         for key, value in parsed_obj.items():
             if isinstance(value, list):
                 result[key] = value
+            elif isinstance(value, unicode):
+                result[key] = value.encode('utf-8')
             else:
                 result[key] = str(value)
 
