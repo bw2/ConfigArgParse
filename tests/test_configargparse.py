@@ -233,8 +233,8 @@ class TestBasicUseCases(TestCase):
 
         if not use_groups:
             self.assertRegex(self.format_help(),
-                'usage: .* \[-h\] --genome GENOME \[-v\] -g MY_CFG_FILE'
-                ' \[-d DBSNP\]\s+\[-f FRMT\]\s+vcf \[vcf ...\]\n\n' +
+                'usage: .* \[-h\] --genome GENOME \[-v\] -g MY_CFG_FILE\n?'
+                '\s+\[-d DBSNP\]\s+\[-f FRMT\]\s+vcf \[vcf ...\]\n\n' +
                 9*'(.+\s+)'+  # repeated 8 times because .+ matches atmost 1 line
                 'positional arguments:\n'
                 '  vcf \s+ Variant file\(s\)\n\n'
@@ -247,8 +247,8 @@ class TestBasicUseCases(TestCase):
                 '  -f FRMT, --format FRMT\s+\[env var: OUTPUT_FORMAT\]\n')
         else:
             self.assertRegex(self.format_help(),
-                'usage: .* \[-h\] --genome GENOME \[-v\] -g MY_CFG_FILE'
-                ' \[-d DBSNP\]\s+\[-f FRMT\]\s+vcf \[vcf ...\]\n\n'+
+                'usage: .* \[-h\] --genome GENOME \[-v\] -g MY_CFG_FILE\n?'
+                '\s+\[-d DBSNP\]\s+\[-f FRMT\]\s+vcf \[vcf ...\]\n\n'+
                 9*'.+\s+'+  # repeated 8 times because .+ matches atmost 1 line
                 'positional arguments:\n'
                 '  vcf \s+ Variant file\(s\)\n\n'
