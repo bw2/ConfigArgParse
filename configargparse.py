@@ -170,7 +170,7 @@ class DefaultConfigFileParser(ConfigFileParser):
                 items[key] = value
                 continue
 
-            raise ConfigFileParserException("Unexpected line %s in %s: %s" % (i,
+            raise ConfigFileParserException("Unexpected line {} in {}: {}".format(i,
                 getattr(stream, 'name', 'stream'), line))
         return items
 
@@ -183,7 +183,7 @@ class DefaultConfigFileParser(ConfigFileParser):
             if isinstance(value, list):
                 # handle special case of lists
                 value = "["+", ".join(map(str, value))+"]"
-            r.write("%s = %s\n" % (key, value))
+            r.write("{} = {}\n".format(key, value))
         return r.getvalue()
 
 
@@ -549,7 +549,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 with open(output_file_path, "w") as output_file:
                     pass
             except IOError as e:
-                raise ValueError("Couldn't open %s for writing: %s" % (
+                raise ValueError("Couldn't open {} for writing: {}".format(
                     output_file_path, e))
         if output_file_paths:
             # generate the config file contents
@@ -671,7 +671,7 @@ class ArgumentParser(argparse.ArgumentParser):
             args.append( command_line_key )
             args.append( value )
         else:
-            raise ValueError("Unexpected value type %s for value: %s" % (
+            raise ValueError("Unexpected value type {} for value: {}".format(
                 type(value), value))
 
         return args
@@ -767,7 +767,7 @@ class ArgumentParser(argparse.ArgumentParser):
             r.write(source)
             for key, (action, value) in settings.items():
                 if key:
-                    r.write("  %-19s%s\n" % (key+":", value))
+                    r.write("  {:<19}{}\n".format(key+":", value))
                 else:
                     if isinstance(value, str):
                         r.write("  %s\n" % value)

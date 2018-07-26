@@ -34,7 +34,7 @@ def launch_http_server(directory):
                 logging.debug("Can't use port %d: %s" % (port, e.strerror))
                 continue
 
-            print("HTML coverage report now available at http://%s%s" % (
+            print("HTML coverage report now available at http://{}{}".format(
                 socket.gethostname(), (":%s" % port) if port != 80 else ""))
 
             os.chdir(directory)
