@@ -759,6 +759,9 @@ class TestMisc(TestCase):
         def __init__(self, name):
             self.name = name
 
+        def __str__(self):
+            return self.name
+
     @staticmethod
     def valid_custom(s):
         if s == "invalid": raise Exception("invalid name")
