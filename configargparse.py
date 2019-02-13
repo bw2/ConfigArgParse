@@ -148,8 +148,8 @@ class DefaultConfigFileParser(ConfigFileParser):
             if not line or line[0] in ["#", ";", "["] or line.startswith("---"):
                 continue
             white_space = "\\s*"
-            key = "(?P<key>[^:=;#\s]+?)"
-            value = white_space+"[:=\s]"+white_space+"(?P<value>.+?)"
+            key = r"(?P<key>[^:=;#\s]+?)"
+            value = white_space+r"[:=\s]"+white_space+"(?P<value>.+?)"
             comment = white_space+"(?P<comment>\\s[;#].*)?"
 
             key_only_match = re.match("^" + key + comment + "$", line)
@@ -435,7 +435,7 @@ class ArgumentParser(argparse.ArgumentParser):
             value = env_vars[key]
             # Make list-string into list.
             if action.nargs or isinstance(action, argparse._AppendAction):
-                element_capture = re.match('\[(.*)\]', value)
+                element_capture = re.match(r'\[(.*)\]', value)
                 if element_capture:
                     value = [val.strip() for val in element_capture.group(1).split(',') if val.strip()]
             env_var_args += self.convert_item_to_command_line_arg(
