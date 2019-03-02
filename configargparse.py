@@ -1,9 +1,11 @@
 import argparse
 import glob
 import os
+import pathlib
 import re
 import sys
 import types
+import appdirs
 
 if sys.version_info >= (3, 0):
     from io import StringIO
@@ -40,7 +42,7 @@ def init_argument_parser(name=None, **kwargs):
 
     kwargs.setdefault('formatter_class', argparse.ArgumentDefaultsHelpFormatter)
     kwargs.setdefault('conflict_handler', 'resolve')
-    _parsers[name] = ArgumentParser(**kwargs)
+    _parsers[name] = ArgumentParser(name=name,**kwargs)
 
 
 def get_argument_parser(name=None, **kwargs):
@@ -270,6 +272,8 @@ class ArgumentParser(argparse.ArgumentParser):
         add_env_var_help=True,
         auto_env_var_prefix=None,
         default_config_files=[],
+        appdir_conf=False,
+        name=None,
         ignore_unknown_config_file_keys=False,
         config_file_parser_class=DefaultConfigFileParser,
         args_for_setting_config_path=[],
@@ -307,6 +311,10 @@ class ArgumentParser(argparse.ArgumentParser):
                  "/etc/conf/conf-enabled/*.ini",
                 "~/.my_app_config.ini",
                 "./app_config.txt"]
+            appdir_conf=[True|'Conf_name']: If set, append appdir-appropriate site and user config
+                file search paths to default_config_files, with config files
+                named Path(sys.argv[0]).name+'.conf' (if True), or
+                with the argument specified (if string).
             ignore_unknown_config_file_keys: If true, settings that are found
                 in a config file but don't correspond to any defined
                 configargparse args will be ignored. If false, they will be
@@ -344,6 +352,22 @@ class ArgumentParser(argparse.ArgumentParser):
             self._config_file_parser = config_file_parser_class()
 
         self._default_config_files = default_config_files
+        self._name = name
+        if appdir_conf is not None:
+            if appdir_conf == True:
+                if name == None or name == 'default':
+                    appdir_name = pathlib.Path(sys.argv[0]).name
+                else:
+                    appdir_name = name
+            else:
+                appdir_name = appdir_conf
+
+            appdir = appdirs.AppDirs(appname=appdir_name)
+            default_config_files.extend( [
+                 pathlib.Path(appdir.site_config_dir,appdir_name+'.conf')
+                ,pathlib.Path(appdir.user_config_dir,appdir_name+'.conf')]
+            )
+
         self._ignore_unknown_config_file_keys = ignore_unknown_config_file_keys
         if args_for_setting_config_path:
             self.add_argument(*args_for_setting_config_path, dest="config_file",
