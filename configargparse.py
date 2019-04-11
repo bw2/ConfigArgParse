@@ -431,6 +431,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # add env var settings to the commandline that aren't there already
         env_var_args = []
+        nargs = False
         actions_with_env_var_values = [a for a in self._actions
             if not a.is_positional_arg and a.env_var and a.env_var in env_vars
                 and not already_on_command_line(args, a.option_strings)]
@@ -439,19 +440,22 @@ class ArgumentParser(argparse.ArgumentParser):
             value = env_vars[key]
             # Make list-string into list.
             if action.nargs or isinstance(action, argparse._AppendAction):
+                nargs = True
                 element_capture = re.match('\[(.*)\]', value)
                 if element_capture:
                     value = [val.strip() for val in element_capture.group(1).split(',') if val.strip()]
             env_var_args += self.convert_item_to_command_line_arg(
                 action, key, value)
 
-        args = env_var_args + args
+        if nargs:
+            args = args + env_var_args
+        else:
+            args = env_var_args + args
 
         if env_var_args:
             self._source_to_settings[_ENV_VAR_SOURCE_KEY] = OrderedDict(
                 [(a.env_var, (a, env_vars[a.env_var]))
                     for a in actions_with_env_var_values])
-
 
         # before parsing any config files, check if -h was specified.
         supports_help_arg = any(
@@ -484,6 +488,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
             # add each config item to the commandline unless it's there already
             config_args = []
+            nargs = False
             for key, value in config_items.items():
                 if key in known_config_keys:
                     action = known_config_keys[key]
@@ -503,9 +508,14 @@ class ArgumentParser(argparse.ArgumentParser):
                     if source_key not in self._source_to_settings:
                         self._source_to_settings[source_key] = OrderedDict()
                     self._source_to_settings[source_key][key] = (action, value)
+                    if (action and action.nargs or
+                        isinstance(action, argparse._AppendAction)):
+                        nargs = True
 
-            args = config_args + args
-
+            if nargs:
+                args = args + config_args
+            else:
+                args = config_args + args
 
         # save default settings for use by print_values()
         default_settings = OrderedDict()
