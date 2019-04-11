@@ -265,23 +265,7 @@ class ArgumentParser(argparse.ArgumentParser):
     environment variables and .ini or .yaml-style config files.
     """
 
-    def __init__(self,
-        *args,
-        add_config_file_help=True,
-        add_env_var_help=True,
-        auto_env_var_prefix=None,
-        default_config_files=[],
-        ignore_unknown_config_file_keys=False,
-        config_file_parser_class=DefaultConfigFileParser,
-        args_for_setting_config_path=[],
-        config_arg_is_required=False,
-        config_arg_help_message="config file path",
-        args_for_writing_out_config_file=[],
-        write_out_config_file_arg_help_message="takes the current command line "
-            "args and writes them out to a config file at the given path, then "
-            "exits",
-        **kwargs
-        ):
+    def __init__(self, *args, **kwargs):
 
         """Supports args of the argparse.ArgumentParser constructor
         as **kwargs, as well as the following additional args.
@@ -332,6 +316,29 @@ class ArgumentParser(argparse.ArgumentParser):
             write_out_config_file_arg_help_message: The help message to use for
                 the args in args_for_writing_out_config_file.
         """
+        # This is the only way to make positional args (tested in the argparse
+        # main test suite) and keyword arguments work across both Python 2 and
+        # 3. This could be refactored to not need extra local variables.
+        add_config_file_help = kwargs.pop('add_config_file_help', True)
+        add_env_var_help = kwargs.pop('add_env_var_help', True)
+        auto_env_var_prefix = kwargs.pop('auto_env_var_prefix', None)
+        default_config_files = kwargs.pop('default_config_files', [])
+        ignore_unknown_config_file_keys = kwargs.pop(
+            'ignore_unknown_config_file_keys', False)
+        config_file_parser_class = kwargs.pop('config_file_parser_class',
+                                              DefaultConfigFileParser)
+        args_for_setting_config_path = kwargs.pop(
+            'args_for_setting_config_path', [])
+        config_arg_is_required = kwargs.pop('config_arg_is_required', False)
+        config_arg_help_message = kwargs.pop('config_arg_help_message',
+                                             "config file path")
+        args_for_writing_out_config_file = kwargs.pop(
+            'args_for_writing_out_config_file', [])
+        write_out_config_file_arg_help_message = kwargs.pop(
+            'write_out_config_file_arg_help_message', "takes the current "
+            "command line args and writes them out to a config file at the "
+            "given path, then exits")
+
         self._add_config_file_help = add_config_file_help
         self._add_env_var_help = add_env_var_help
         self._auto_env_var_prefix = auto_env_var_prefix
