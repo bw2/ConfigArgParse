@@ -445,7 +445,7 @@ class ArgumentParser(argparse.ArgumentParser):
             env_var_args += self.convert_item_to_command_line_arg(
                 action, key, value)
 
-        args = args + env_var_args
+        args = env_var_args + args
 
         if env_var_args:
             self._source_to_settings[_ENV_VAR_SOURCE_KEY] = OrderedDict(
@@ -504,7 +504,7 @@ class ArgumentParser(argparse.ArgumentParser):
                         self._source_to_settings[source_key] = OrderedDict()
                     self._source_to_settings[source_key][key] = (action, value)
 
-            args = args + config_args
+            args = config_args + args
 
 
         # save default settings for use by print_values()
