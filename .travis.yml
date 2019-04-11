@@ -1,18 +1,20 @@
 # Config file for automatic testing at travis-ci.org
 
 language: python
-dist: xenial  # Needed for Python 3.7
-python:
-  - "3.7"
-  - "3.6"
-  - "3.5"
-  - "3.4"
-  - "3.3"
-  - "3.2"
-  - "2.7"
-  - "2.6"
-  - "pypy"
-  - "pypy3"
+matrix:
+  - dist: xenial  # Needed for Python 3.7
+    python:
+    - "3.7"
+    - "3.6"
+  - python:
+    - "3.5"
+    - "3.4"
+    - "3.3"
+    - "3.2"
+    - "2.7"
+    - "2.6"
+    - "pypy"
+    - "pypy3"
 
 # command to install dependencies: 
 install: pip install mock
