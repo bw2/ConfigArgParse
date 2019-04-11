@@ -755,6 +755,14 @@ class TestMisc(TestCase):
             '--flag \s*Flag help text'
         )
 
+    def test_FormatHelpProg(self):
+        self.initParser('format_help_prog')
+        self.assertRegex(self.format_help(), 'usage: format_help_prog .*')
+
+    def test_FormatHelpProgLib(self):
+        parser = argparse.ArgumentParser('format_help_prog')
+        self.assertRegex(parser.format_help(), 'usage: format_help_prog .*')
+
     class CustomClass(object):
         def __init__(self, name):
             self.name = name

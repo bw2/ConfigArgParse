@@ -266,6 +266,7 @@ class ArgumentParser(argparse.ArgumentParser):
     """
 
     def __init__(self,
+        *args,
         add_config_file_help=True,
         add_env_var_help=True,
         auto_env_var_prefix=None,
@@ -335,7 +336,7 @@ class ArgumentParser(argparse.ArgumentParser):
         self._add_env_var_help = add_env_var_help
         self._auto_env_var_prefix = auto_env_var_prefix
 
-        argparse.ArgumentParser.__init__(self, **kwargs)
+        argparse.ArgumentParser.__init__(self, *args, **kwargs)
 
         # parse the additional args
         if config_file_parser_class is None:
