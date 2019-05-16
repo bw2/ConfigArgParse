@@ -1,4 +1,5 @@
 import argparse
+import configparser
 import glob
 import os
 import re
@@ -190,6 +191,32 @@ class DefaultConfigFileParser(ConfigFileParser):
             r.write("%s = %s\n" % (key, value))
         return r.getvalue()
 
+class InternalConfigFileParser(DefaultConfigFileParser):
+    """Parses ini file. Depends on the internal configparse module."""
+ 
+    def parse(self, stream):
+        """Parses the keys + values from a config file."""
+
+        items = OrderedDict()
+        # here use extended interpolation is my favor
+        # allow no value to match the behavior of ConfigFileParser here,
+        # for no value in python configparser, the value is None
+        # so we will give it a "true" to mean that this key is passed
+        # its value is true
+        # but passing true, True, yes 1, is also okay like in configparser
+        internal_config = configparser.ConfigParser(
+            interpolation=configparser.ExtendedInterpolation(),
+            allow_no_value=True)
+        internal_config.read_file(stream)
+        for section_name, section in internal_config.items():
+            for option, value in section.items():
+                if value is None:
+                    items[option] = "true"
+                else:
+                    items[option] = value        
+        return items
+
+        
 
 class YAMLConfigFileParser(ConfigFileParser):
     """Parses YAML config files. Depends on the PyYAML module.
@@ -271,7 +298,7 @@ class ArgumentParser(argparse.ArgumentParser):
         auto_env_var_prefix=None,
         default_config_files=[],
         ignore_unknown_config_file_keys=False,
-        config_file_parser_class=DefaultConfigFileParser,
+        config_file_parser_class=InternalConfigFileParser,
         args_for_setting_config_path=[],
         config_arg_is_required=False,
         config_arg_help_message="config file path",
