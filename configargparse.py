@@ -236,7 +236,6 @@ class YAMLConfigFileParser(ConfigFileParser):
 
         return result
 
-
     def serialize(self, items, default_flow_style=False):
         """Does the inverse of config parsing by taking parsed values and
         converting them back to a string representing config file contents.
@@ -251,6 +250,43 @@ class YAMLConfigFileParser(ConfigFileParser):
         # it looks like ordering can't be preserved: http://pyyaml.org/ticket/29
         items = dict(items)
         return yaml.dump(items, default_flow_style=default_flow_style)
+
+class ConfigSaver(object):
+    """This abstract class can be extended to add support for new config saver to save the valid runtime config.
+    it saves the config in the format returned by ConfigFileParser.serialize"""
+
+    def save(self, config_content):
+        """writes the content of the runtime config. Otherwise an error will be raised.
+
+        Args:
+            config_content: Config file content from ConfigFileParser.serialize.
+        """
+        raise NotImplementedError("parse(..) not implemented")
+
+    def validate_path(self, path):
+        """validates the location the config is to be saved or raises a IOError
+
+        Args:
+            path: a string path to the location to save
+        """
+        raise NotImplementedError("serialize(..) not implemented")
+
+
+class DefaultConfigSaver(ConfigSaver):
+
+    def save(self, file_contents, output_file_path):
+        with open(output_file_path, "w") as output_file:
+            output_file.write(file_contents)
+
+    def validate_path(self, output_file_path):
+        try:
+            with open(output_file_path, "w") as output_file:
+                pass
+            output_file_path = output_file_path
+        except IOError as e:
+            raise ValueError("Couldn't open %s for writing: %s" % (
+                output_file_path, e))
+
 
 
 # used while parsing args to keep track of where they came from
@@ -275,6 +311,7 @@ class ArgumentParser(argparse.ArgumentParser):
         args_for_setting_config_path=[],
         config_arg_is_required=False,
         config_arg_help_message="config file path",
+        config_file_saver_class=DefaultConfigSaver,
         args_for_writing_out_config_file=[],
         write_out_config_file_arg_help_message="takes the current command line "
             "args and writes them out to a config file at the given path, then "
@@ -342,6 +379,11 @@ class ArgumentParser(argparse.ArgumentParser):
             self._config_file_parser = DefaultConfigFileParser()
         else:
             self._config_file_parser = config_file_parser_class()
+
+        if config_file_saver_class is None:
+            self._config_file_saver = DefaultConfigSaver()
+        else:
+            self._config_file_saver = config_file_saver_class()
 
         self._default_config_files = default_config_files
         self._ignore_unknown_config_file_keys = ignore_unknown_config_file_keys
@@ -548,27 +590,21 @@ class ArgumentParser(argparse.ArgumentParser):
             exit_after: whether to exit the program after writing the config files
         """
         for output_file_path in output_file_paths:
-            # validate the output file path
-            try:
-                with open(output_file_path, "w") as output_file:
-                    pass
-            except IOError as e:
-                raise ValueError("Couldn't open %s for writing: %s" % (
-                    output_file_path, e))
+            # self.config_save.save(file_contents)
+            self._config_file_saver.validate_path(output_file_path)
+
         if output_file_paths:
             # generate the config file contents
             config_items = self.get_items_for_config_file_output(
                 self._source_to_settings, parsed_namespace)
             file_contents = self._config_file_parser.serialize(config_items)
             for output_file_path in output_file_paths:
-                with open(output_file_path, "w") as output_file:
-                    output_file.write(file_contents)
+                self._config_file_saver.save(file_contents, output_file_path)
             message = "Wrote config file to " + ", ".join(output_file_paths)
             if exit_after:
                 self.exit(0, message)
             else:
                 print(message)
-
 
     def get_command_line_key_for_unknown_config_file_setting(self, key):
         """Compute a commandline arg key to be used for a config file setting
