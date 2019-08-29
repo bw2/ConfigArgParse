@@ -253,9 +253,11 @@ class YAMLConfigFileParser(ConfigFileParser):
 
 class ConfigSaver(object):
     """This abstract class can be extended to add support for new config saver to save the valid runtime config.
-    it saves the config in the format returned by ConfigFileParser.serialize"""
+    the idea is to be able to save to a file, database or distributed filesystem .
+    it saves the config in the format returned by ConfigFileParser.serialize
+    """
 
-    def save(self, config_content):
+    def save(self, config_content, output_file_path):
         """writes the content of the runtime config. Otherwise an error will be raised.
 
         Args:
