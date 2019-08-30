@@ -1027,11 +1027,6 @@ class TestConfigFileParsers(TestCase):
             ('list_arg', [1,2,3]),
         ]))
 
-class TestConfigSaver(TestCase):
-    """Test ConfigFileParser subclasses in isolation"""
-
-    def testDefaultConfigSaver_Basic(self):
-        pass
 
 
 ################################################################################
