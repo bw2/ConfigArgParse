@@ -3,7 +3,9 @@ import glob
 import os
 import re
 import sys
+import tempfile
 import types
+import datetime
 
 if sys.version_info >= (3, 0):
     from io import StringIO
@@ -274,6 +276,7 @@ class ConfigSaver(object):
         raise NotImplementedError("serialize(..) not implemented")
 
 
+
 class DefaultConfigSaver(ConfigSaver):
 
     def save(self, file_contents, output_file_path):
@@ -288,8 +291,6 @@ class DefaultConfigSaver(ConfigSaver):
         except IOError as e:
             raise ValueError("Couldn't open %s for writing: %s" % (
                 output_file_path, e))
-
-
 
 # used while parsing args to keep track of where they came from
 _COMMAND_LINE_SOURCE_KEY = "command_line"
@@ -313,8 +314,9 @@ class ArgumentParser(argparse.ArgumentParser):
         args_for_setting_config_path=[],
         config_arg_is_required=False,
         config_arg_help_message="config file path",
-        config_file_saver_class=DefaultConfigSaver,
         args_for_writing_out_config_file=[],
+        config_file_saver_class=DefaultConfigSaver,
+        config_file_saver_kwags={},
         write_out_config_file_arg_help_message="takes the current command line "
             "args and writes them out to a config file at the given path, then "
             "exits",
@@ -369,6 +371,12 @@ class ArgumentParser(argparse.ArgumentParser):
                 (eg. ["-w", "--write-out-config-file"]). Default: []
             write_out_config_file_arg_help_message: The help message to use for
                 the args in args_for_writing_out_config_file.
+            config_file_saver_class: configargparse.ConfigSaver subclass
+                which determines where the successfully parsed runtime config will be saved.
+                configargparse comes with DefaultConfigFileParser for saving to a file.
+                configargparse.ConfigSaver can be extended to save to a database or distributed filesystem
+            config_file_saver_kwags: keyword arguements such and connection objects, to be passed to the custom
+                ConfigSaver subclass
         """
         self._add_config_file_help = add_config_file_help
         self._add_env_var_help = add_env_var_help
@@ -385,7 +393,7 @@ class ArgumentParser(argparse.ArgumentParser):
         if config_file_saver_class is None:
             self._config_file_saver = DefaultConfigSaver()
         else:
-            self._config_file_saver = config_file_saver_class()
+            self._config_file_saver = config_file_saver_class(**config_file_saver_kwags)
 
         self._default_config_files = default_config_files
         self._ignore_unknown_config_file_keys = ignore_unknown_config_file_keys
