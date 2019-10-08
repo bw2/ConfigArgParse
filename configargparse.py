@@ -223,12 +223,23 @@ class YAMLConfigFileParser(ConfigFileParser):
                 "yaml.load('%s') returned type '%s' instead of 'dict'." % (
                 getattr(stream, 'name', 'stream'),  type(parsed_obj).__name__))
 
+        def _kvgen(d, pfix=None):
+            for k, v in d.items():
+                if pfix:
+                    npfix = pfix + '-' + k
+                else:
+                    npfix = k
+
+                if isinstance(v, dict):
+                    yield from _kvgen(v, npfix)
+                elif isinstance(v, list):
+                    yield npfix, v
+                else:
+                    yield npfix, str(v)
+
         result = OrderedDict()
-        for key, value in parsed_obj.items():
-            if isinstance(value, list):
-                result[key] = value
-            else:
-                result[key] = str(value)
+        for key, value in _kvgen(parsed_obj):
+            result[key] = value
 
         return result
 
@@ -244,9 +255,25 @@ class YAMLConfigFileParser(ConfigFileParser):
         # lazy-import so there's no dependency on yaml unless this class is used
         yaml = self._load_yaml()
 
+        def _set_lvlkey(d, k, v):
+            # set nested dict key; e.g
+            # my-config-opt -> { 'my': { 'config': { 'opt': v } } }
+            parts = k.split('-')
+            for levelk in parts[:-1]:
+                if levelk not in d:
+                    d[levelk] = {}
+                d = d[levelk]
+            d[parts[-1]] = v
+
         # it looks like ordering can't be preserved: http://pyyaml.org/ticket/29
-        items = dict(items)
-        return yaml.dump(items, default_flow_style=default_flow_style)
+        d = {}
+        for k,v in dict(items).items():
+            if '-' in k:
+                _set_lvlkey(d, k, v)
+            else:
+                d[k] = v
+
+        return yaml.dump(d, default_flow_style=default_flow_style)
 
 
 # used while parsing args to keep track of where they came from
