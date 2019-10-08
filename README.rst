@@ -1,3 +1,18 @@
+ConfigArgParse
+--------------
+
+.. image:: https://img.shields.io/pypi/v/ConfigArgParse.svg?style=flat
+    :alt: PyPI version
+    :target: https://pypi.python.org/pypi/ConfigArgParse
+
+.. image:: https://img.shields.io/pypi/pyversions/ConfigArgParse.svg
+    :alt: Supported Python versions
+    :target: https://pypi.python.org/pypi/ConfigArgParse
+
+.. image:: https://travis-ci.org/bw2/ConfigArgParse.svg?branch=master
+    :alt: Travis CI build
+    :target: https://travis-ci.org/bw2/ConfigArgParse
+
 Overview
 ~~~~~~~~
 
@@ -37,7 +52,7 @@ Features
 -  extensible (:code:`ConfigFileParser` can be subclassed to define a new
    config file format)
 -  unittested by running the unittests that came with argparse but on
-   configargparse, and using tox to test with python2.7+ and python3+
+   configargparse, and using tox to test with Python 2.7 and Python 3+
 
 Example
 ~~~~~~~
@@ -263,7 +278,7 @@ argparse in all usecases.
 
 Previously existing modules (PyPI search keywords: config argparse):
 
--  argparse (built-in module python v2.7+ )
+-  argparse (built-in module Python v2.7+)
 
    -  Good:
 
@@ -294,7 +309,7 @@ Previously existing modules (PyPI search keywords: config argparse):
          "choices" are not handled as expected. For example, if you
          specify a required value in a config file, you still have to
          specify it again on the command line.
-      -  doesn't work with python 3 yet
+      -  doesn't work with Python 3 yet
       -  no unit tests, code not well documented
 
 -  appsettings v0.5 (https://pypi.python.org/pypi/appsettings)
@@ -309,7 +324,7 @@ Previously existing modules (PyPI search keywords: config argparse):
 
       -  passes in config file and env settings via parse_args
          namespace param
-      -  tests not finished and don't work with python3 (import
+      -  tests not finished and don't work with Python 3 (import
          StringIO)
 
 -  argparse_config v0.5.1
@@ -321,7 +336,7 @@ Previously existing modules (PyPI search keywords: config argparse):
 
    -  Bad:
 
-      -  doesn't work with python3 (error during pip install)
+      -  doesn't work with Python 3 (error during pip install)
 
 -  yconf v0.3.2 - (https://pypi.python.org/pypi/yconf) - features
    and interface not that great
@@ -338,7 +353,7 @@ Previously existing modules (PyPI search keywords: config argparse):
 
    -  Bad:
 
-      -  doesn't work with python3
+      -  doesn't work with Python 3
       -  2+ years since last release to PyPI
       -  apparently unmaintained
 

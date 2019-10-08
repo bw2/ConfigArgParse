@@ -4,16 +4,12 @@ import os
 import re
 import sys
 import types
+from collections import OrderedDict
 
 if sys.version_info >= (3, 0):
     from io import StringIO
 else:
     from StringIO import StringIO
-
-if sys.version_info < (2, 7):
-    from ordereddict import OrderedDict
-else:
-    from collections import OrderedDict
 
 
 ACTION_TYPES_THAT_DONT_NEED_A_VALUE = (argparse._StoreTrueAction,
@@ -152,8 +148,8 @@ class DefaultConfigFileParser(ConfigFileParser):
             if not line or line[0] in ["#", ";", "["] or line.startswith("---"):
                 continue
             white_space = "\\s*"
-            key = "(?P<key>[^:=;#\s]+?)"
-            value = white_space+"[:=\s]"+white_space+"(?P<value>.+?)"
+            key = r"(?P<key>[^:=;#\s]+?)"
+            value = white_space+r"[:=\s]"+white_space+"(?P<value>.+?)"
             comment = white_space+"(?P<comment>\\s[;#].*)?"
 
             key_only_match = re.match("^" + key + comment + "$", line)
@@ -174,7 +170,7 @@ class DefaultConfigFileParser(ConfigFileParser):
                 items[key] = value
                 continue
 
-            raise ConfigFileParserException("Unexpected line %s in %s: %s" % (i,
+            raise ConfigFileParserException("Unexpected line {} in {}: {}".format(i,
                 getattr(stream, 'name', 'stream'), line))
         return items
 
@@ -187,7 +183,7 @@ class DefaultConfigFileParser(ConfigFileParser):
             if isinstance(value, list):
                 # handle special case of lists
                 value = "["+", ".join(map(str, value))+"]"
-            r.write("%s = %s\n" % (key, value))
+            r.write("{} = {}\n".format(key, value))
         return r.getvalue()
 
 
@@ -402,7 +398,7 @@ class ArgumentParser(argparse.ArgumentParser):
             args = list(args)
 
         # normalize args by converting args like --key=value to --key value
-        normalized_args = list()
+        normalized_args = []
         for arg in args:
             if arg and arg[0] in self.prefix_chars and '=' in arg:
                 key, value =  arg.split('=', 1)
@@ -472,8 +468,8 @@ class ArgumentParser(argparse.ArgumentParser):
             "-h" in args or "--help" in args)
 
         # prepare for reading config file(s)
-        known_config_keys = dict((config_key, action) for action in self._actions
-            for config_key in self.get_possible_config_keys(action))
+        known_config_keys = {config_key: action for action in self._actions
+            for config_key in self.get_possible_config_keys(action)}
 
         # open the config file(s)
         config_streams = []
@@ -571,7 +567,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 with open(output_file_path, "w") as output_file:
                     pass
             except IOError as e:
-                raise ValueError("Couldn't open %s for writing: %s" % (
+                raise ValueError("Couldn't open {} for writing: {}".format(
                     output_file_path, e))
         if output_file_paths:
             # generate the config file contents
@@ -693,7 +689,7 @@ class ArgumentParser(argparse.ArgumentParser):
             args.append( command_line_key )
             args.append( value )
         else:
-            raise ValueError("Unexpected value type %s for value: %s" % (
+            raise ValueError("Unexpected value type {} for value: {}".format(
                 type(value), value))
 
         return args
@@ -710,7 +706,7 @@ class ArgumentParser(argparse.ArgumentParser):
             return keys
 
         for arg in action.option_strings:
-            if any([arg.startswith(2*c) for c in self.prefix_chars]):
+            if any(arg.startswith(2*c) for c in self.prefix_chars):
                 keys += [arg[2:], arg] # eg. for '--bla' return ['bla', '--bla']
 
         return keys
@@ -789,7 +785,7 @@ class ArgumentParser(argparse.ArgumentParser):
             r.write(source)
             for key, (action, value) in settings.items():
                 if key:
-                    r.write("  %-19s%s\n" % (key+":", value))
+                    r.write("  {:<19}{}\n".format(key+":", value))
                 else:
                     if isinstance(value, str):
                         r.write("  %s\n" % value)

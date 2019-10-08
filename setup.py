@@ -34,7 +34,7 @@ def launch_http_server(directory):
                 logging.debug("Can't use port %d: %s" % (port, e.strerror))
                 continue
 
-            print("HTML coverage report now available at http://%s%s" % (
+            print("HTML coverage report now available at http://{}{}".format(
                 socket.gethostname(), (":%s" % port) if port != 80 else ""))
 
             os.chdir(directory)
@@ -72,14 +72,6 @@ install_requires = []
 tests_require = [
     'PyYAML',
 ]
-if sys.version_info < (2, 7):
-    install_requires.extend([
-        'argparse',
-        'ordereddict',
-    ])
-    tests_require.extend([
-        'unittest2',
-    ])
 
 
 setup(
@@ -102,17 +94,16 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
     ],
     test_suite='tests',
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     install_requires=install_requires,
     tests_require=tests_require,
     extras_require = {

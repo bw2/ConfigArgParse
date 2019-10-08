@@ -5,16 +5,12 @@ import logging
 import sys
 import tempfile
 import types
+import unittest
 
 try:
     import mock
 except ImportError:
     from unittest import mock
-
-if sys.version_info < (2, 7):
-    import unittest2 as unittest
-else:
-    import unittest
 
 if sys.version_info >= (3, 0):
     from io import StringIO
@@ -80,14 +76,14 @@ class TestBasicUseCases(TestCase):
 
         # make sure required args are enforced
         self.assertParseArgsRaises("too few arg"
-            if sys.version_info < (3,3) else
+            if sys.version_info.major < 3 else
             "the following arguments are required",  args="")
         self.assertParseArgsRaises("argument -y/--arg-y is required"
-            if sys.version_info < (3,3) else
+            if sys.version_info.major < 3 else
             "the following arguments are required: -y/--arg-y",
             args="-x --arg-z 11 file1.txt")
         self.assertParseArgsRaises("argument --arg-z is required"
-            if sys.version_info < (3,3) else
+            if sys.version_info.major < 3 else
             "the following arguments are required: --arg-z",
             args="file1.txt file2.txt file3.txt -x -y 1")
 
@@ -116,11 +112,11 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.arg_z, [40])
 
         self.assertRegex(self.format_values(),
-            'Command Line Args: \s+ file1.txt file2.txt\n'
-            'Config File \(method arg\):\n'
-            '  arg-x: \s+ True\n'
-            '  arg-y: \s+ 10\n'
-            '  arg-z: \s+ 40\n')
+            'Command Line Args: \\s+ file1.txt file2.txt\n'
+            'Config File \\(method arg\\):\n'
+            '  arg-x: \\s+ True\n'
+            '  arg-y: \\s+ 10\n'
+            '  arg-z: \\s+ 40\n')
 
         # check values after setting args in both command line and config file
         ns = self.parse(args="file1.txt file2.txt --arg-x -y 3 --arg-z 100 ",
@@ -171,7 +167,7 @@ class TestBasicUseCases(TestCase):
 
         # make sure required args are enforced
         self.assertParseArgsRaises("too few arg"
-                                   if sys.version_info < (3,3) else
+                                   if sys.version_info.major < 3 else
                                    "the following arguments are required: vcf, -g/--my-cfg-file",
                                    args="--genome hg19")
         self.assertParseArgsRaises("not found: file.txt", args="-g file.txt")
@@ -183,14 +179,14 @@ class TestBasicUseCases(TestCase):
         ns = self.parse(args="--genome hg19 -g %s bla.vcf " % config_file2.name)
         self.assertEqual(ns.genome, "hg19")
         self.assertEqual(ns.verbose, False)
-        self.assertEqual(ns.dbsnp, None)
+        self.assertIsNone(ns.dbsnp)
         self.assertEqual(ns.fmt, "BED")
         self.assertListEqual(ns.vcf, ["bla.vcf"])
 
         self.assertRegex(self.format_values(),
-            'Command Line Args:   --genome hg19 -g [^\s]+ bla.vcf\n'
+            'Command Line Args:   --genome hg19 -g [^\\s]+ bla.vcf\n'
             'Defaults:\n'
-            '  --format: \s+ BED\n')
+            '  --format: \\s+ BED\n')
 
         # check precedence: args > env > config > default using the --format arg
         default_config_file.write("--format MAF")
@@ -198,28 +194,28 @@ class TestBasicUseCases(TestCase):
         ns = self.parse(args="--genome hg19 -g %s f.vcf " % config_file2.name)
         self.assertEqual(ns.fmt, "MAF")
         self.assertRegex(self.format_values(),
-            'Command Line Args:   --genome hg19 -g [^\s]+ f.vcf\n'
-            'Config File \([^\s]+\):\n'
-            '  --format: \s+ MAF\n')
+            'Command Line Args:   --genome hg19 -g [^\\s]+ f.vcf\n'
+            'Config File \\([^\\s]+\\):\n'
+            '  --format: \\s+ MAF\n')
 
         config_file2.write("--format VCF")
         config_file2.flush()
         ns = self.parse(args="--genome hg19 -g %s f.vcf " % config_file2.name)
         self.assertEqual(ns.fmt, "VCF")
         self.assertRegex(self.format_values(),
-            'Command Line Args:   --genome hg19 -g [^\s]+ f.vcf\n'
-            'Config File \([^\s]+\):\n'
-            '  --format: \s+ VCF\n')
+            'Command Line Args:   --genome hg19 -g [^\\s]+ f.vcf\n'
+            'Config File \\([^\\s]+\\):\n'
+            '  --format: \\s+ VCF\n')
 
         ns = self.parse(env_vars={"OUTPUT_FORMAT":"R", "DBSNP_PATH":"/a/b.vcf"},
             args="--genome hg19 -g %s f.vcf " % config_file2.name)
         self.assertEqual(ns.fmt, "R")
         self.assertEqual(ns.dbsnp, "/a/b.vcf")
         self.assertRegex(self.format_values(),
-            'Command Line Args:   --genome hg19 -g [^\s]+ f.vcf\n'
+            'Command Line Args:   --genome hg19 -g [^\\s]+ f.vcf\n'
             'Environment Variables:\n'
-            '  DBSNP_PATH: \s+ /a/b.vcf\n'
-            '  OUTPUT_FORMAT: \s+ R\n')
+            '  DBSNP_PATH: \\s+ /a/b.vcf\n'
+            '  OUTPUT_FORMAT: \\s+ R\n')
 
         ns = self.parse(env_vars={"OUTPUT_FORMAT":"R", "DBSNP_PATH":"/a/b.vcf",
                                   "ANOTHER_VAR":"something"},
@@ -227,40 +223,40 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.fmt, "WIG")
         self.assertEqual(ns.dbsnp, "/a/b.vcf")
         self.assertRegex(self.format_values(),
-            'Command Line Args:   --genome hg19 -g [^\s]+ --format WIG f.vcf\n'
+            'Command Line Args:   --genome hg19 -g [^\\s]+ --format WIG f.vcf\n'
             'Environment Variables:\n'
-            '  DBSNP_PATH: \s+ /a/b.vcf\n')
+            '  DBSNP_PATH: \\s+ /a/b.vcf\n')
 
         if not use_groups:
             self.assertRegex(self.format_help(),
-                'usage: .* \[-h\] --genome GENOME \[-v\] -g MY_CFG_FILE\n?'
-                '\s+\[-d DBSNP\]\s+\[-f FRMT\]\s+vcf \[vcf ...\]\n\n' +
-                9*'(.+\s+)'+  # repeated 8 times because .+ matches atmost 1 line
+                'usage: .* \\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?'
+                '\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n' +
+                9*r'(.+\s+)'+  # repeated 8 times because .+ matches atmost 1 line
                 'positional arguments:\n'
-                '  vcf \s+ Variant file\(s\)\n\n'
+                '  vcf \\s+ Variant file\\(s\\)\n\n'
                 'optional arguments:\n'
-                '  -h, --help \s+ show this help message and exit\n'
-                '  --genome GENOME \s+ Path to genome file\n'
+                '  -h, --help \\s+ show this help message and exit\n'
+                '  --genome GENOME \\s+ Path to genome file\n'
                 '  -v\n'
                 '  -g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE\n'
-                '  -d DBSNP, --dbsnp DBSNP\s+\[env var: DBSNP_PATH\]\n'
-                '  -f FRMT, --format FRMT\s+\[env var: OUTPUT_FORMAT\]\n')
+                '  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
+                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n')
         else:
             self.assertRegex(self.format_help(),
-                'usage: .* \[-h\] --genome GENOME \[-v\] -g MY_CFG_FILE\n?'
-                '\s+\[-d DBSNP\]\s+\[-f FRMT\]\s+vcf \[vcf ...\]\n\n'+
-                9*'.+\s+'+  # repeated 8 times because .+ matches atmost 1 line
+                'usage: .* \\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?'
+                '\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n'+
+                9*r'.+\s+'+  # repeated 8 times because .+ matches atmost 1 line
                 'positional arguments:\n'
-                '  vcf \s+ Variant file\(s\)\n\n'
+                '  vcf \\s+ Variant file\\(s\\)\n\n'
                 'optional arguments:\n'
-                '  -h, --help \s+ show this help message and exit\n\n'
+                '  -h, --help \\s+ show this help message and exit\n\n'
                 'g1:\n'
-                '  --genome GENOME \s+ Path to genome file\n'
+                '  --genome GENOME \\s+ Path to genome file\n'
                 '  -v\n'
                 '  -g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE\n\n'
                 'g2:\n'
-                '  -d DBSNP, --dbsnp DBSNP\s+\[env var: DBSNP_PATH\]\n'
-                '  -f FRMT, --format FRMT\s+\[env var: OUTPUT_FORMAT\]\n')
+                '  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
+                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n')
 
         self.assertParseArgsRaises("invalid choice: 'ZZZ'",
             args="--genome hg19 -g %s --format ZZZ f.vcf" % config_file2.name)
@@ -315,22 +311,22 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.verbose, False)
         self.assertEqual(ns.fmt, "BAM")
         self.assertRegex(self.format_values(),
-            'Command Line Args:   --genome hg19 -f1 [^\s]+\n'
+            'Command Line Args:   --genome hg19 -f1 [^\\s]+\n'
             'Environment Variables:\n'
-            '  BAM_FORMAT: \s+ true\n'
+            '  BAM_FORMAT: \\s+ true\n'
             'Defaults:\n'
-            '  --format: \s+ BED\n')
+            '  --format: \\s+ BED\n')
 
         self.assertRegex(self.format_help(),
-            'usage: .* \[-h\] --genome GENOME \[-v\]\s+ \(-f1 TYPE1_CFG_FILE \|'
-            ' \s*-f2 TYPE2_CFG_FILE\)\s+\(-f FRMT \| -b\)\n\n' +
-            7*'.+\s+'+  # repeated 7 times because .+ matches atmost 1 line
+            r'usage: .* \[-h\] --genome GENOME \[-v\]\s+ \(-f1 TYPE1_CFG_FILE \|'
+            ' \\s*-f2 TYPE2_CFG_FILE\\)\\s+\\(-f FRMT \\| -b\\)\n\n' +
+            7*r'.+\s+'+  # repeated 7 times because .+ matches atmost 1 line
             'optional arguments:\n'
             '  -h, --help            show this help message and exit\n'
             '  -f1 TYPE1_CFG_FILE, --type1-cfg-file TYPE1_CFG_FILE\n'
             '  -f2 TYPE2_CFG_FILE, --type2-cfg-file TYPE2_CFG_FILE\n'
-            '  -f FRMT, --format FRMT\s+\[env var: OUTPUT_FORMAT\]\n'
-            '  -b, --bam\s+\[env var: BAM_FORMAT\]\n\n'
+            '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n'
+            '  -b, --bam\\s+\\[env var: BAM_FORMAT\\]\n\n'
             'group1:\n'
             '  --genome GENOME       Path to genome file\n'
             '  -v\n')
@@ -430,28 +426,28 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.x, 1)
         self.assertEqual(ns.y, 12.1)
         self.assertEqual(ns.z, 'z 1')
-        self.assertEqual(ns.c, None)
+        self.assertIsNone(ns.c)
         self.assertEqual(ns.b, True)
         self.assertEqual(ns.a, [33])
         self.assertRegex(self.format_values(),
-            'Command Line Args: \s+ -x 1\n'
-            'Config File \(method arg\):\n'
-            '  y: \s+ 12.1\n'
-            '  b: \s+ True\n'
-            '  a: \s+ 33\n'
-            '  z: \s+ z 1\n')
+            'Command Line Args: \\s+ -x 1\n'
+            'Config File \\(method arg\\):\n'
+            '  y: \\s+ 12.1\n'
+            '  b: \\s+ True\n'
+            '  a: \\s+ 33\n'
+            '  z: \\s+ z 1\n')
 
 
         # -x is not a long arg so can't be set via config file
         self.assertParseArgsRaises("argument -x is required"
-                                   if sys.version_info < (3,3) else
+                                   if sys.version_info.major < 3 else
                                    "the following arguments are required: -x, --y",
                                    config_file_contents="-x 3")
         self.assertParseArgsRaises("invalid float value: 'abc'",
                                    args="-x 5",
                                    config_file_contents="y: abc")
         self.assertParseArgsRaises("argument --y is required"
-                                   if sys.version_info < (3,3) else
+                                   if sys.version_info.major < 3 else
                                    "the following arguments are required: --y",
                                    args="-x 5",
                                    config_file_contents="z: 1")
@@ -469,7 +465,7 @@ class TestBasicUseCases(TestCase):
         self.initParser(ignore_unknown_config_file_keys=False)
         ns, args = self.parse_known(args="-x 1", config_file_contents="bla=3",
             env_vars={"bla": "2"})
-        self.assertEqual(set(args), set(["--bla", "3", "-x", "1"]))
+        self.assertEqual(set(args), {"--bla", "3", "-x", "1"})
 
     def testBooleanValuesCanBeExpressedAsNumbers(self):
         self.initParser()
@@ -544,7 +540,7 @@ class TestBasicUseCases(TestCase):
         self.initParser()
         self.add_arg("-f", "--file", env_var="FILES", action="append", type=int)
         ns = self.parse("", env_vars = {"file": "[1,2,3]", "VERBOSE": "true"})
-        self.assertEqual(ns.file, None)
+        self.assertIsNone(ns.file)
 
     def testAutoEnvVarPrefix(self):
         self.initParser(auto_env_var_prefix="TEST_")
@@ -561,8 +557,8 @@ class TestBasicUseCases(TestCase):
             "TEST2": "22",
             "TEST_ARG4": "arg4_value",
             "TEST_ARG4_MORE": "magic"})
-        self.assertEqual(ns.arg0, None)
-        self.assertEqual(ns.arg1, None)
+        self.assertIsNone(ns.arg0)
+        self.assertIsNone(ns.arg1)
         self.assertEqual(ns.arg2, 22)
         self.assertEqual(ns.arg4, "arg4_value")
         self.assertEqual(ns.arg4_more, "magic")
@@ -665,7 +661,7 @@ class TestMisc(TestCase):
                         default_config_files=[temp_cfg.name])
         self.add_arg('--genome', help='Path to genome file', required=True)
         self.assertParseArgsRaises("argument -c/--config is required"
-                                   if sys.version_info < (3,3) else
+                                   if sys.version_info.major < 3 else
                                    "arguments are required: -c/--config",)
 
         temp_cfg2 = tempfile.NamedTemporaryFile(mode="w", delete=True)
@@ -679,15 +675,15 @@ class TestMisc(TestCase):
         self.assertEqual(ns.genome, "hg20")
 
         self.assertRegex(self.format_help(),
-            'usage: .* \[-h\] -c CONFIG_FILE --genome GENOME\n\n'+
-            7*'.+\s+'+  # repeated 7 times because .+ matches atmost 1 line
+            'usage: .* \\[-h\\] -c CONFIG_FILE --genome GENOME\n\n'+
+            7*r'.+\s+'+  # repeated 7 times because .+ matches atmost 1 line
             'optional arguments:\n'
-            '  -h, --help\s+ show this help message and exit\n'
-            '  -c CONFIG_FILE, --config CONFIG_FILE\s+ my config file\n'
-            '  --genome GENOME\s+ Path to genome file\n')
+            '  -h, --help\\s+ show this help message and exit\n'
+            '  -c CONFIG_FILE, --config CONFIG_FILE\\s+ my config file\n'
+            '  --genome GENOME\\s+ Path to genome file\n')
 
         # just run print_values() to make sure it completes and returns None
-        self.assertEqual(self.parser.print_values(file=sys.stderr), None)
+        self.assertIsNone(self.parser.print_values(file=sys.stderr))
 
         # test ignore_unknown_config_file_keys=False
         self.initParser(ignore_unknown_config_file_keys=False)
@@ -719,7 +715,7 @@ class TestMisc(TestCase):
 
         self.add_arg('--hello', type=int, required=False)
 
-        command = '-c {0} --hello 2'.format(temp_cfg.name)
+        command = '-c {} --hello 2'.format(temp_cfg.name)
 
         known, unknown = self.parse_known(command)
 
@@ -736,23 +732,23 @@ class TestMisc(TestCase):
         self.add_arg('--flag', help='Flag help text', action="store_true")
 
         self.assertRegex(self.format_help(),
-            'usage: .* \[-h\] -c CONFIG_FILE\s+'
-            '\[-w CONFIG_OUTPUT_PATH\]\s* --arg1 ARG1\s*\[--flag\]\s*'
-            'Args that start with \'--\' \(eg. --arg1\) can also be set in a '
-            'config file\s*\(~/.myconfig or specified via -c\).\s*'
-            'Config file syntax allows: key=value,\s*flag=true, stuff=\[a,b,c\] '
-            '\(for details, see syntax at https://goo.gl/R74nmi\).\s*'
-            'If an arg is specified in more than\s*one place, then '
-            'commandline values\s*override config file values which override\s*'
-            'defaults.\s*'
-            'optional arguments:\s*'
-            '-h, --help \s* show this help message and exit\n\s*'
-            '-c CONFIG_FILE, --config CONFIG_FILE\s+my config file\s*'
-            '-w CONFIG_OUTPUT_PATH, --write-config CONFIG_OUTPUT_PATH\s*takes\s*'
-            'the current command line args and writes them\s*'
-            'out to a config file at the given path, then exits\s*'
-            '--arg1 ARG1\s*Arg1 help text\s*'
-            '--flag \s*Flag help text'
+            r'usage: .* \[-h\] -c CONFIG_FILE\s+'
+            r'\[-w CONFIG_OUTPUT_PATH\]\s* --arg1 ARG1\s*\[--flag\]\s*'
+            'Args that start with \'--\' \\(eg. --arg1\\) can also be set in a '
+            r'config file\s*\(~/.myconfig or specified via -c\).\s*'
+            r'Config file syntax allows: key=value,\s*flag=true, stuff=\[a,b,c\] '
+            r'\(for details, see syntax at https://goo.gl/R74nmi\).\s*'
+            r'If an arg is specified in more than\s*one place, then '
+            r'commandline values\s*override config file values which override\s*'
+            r'defaults.\s*'
+            r'optional arguments:\s*'
+            '-h, --help \\s* show this help message and exit\n\\s*'
+            r'-c CONFIG_FILE, --config CONFIG_FILE\s+my config file\s*'
+            r'-w CONFIG_OUTPUT_PATH, --write-config CONFIG_OUTPUT_PATH\s*takes\s*'
+            r'the current command line args and writes them\s*'
+            r'out to a config file at the given path, then exits\s*'
+            r'--arg1 ARG1\s*Arg1 help text\s*'
+            r'--flag \s*Flag help text'
         )
 
     def test_FormatHelpProg(self):
@@ -934,7 +930,7 @@ class TestConfigFileParsers(TestCase):
 
     def testDefaultConfigFileParser_Basic(self):
         p = configargparse.DefaultConfigFileParser()
-        self.assertTrue(len(p.get_syntax_description()) > 0)
+        self.assertGreater(len(p.get_syntax_description()), 0)
 
         # test the simplest case
         input_config_str = StringIO("""a: 3\n""")
@@ -944,7 +940,7 @@ class TestConfigFileParsers(TestCase):
         self.assertEqual(input_config_str.getvalue().replace(": ", " = "),
                          output_config_str)
 
-        self.assertDictEqual(parsed_obj, dict([('a', '3')]))
+        self.assertDictEqual(parsed_obj, {'a': '3'})
 
     def testDefaultConfigFileParser_All(self):
         p = configargparse.DefaultConfigFileParser()
@@ -973,13 +969,13 @@ class TestConfigFileParsers(TestCase):
             l.replace(': ', ' = ') for l in config_lines if l.startswith('_'))+"\n",
             output_config_str)
 
-        self.assertDictEqual(parsed_obj, dict([
-            ('_a', '3'),
-            ('_b', 'c'),
-            ('_list_arg1', ['a', 'b', 'c']),
-            ('_str_arg', 'true'),
-            ('_list_arg2', ['1', '2', '3']),
-        ]))
+        self.assertDictEqual(parsed_obj, {
+            '_a': '3',
+            '_b': 'c',
+            '_list_arg1': ['a', 'b', 'c'],
+            '_str_arg': 'true',
+            '_list_arg2': ['1', '2', '3'],
+        })
 
         self.assertListEqual(parsed_obj['_list_arg1'], ['a', 'b', 'c'])
         self.assertListEqual(parsed_obj['_list_arg2'], ['1', '2', '3'])
@@ -993,7 +989,7 @@ class TestConfigFileParsers(TestCase):
             return
 
         p = configargparse.YAMLConfigFileParser()
-        self.assertTrue(len(p.get_syntax_description()) > 0)
+        self.assertGreater(len(p.get_syntax_description()), 0)
 
         input_config_str = StringIO("""a: '3'\n""")
         parsed_obj = p.parse(input_config_str)
@@ -1001,7 +997,7 @@ class TestConfigFileParsers(TestCase):
 
         self.assertEqual(input_config_str.getvalue(), output_config_str)
 
-        self.assertDictEqual(parsed_obj, dict([('a', '3')]))
+        self.assertDictEqual(parsed_obj, {'a': '3'})
 
     def testYAMLConfigFileParser_All(self):
         try:
@@ -1030,10 +1026,7 @@ class TestConfigFileParsers(TestCase):
         output_config_str = p.serialize(parsed_obj)
         self.assertEqual(input_config_str.getvalue(), output_config_str)
 
-        self.assertDictEqual(parsed_obj, dict([
-            ('a', '3'),
-            ('list_arg', [1,2,3]),
-        ]))
+        self.assertDictEqual(parsed_obj, {'a': '3', 'list_arg': [1,2,3]})
 
 
 
@@ -1047,17 +1040,12 @@ try:
     #Sig = test.test_argparse.Sig
     #NS = test.test_argparse.NS
 except ImportError:
-    if sys.version_info < (2, 7):
-        logging.info("\n\n" + ("=" * 30) +
-                     "\nINFO: Skipping tests for argparse (Python < 2.7)\n"
-                     + ("=" * 30) + "\n")
-    else:
-        logging.error("\n\n"
-            "============================\n"
-            "ERROR: Many tests couldn't be run because 'import test.test_argparse' "
-            "failed. Try building/installing python from source rather than through"
-            " a package manager.\n"
-            "============================\n")
+    logging.error("\n\n"
+        "============================\n"
+        "ERROR: Many tests couldn't be run because 'import test.test_argparse' "
+        "failed. Try building/installing python from source rather than through"
+        " a package manager.\n"
+        "============================\n")
 else:
     test_argparse_source_code = inspect.getsource(test.test_argparse)
     test_argparse_source_code = test_argparse_source_code.replace(
