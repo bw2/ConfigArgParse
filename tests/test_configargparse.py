@@ -595,6 +595,13 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.arg, ['Shell', 'someword', 'anotherword'])
         self.assertEqual(ns.a, "positional_value")
 
+    def testValuesWithLeadingDash(self):
+        self.initParser()
+        self.add_arg("--key")
+        ns = self.parse("--key=-value")
+        self.assertEqual(ns.key, '-value')
+
+
 class TestMisc(TestCase):
     # TODO test different action types with config file, env var
 
