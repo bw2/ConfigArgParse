@@ -45,3 +45,5 @@ docs/_build
 
 # IDEs
 .idea
+
+.eggs/

@@ -265,22 +265,7 @@ class ArgumentParser(argparse.ArgumentParser):
     environment variables and .ini or .yaml-style config files.
     """
 
-    def __init__(self,
-        add_config_file_help=True,
-        add_env_var_help=True,
-        auto_env_var_prefix=None,
-        default_config_files=[],
-        ignore_unknown_config_file_keys=False,
-        config_file_parser_class=DefaultConfigFileParser,
-        args_for_setting_config_path=[],
-        config_arg_is_required=False,
-        config_arg_help_message="config file path",
-        args_for_writing_out_config_file=[],
-        write_out_config_file_arg_help_message="takes the current command line "
-            "args and writes them out to a config file at the given path, then "
-            "exits",
-        **kwargs
-        ):
+    def __init__(self, *args, **kwargs):
 
         """Supports args of the argparse.ArgumentParser constructor
         as **kwargs, as well as the following additional args.
@@ -331,11 +316,34 @@ class ArgumentParser(argparse.ArgumentParser):
             write_out_config_file_arg_help_message: The help message to use for
                 the args in args_for_writing_out_config_file.
         """
+        # This is the only way to make positional args (tested in the argparse
+        # main test suite) and keyword arguments work across both Python 2 and
+        # 3. This could be refactored to not need extra local variables.
+        add_config_file_help = kwargs.pop('add_config_file_help', True)
+        add_env_var_help = kwargs.pop('add_env_var_help', True)
+        auto_env_var_prefix = kwargs.pop('auto_env_var_prefix', None)
+        default_config_files = kwargs.pop('default_config_files', [])
+        ignore_unknown_config_file_keys = kwargs.pop(
+            'ignore_unknown_config_file_keys', False)
+        config_file_parser_class = kwargs.pop('config_file_parser_class',
+                                              DefaultConfigFileParser)
+        args_for_setting_config_path = kwargs.pop(
+            'args_for_setting_config_path', [])
+        config_arg_is_required = kwargs.pop('config_arg_is_required', False)
+        config_arg_help_message = kwargs.pop('config_arg_help_message',
+                                             "config file path")
+        args_for_writing_out_config_file = kwargs.pop(
+            'args_for_writing_out_config_file', [])
+        write_out_config_file_arg_help_message = kwargs.pop(
+            'write_out_config_file_arg_help_message', "takes the current "
+            "command line args and writes them out to a config file at the "
+            "given path, then exits")
+
         self._add_config_file_help = add_config_file_help
         self._add_env_var_help = add_env_var_help
         self._auto_env_var_prefix = auto_env_var_prefix
 
-        argparse.ArgumentParser.__init__(self, **kwargs)
+        argparse.ArgumentParser.__init__(self, *args, **kwargs)
 
         # parse the additional args
         if config_file_parser_class is None:
@@ -431,6 +439,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # add env var settings to the commandline that aren't there already
         env_var_args = []
+        nargs = False
         actions_with_env_var_values = [a for a in self._actions
             if not a.is_positional_arg and a.env_var and a.env_var in env_vars
                 and not already_on_command_line(args, a.option_strings)]
@@ -439,19 +448,22 @@ class ArgumentParser(argparse.ArgumentParser):
             value = env_vars[key]
             # Make list-string into list.
             if action.nargs or isinstance(action, argparse._AppendAction):
+                nargs = True
                 element_capture = re.match('\[(.*)\]', value)
                 if element_capture:
                     value = [val.strip() for val in element_capture.group(1).split(',') if val.strip()]
             env_var_args += self.convert_item_to_command_line_arg(
                 action, key, value)
 
-        args = args + env_var_args
+        if nargs:
+            args = args + env_var_args
+        else:
+            args = env_var_args + args
 
         if env_var_args:
             self._source_to_settings[_ENV_VAR_SOURCE_KEY] = OrderedDict(
                 [(a.env_var, (a, env_vars[a.env_var]))
                     for a in actions_with_env_var_values])
-
 
         # before parsing any config files, check if -h was specified.
         supports_help_arg = any(
@@ -484,6 +496,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
             # add each config item to the commandline unless it's there already
             config_args = []
+            nargs = False
             for key, value in config_items.items():
                 if key in known_config_keys:
                     action = known_config_keys[key]
@@ -503,9 +516,14 @@ class ArgumentParser(argparse.ArgumentParser):
                     if source_key not in self._source_to_settings:
                         self._source_to_settings[source_key] = OrderedDict()
                     self._source_to_settings[source_key][key] = (action, value)
+                    if (action and action.nargs or
+                        isinstance(action, argparse._AppendAction)):
+                        nargs = True
 
-            args = args + config_args
-
+            if nargs:
+                args = args + config_args
+            else:
+                args = config_args + args
 
         # save default settings for use by print_values()
         default_settings = OrderedDict()

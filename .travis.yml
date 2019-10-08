@@ -1,15 +1,29 @@
 # Config file for automatic testing at travis-ci.org
 
-language: python
-
-python:
-  - "3.5"
-  - "3.4"
-  - "3.3"
-  - "3.2"
-  - "2.7"
-  - "2.6"
-  - "pypy"
+matrix:
+  include:
+  - dist: xenial  # Needed for Python 3.7
+    python: 3.7
+    language: python
+  - dist: xenial  # Needed for Python 3.6
+    python: 3.6
+    language: python
+  - python: 3.5
+    language: python
+  - python: 3.4
+    language: python
+  - python: 3.3
+    language: python
+  - python: 3.2
+    language: python
+  - python: 2.7
+    language: python
+  - python: 2.6
+    language: python
+  - python: pypy
+    language: python
+  - python: pypy3
+    language: python
 
 # command to install dependencies: 
 install: pip install mock
