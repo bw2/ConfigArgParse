@@ -12,7 +12,6 @@ matrix:
     language: python
   - python: 3.4
     language: python
-    language: python
   - python: 2.7
     language: python
   - python: pypy
