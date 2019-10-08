@@ -20,6 +20,7 @@ ACTION_TYPES_THAT_DONT_NEED_A_VALUE = (argparse._StoreTrueAction,
 # global ArgumentParser instances
 _parsers = {}
 
+
 def init_argument_parser(name=None, **kwargs):
     """Creates a global ArgumentParser instance with the given name,
     passing any args other than "name" to the ArgumentParser constructor.
@@ -399,11 +400,16 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # normalize args by converting args like --key=value to --key value
         normalized_args = []
+        explicit_param_value_mapping = []
         for arg in args:
             if arg and arg[0] in self.prefix_chars and '=' in arg:
-                key, value =  arg.split('=', 1)
+                key, value = arg.split('=', 1)
                 normalized_args.append(key)
                 normalized_args.append(value)
+                # Remember that these two objects form a key=value pair, will be useful later in
+                # this function. We store the ids of the object, so that any comparison matches
+                # these precise strings, not any other string that would have the same content.
+                explicit_param_value_mapping.append((id(key), id(value)))
             else:
                 normalized_args.append(arg)
         args = normalized_args
@@ -542,9 +548,26 @@ class ArgumentParser(argparse.ArgumentParser):
         if default_settings:
             self._source_to_settings[_DEFAULTS_SOURCE_KEY] = default_settings
 
+        # Some parameters have been passed originally in the form of "--key=value" or "-key=value".
+        # These params are now separated in the args list like [ "--key", "value" ].
+        # However if value is something like "-data", with a leading dash, passing
+        # [ '--key', '-data' ] to ArgParse will be interpreting as passing two keys
+        # "--key" and "-data", thus breaking the parsing process.
+        # To avoid that, we use the explicit key->value mapping set before, to rejoin this as
+        # "key=value" in a new array passed to ArgParse, and allow a proper interpretation.
+        rejoined_args = []
+        i = 0
+        while i < len(args):
+            if i != len(args) - 1 and (id(args[i]), id(args[i + 1])) in explicit_param_value_mapping:
+                rejoined_args.append('{0}={1}'.format(args[i], args[i + 1]))
+                i = i + 1
+            else:
+                rejoined_args.append(args[i])
+            i = i + 1
+
         # parse all args (including commandline, config file, and env var)
         namespace, unknown_args = argparse.ArgumentParser.parse_known_args(
-            self, args=args, namespace=namespace)
+            self, args=rejoined_args, namespace=namespace)
         # handle any args that have is_write_out_config_file_arg set to true
         # check if the user specified this arg on the commandline
         output_file_paths = [getattr(namespace, a.dest, None) for a in self._actions
