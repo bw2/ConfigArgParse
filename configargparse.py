@@ -445,7 +445,7 @@ class ArgumentParser(argparse.ArgumentParser):
             # Make list-string into list.
             if action.nargs or isinstance(action, argparse._AppendAction):
                 nargs = True
-                element_capture = re.match('\[(.*)\]', value)
+                element_capture = re.match(r'\[(.*)\]', value)
                 if element_capture:
                     value = [val.strip() for val in element_capture.group(1).split(',') if val.strip()]
             env_var_args += self.convert_item_to_command_line_arg(
