@@ -100,7 +100,7 @@ Now run the script and pass it the config file:
 
 .. code:: bash
 
-    python my_script.py --genome hg19 --my-config config.txt  f1.vcf  f2.vcf
+    DBSNP_PATH=/data/dbsnp/variants_v2.vcf python config_test.py --my-config config.txt f1.vcf f2.vcf
 
 *output:*
 
@@ -108,30 +108,36 @@ Here is the result:
 
 .. code:: bash
 
-    Namespace(dbsnp='/data/dbsnp/variants.vcf', genome='hg19', my_config='config.txt', vcf=['f1.vcf', 'f2.vcf'], verbose=False)
+    Namespace(dbsnp='/data/dbsnp/variants_v2.vcf', genome='HCMV', my_config='config.txt', v=False, vcf=['f1.vcf', 'f2.vcf'])
     ----------
-    usage: my_script.py [-h] --genome GENOME [-v] -c MY_CONFIG [-d DBSNP]
-                        vcf [vcf ...]
+    usage: config_test.py [-h] -c MY_CONFIG --genome GENOME [-v] [-d DBSNP]
+                          vcf [vcf ...]
+    
     Args that start with '--' (eg. --genome) can also be set in a config file
-    (/etc/settings.ini or /home/jeff/.my_settings or provided via -c) by using
-    .ini or .yaml-style syntax (eg. genome=value). Command-line values override
-    environment variables which override config file values which override
-    defaults.
-
+    (/etc/app/conf.d/*.conf or ~/.my_settings or specified via -c). Config file
+    syntax allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
+    https://goo.gl/R74nmi). If an arg is specified in more than one place, then
+    commandline values override environment variables which override config file
+    values which override defaults.
+    
     positional arguments:
-      vcf                   variant file
+      vcf                   variant file(s)
+    
     optional arguments:
       -h, --help            show this help message and exit
-      --genome GENOME       path to genome file
-      -v                    verbose
       -c MY_CONFIG, --my-config MY_CONFIG
                             config file path
+      --genome GENOME       path to genome file
+      -v                    verbose
       -d DBSNP, --dbsnp DBSNP
                             known variants .vcf [env var: DBSNP_PATH]
+    
     ----------
-    Command Line Args:   --genome hg19 --my-config config.txt f1.vcf f2.vcf
+    Command Line Args:   --my-config config.txt f1.vcf f2.vcf
+    Environment Variables:
+      DBSNP_PATH:        /data/dbsnp/variants_v2.vcf
     Config File (config.txt):
-      dbsnp:             /data/dbsnp/variants.vcf
+      genome:            HCMV
 
 Special Values
 ~~~~~~~~~~~~~~
