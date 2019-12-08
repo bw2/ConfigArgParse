@@ -460,12 +460,12 @@ class TestBasicUseCases(TestCase):
         ns, args = self.parse_known("-x 10 --y 3.8",
                         config_file_contents="bla=3",
                         env_vars={"bla": "2"})
-        self.assertListEqual(args, ["--bla", "3"])
+        self.assertListEqual(args, ["--bla=3"])
 
         self.initParser(ignore_unknown_config_file_keys=False)
         ns, args = self.parse_known(args="-x 1", config_file_contents="bla=3",
             env_vars={"bla": "2"})
-        self.assertEqual(set(args), {"--bla", "3", "-x", "1"})
+        self.assertEqual(set(args), {"--bla=3", "-x", "1"})
 
     def testBooleanValuesCanBeExpressedAsNumbers(self):
         self.initParser()
@@ -541,6 +541,68 @@ class TestBasicUseCases(TestCase):
         self.add_arg("-f", "--file", env_var="FILES", action="append", type=int)
         ns = self.parse("", env_vars = {"file": "[1,2,3]", "VERBOSE": "true"})
         self.assertIsNone(ns.file)
+
+    def testValuesStartingWithDash(self):
+        self.initParser()
+        self.add_arg("--arg0")
+        self.add_arg("--arg1", env_var="ARG1")
+        self.add_arg("--arg2")
+        self.add_arg("--arg3", action='append')
+        self.add_arg("--arg4", action='append', env_var="ARG4")
+        self.add_arg("--arg5", action='append')
+
+        ns = self.parse(
+            "--arg0=-foo --arg3=-foo --arg3=-bar",
+            config_file_contents="arg2: -foo\narg5: [-foo, -bar]",
+            env_vars={"ARG1": "-foo", "ARG4": "[-foo, -bar]"}
+        )
+        self.assertEqual(ns.arg0, "-foo")
+        self.assertEqual(ns.arg1, "-foo")
+        self.assertEqual(ns.arg2, "-foo")
+        self.assertEqual(ns.arg3, ["-foo", "-bar"])
+        self.assertEqual(ns.arg4, ["-foo", "-bar"])
+        self.assertEqual(ns.arg5, ["-foo", "-bar"])
+
+    def testPriorityKnown(self):
+        self.initParser()
+        self.add_arg("--arg", env_var="ARG")
+
+        ns = self.parse(
+            "--arg command_line_val",
+            config_file_contents="arg: config_val",
+            env_vars={"ARG": "env_val"}
+            )
+        self.assertEqual(ns.arg, "command_line_val")
+
+        ns = self.parse(
+            "--arg=command_line_val",
+            config_file_contents="arg: config_val",
+            env_vars={"ARG": "env_val"}
+            )
+        self.assertEqual(ns.arg, "command_line_val")
+
+        ns = self.parse(
+            "",
+            config_file_contents="arg: config_val",
+            env_vars={"ARG": "env_val"}
+            )
+        self.assertEqual(ns.arg, "env_val")
+
+    def testPriorityUnknown(self):
+        self.initParser()
+
+        ns, args = self.parse_known(
+            "--arg command_line_val",
+            config_file_contents="arg: config_val",
+            env_vars={"arg": "env_val"}
+            )
+        self.assertListEqual(args, ["--arg", "command_line_val"])
+
+        ns, args = self.parse_known(
+            "--arg=command_line_val",
+            config_file_contents="arg: config_val",
+            )
+        self.assertListEqual(args, ["--arg=command_line_val"])
 
     def testAutoEnvVarPrefix(self):
         self.initParser(auto_env_var_prefix="TEST_")
@@ -719,7 +781,7 @@ class TestMisc(TestCase):
 
         known, unknown = self.parse_known(command)
 
-        self.assertListEqual(unknown, ['--a2a', '0.5', '--a3a', '0.5'])
+        self.assertListEqual(unknown, ['--a2a=0.5', '--a3a=0.5'])
 
     def test_FormatHelp(self):
         self.initParser(args_for_setting_config_path=["-c", "--config"],

@@ -397,17 +397,6 @@ class ArgumentParser(argparse.ArgumentParser):
         else:
             args = list(args)
 
-        # normalize args by converting args like --key=value to --key value
-        normalized_args = []
-        for arg in args:
-            if arg and arg[0] in self.prefix_chars and '=' in arg:
-                key, value =  arg.split('=', 1)
-                normalized_args.append(key)
-                normalized_args.append(value)
-            else:
-                normalized_args.append(arg)
-        args = normalized_args
-
         for a in self._actions:
             a.is_positional_arg = not a.option_strings
 
@@ -438,7 +427,7 @@ class ArgumentParser(argparse.ArgumentParser):
         nargs = False
         actions_with_env_var_values = [a for a in self._actions
             if not a.is_positional_arg and a.env_var and a.env_var in env_vars
-                and not already_on_command_line(args, a.option_strings)]
+                and not already_on_command_line(args, a.option_strings, self.prefix_chars)]
         for action in actions_with_env_var_values:
             key = action.env_var
             value = env_vars[key]
@@ -497,13 +486,14 @@ class ArgumentParser(argparse.ArgumentParser):
                 if key in known_config_keys:
                     action = known_config_keys[key]
                     discard_this_key = already_on_command_line(
-                        args, action.option_strings)
+                        args, action.option_strings, self.prefix_chars)
                 else:
                     action = None
                     discard_this_key = self._ignore_unknown_config_file_keys or \
                         already_on_command_line(
                             args,
-                            [self.get_command_line_key_for_unknown_config_file_setting(key)])
+                            [self.get_command_line_key_for_unknown_config_file_setting(key)],
+                            self.prefix_chars)
 
                 if not discard_this_key:
                     config_args += self.convert_item_to_command_line_arg(
@@ -526,7 +516,7 @@ class ArgumentParser(argparse.ArgumentParser):
         for action in self._actions:
             cares_about_default_value = (not action.is_positional_arg or
                 action.nargs in [OPTIONAL, ZERO_OR_MORE])
-            if (already_on_command_line(args, action.option_strings) or
+            if (already_on_command_line(args, action.option_strings, self.prefix_chars) or
                     not cares_about_default_value or
                     action.default is None or
                     action.default == SUPPRESS or
@@ -617,7 +607,8 @@ class ArgumentParser(argparse.ArgumentParser):
                     config_file_keys = self.get_possible_config_keys(action)
                     if config_file_keys and not action.is_positional_arg and \
                         already_on_command_line(existing_command_line_args,
-                                                action.option_strings):
+                                                action.option_strings,
+                                                self.prefix_chars):
                         value = getattr(parsed_namespace, action.dest, None)
                         if value is not None:
                             if isinstance(value, bool):
@@ -675,8 +666,7 @@ class ArgumentParser(argparse.ArgumentParser):
         elif isinstance(value, list):
             if action is None or isinstance(action, argparse._AppendAction):
                 for list_elem in value:
-                    args.append( command_line_key )
-                    args.append( str(list_elem) )
+                    args.append( "%s=%s" % (command_line_key, str(list_elem)) )
             elif (isinstance(action, argparse._StoreAction) and action.nargs in ('+', '*')) or (
                 isinstance(action.nargs, int) and action.nargs > 1):
                 args.append( command_line_key )
@@ -686,8 +676,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 self.error(("%s can't be set to a list '%s' unless its action type is changed "
                             "to 'append' or nargs is set to '*', '+', or > 1") % (key, value))
         elif isinstance(value, str):
-            args.append( command_line_key )
-            args.append( value )
+            args.append( "%s=%s" % (command_line_key, value) )
         else:
             raise ValueError("Unexpected value type {} for value: {}".format(
                 type(value), value))
@@ -719,7 +708,7 @@ class ArgumentParser(argparse.ArgumentParser):
         constructor that are present on disk.
 
         Args:
-            command_line_args: List of all args (already split on spaces)
+            command_line_args: List of all args
         """
         # open any default config files
         config_files = [open(f) for files in map(glob.glob, map(os.path.expanduser, self._default_config_files))
@@ -909,13 +898,21 @@ def add_argument(self, *args, **kwargs):
     return action
 
 
-def already_on_command_line(existing_args_list, potential_command_line_args):
+def already_on_command_line(existing_args_list, potential_command_line_args, prefix_chars):
     """Utility method for checking if any of the potential_command_line_args is
     already present in existing_args.
     """
-    return any(potential_arg in existing_args_list
-               for potential_arg in potential_command_line_args)
+    arg_names = []
+    for arg_string in existing_args_list:
+        if arg_string and arg_string[0] in prefix_chars and "=" in arg_string :
+            option_string, explicit_arg = arg_string.split("=", 1)
+            arg_names.append(option_string)
+        else:
+            arg_names.append(arg_string)
 
+    return any(
+        potential_arg in arg_names for potential_arg in potential_command_line_args
+    )
 
 
 # wrap ArgumentParser's add_argument(..) method with the one above
