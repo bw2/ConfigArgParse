@@ -550,9 +550,10 @@ class TestBasicUseCases(TestCase):
         self.add_arg("--arg3", action='append')
         self.add_arg("--arg4", action='append', env_var="ARG4")
         self.add_arg("--arg5", action='append')
+        self.add_arg("--arg6")
 
         ns = self.parse(
-            "--arg0=-foo --arg3=-foo --arg3=-bar",
+            "--arg0=-foo --arg3=-foo --arg3=-bar --arg6=-test-more-dashes",
             config_file_contents="arg2: -foo\narg5: [-foo, -bar]",
             env_vars={"ARG1": "-foo", "ARG4": "[-foo, -bar]"}
         )
@@ -562,6 +563,7 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.arg3, ["-foo", "-bar"])
         self.assertEqual(ns.arg4, ["-foo", "-bar"])
         self.assertEqual(ns.arg5, ["-foo", "-bar"])
+        self.assertEqual(ns.arg6, "-test-more-dashes")
 
     def testPriorityKnown(self):
         self.initParser()
