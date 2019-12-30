@@ -311,6 +311,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 (eg. ["-w", "--write-out-config-file"]). Default: []
             write_out_config_file_arg_help_message: The help message to use for
                 the args in args_for_writing_out_config_file.
+            open_func: function used to open file. Needs to return a file-like object.
         """
         # This is the only way to make positional args (tested in the argparse
         # main test suite) and keyword arguments work across both Python 2 and
@@ -334,6 +335,8 @@ class ArgumentParser(argparse.ArgumentParser):
             'write_out_config_file_arg_help_message', "takes the current "
             "command line args and writes them out to a config file at the "
             "given path, then exits")
+
+        self._open_func = kwargs.pop('open_func', open)
 
         self._add_config_file_help = add_config_file_help
         self._add_env_var_help = add_env_var_help
@@ -554,7 +557,7 @@ class ArgumentParser(argparse.ArgumentParser):
         for output_file_path in output_file_paths:
             # validate the output file path
             try:
-                with open(output_file_path, "w") as output_file:
+                with self._open_func(output_file_path, "w") as output_file:
                     pass
             except IOError as e:
                 raise ValueError("Couldn't open {} for writing: {}".format(
@@ -565,7 +568,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 self._source_to_settings, parsed_namespace)
             file_contents = self._config_file_parser.serialize(config_items)
             for output_file_path in output_file_paths:
-                with open(output_file_path, "w") as output_file:
+                with self._open_func(output_file_path, "w") as output_file:
                     output_file.write(file_contents)
             message = "Wrote config file to " + ", ".join(output_file_paths)
             if exit_after:
@@ -711,8 +714,10 @@ class ArgumentParser(argparse.ArgumentParser):
             command_line_args: List of all args
         """
         # open any default config files
-        config_files = [open(f) for files in map(glob.glob, map(os.path.expanduser, self._default_config_files))
-                        for f in files]
+        config_files = []
+        for files in map(glob.glob, map(os.path.expanduser, self._default_config_files)):
+            for f in files:
+                config_files.append(self._open_func(f))
 
         # list actions with is_config_file_arg=True. Its possible there is more
         # than one such arg.
@@ -752,7 +757,7 @@ class ArgumentParser(argparse.ArgumentParser):
             if not os.path.isfile(user_config_file):
                 self.error('File not found: %s' % user_config_file)
 
-            config_files += [open(user_config_file)]
+            config_files += [self._open_func(user_config_file)]
 
         return config_files
 

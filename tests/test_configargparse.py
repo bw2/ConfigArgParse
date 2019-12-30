@@ -1,5 +1,6 @@
 import argparse
 import configargparse
+from contextlib import contextmanager
 import inspect
 import logging
 import sys
@@ -38,6 +39,20 @@ def replace_error_method(arg_parser):
     arg_parser.exit = types.MethodType(exit_method, arg_parser)
 
     return arg_parser
+
+
+@contextmanager
+def captured_output():
+    """
+    swap stdout and stderr for StringIO so we can do asserts on outputs.
+    """
+    new_out, new_err = StringIO(), StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err
 
 
 class TestCase(unittest.TestCase):
@@ -269,6 +284,28 @@ class TestBasicUseCases(TestCase):
 
     def testBasicCase2_WithGroups(self):
         self.testBasicCase2(use_groups=True)
+
+    def testCustomOpenFunction(self):
+        expected_output = 'dummy open called'
+
+        def dummy_open(p):
+            print(expected_output)
+            return open(p)
+
+        self.initParser(open_func=dummy_open)
+        self.add_arg('--config', is_config_file=True)
+        self.add_arg('--arg1', default=1, type=int)
+
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as config_file:
+            config_file.write('arg1 2')
+            config_file_path = config_file.name
+
+        with captured_output() as (out, _):
+            args = self.parse('--config {}'.format(config_file_path))
+            self.assertTrue(hasattr(args, 'arg1'))
+            self.assertEqual(args.arg1, 2)
+            output = out.getvalue().strip()
+            self.assertEqual(output, expected_output)
 
     def testPositionalAndConfigVarLists(self):
         self.initParser()
