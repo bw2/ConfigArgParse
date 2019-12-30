@@ -292,7 +292,7 @@ class TestBasicUseCases(TestCase):
             print(expected_output)
             return open(p)
 
-        self.initParser(open_func=dummy_open)
+        self.initParser(config_file_open_func=dummy_open)
         self.add_arg('--config', is_config_file=True)
         self.add_arg('--arg1', default=1, type=int)
 
