@@ -3,6 +3,7 @@ import configargparse
 from contextlib import contextmanager
 import inspect
 import logging
+import os
 import sys
 import tempfile
 import types
@@ -17,6 +18,9 @@ if sys.version_info >= (3, 0):
     from io import StringIO
 else:
     from StringIO import StringIO
+
+# set COLUMNS to get expected wrapping
+os.environ['COLUMNS'] = '80'
 
 # enable logging to simplify debugging
 logger = logging.getLogger()
