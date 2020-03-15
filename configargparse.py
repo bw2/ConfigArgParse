@@ -187,6 +187,77 @@ class DefaultConfigFileParser(ConfigFileParser):
         return r.getvalue()
 
 
+class ConfigparserConfigFileParser(ConfigFileParser):
+    """parses INI files using pythons configparser."""
+
+    def get_syntax_description(self):
+        msg = """Uses configparser module to parse an INI file which allows multi-line
+        values.
+        
+        Allowed syntax is that for a ConfigParser with the following options:
+
+            allow_no_value = False,
+            inline_comment_prefixes = ("#",)
+            strict = True
+            empty_lines_in_values = False
+
+        See https://docs.python.org/3/library/configparser.html for details.
+        
+        Note: INI file sections names are still treated as comments.
+        """
+        return msg
+
+    def parse(self, stream):
+        """Parses the keys and values from an INI config file."""
+        import configparser
+        from ast import literal_eval
+        # parse with configparser to allow multi-line values
+        config = configparser.ConfigParser(
+            allow_no_value=False,
+            inline_comment_prefixes=("#",),
+            strict=True,
+            empty_lines_in_values=False,
+        )
+        try:
+            config.read_string(stream.read())
+        except Exception as e:
+            raise ConfigFileParserException("Couldn't parse config file: %s" % e)
+        # convert to dict and remove INI section names
+        result = OrderedDict()
+        for section in config.sections():
+            for k,v in config[section].items():
+                multiLine2SingleLine = v.replace('\n','').replace('\r','')
+                # handle special case for lists
+                if '[' in multiLine2SingleLine and ']' in multiLine2SingleLine:
+                    # ensure not a dict with a list value
+                    prelist_string = multiLine2SingleLine.split('[')[0]
+                    if '{' not in prelist_string:
+                        result[k] = literal_eval(multiLine2SingleLine)
+                    else:
+                        result[k] = multiLine2SingleLine
+                else:
+                    result[k] = multiLine2SingleLine
+        return result
+
+    def serialize(self, items):
+        """Does the inverse of config parsing by taking parsed values and
+        converting them back to a string representing config file contents.
+        """
+        import configparser
+        import io
+        config = configparser.ConfigParser(
+            allow_no_value=False,
+            inline_comment_prefixes=("#",),
+            strict=True,
+            empty_lines_in_values=False,
+        )
+        items = {"DEFAULT":items}
+        config.read_dict(items)
+        stream = io.StringIO()
+        config.write(stream)
+        stream.seek(0)
+        return stream.read()
+
 class YAMLConfigFileParser(ConfigFileParser):
     """Parses YAML config files. Depends on the PyYAML module.
     https://pypi.python.org/pypi/PyYAML
