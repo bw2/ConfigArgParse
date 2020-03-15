@@ -827,6 +827,8 @@ class ArgumentParser(argparse.ArgumentParser):
             env_var_actions = [(a.env_var, a) for a in self._actions
                                if getattr(a, "env_var", None)]
             for env_var, a in env_var_actions:
+                if a.help == SUPPRESS:
+                    continue
                 env_var_help_string = "   [env var: %s]" % env_var
                 if not a.help:
                     a.help = ""
