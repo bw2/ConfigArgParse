@@ -213,8 +213,10 @@ class ConfigparserConfigFileParser(ConfigFileParser):
         from ast import literal_eval
         # parse with configparser to allow multi-line values
         config = configparser.ConfigParser(
+            delimiters=("=",":"),
             allow_no_value=False,
-            inline_comment_prefixes=("#",),
+            comment_prefixes=("#",";"),
+            inline_comment_prefixes=("#",";"),
             strict=True,
             empty_lines_in_values=False,
         )
@@ -226,7 +228,7 @@ class ConfigparserConfigFileParser(ConfigFileParser):
         result = OrderedDict()
         for section in config.sections():
             for k,v in config[section].items():
-                multiLine2SingleLine = v.replace('\n','').replace('\r','')
+                multiLine2SingleLine = v.replace('\n',' ').replace('\r',' ')
                 # handle special case for lists
                 if '[' in multiLine2SingleLine and ']' in multiLine2SingleLine:
                     # ensure not a dict with a list value
