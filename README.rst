@@ -162,11 +162,12 @@ Config File Syntax
 ~~~~~~~~~~~~~~~~~~
 
 Only command line args that have a long version (eg. one that starts with '--')
-can be set in a config file. For example, "--color" can be set by
-putting "color=green" in a config file. The config file syntax depends on the
-constuctor arg: :code:`config_file_parser_class` which can be set to one of the
-provided classes: :code:`DefaultConfigFileParser` or :code:`YAMLConfigFileParser`,
-or to your own subclass of the :code:`ConfigFileParser` abstract class.
+can be set in a config file. For example, "--color" can be set by putting
+"color=green" in a config file. The config file syntax depends on the constuctor
+arg: :code:`config_file_parser_class` which can be set to one of the provided
+classes: :code:`DefaultConfigFileParser`, :code:`YAMLConfigFileParser`,
+:code:`ConfigparserConfigFileParser` or to your own subclass of the
+:code:`ConfigFileParser` abstract class.
 
 *DefaultConfigFileParser*  - the full range of valid syntax is:
 
@@ -204,6 +205,57 @@ or to your own subclass of the :code:`ConfigFileParser` abstract class.
 
         fruit: [apple, orange, lemon]
         indexes: [1, 12, 35, 40]
+
+*ConfigparserConfigFileParser*  - allows a subset of python's configparser
+module syntax (https://docs.python.org/3.7/library/configparser.html). In
+particular the following configparser options are set:
+
+.. code:: py
+
+        config = configparser.ConfigParser(
+            delimiters=("=",":"),
+            allow_no_value=False,
+            comment_prefixes=("#",";"),
+            inline_comment_prefixes=("#",";"),
+            strict=True,
+            empty_lines_in_values=False,
+        )
+
+Once configparser parses the config file all section names are removed, thus all
+keys must have unique names regardless of which INI section they are defined
+under. Also, any keys which have python list syntax are converted to lists by
+evaluating them as python code using ast.literal_eval
+(https://docs.python.org/3/library/ast.html#ast.literal_eval). To facilitate
+this all multi-line values are converted to single-line values. Thus multi-line
+string values will have all new-lines converted to spaces. Note, since key-value
+pairs that have python dictionary syntax are saved as single-line strings, even
+if formatted across multiple lines in the config file, dictionaries can be read
+in and converted to valid python dictionaries with PyYAML's safe_load. Example
+given below:
+
+.. code:: py
+
+        # inside your config file (e.g. config.ini)
+        [section1]  # INI sections treated as comments
+        system1_settings: { # start of multi-line dictionary
+            'a':True,
+            'b':[2, 4, 8, 16],
+            'c':{'start':0, 'stop':1000},
+            'd':'experiment 32 testing simulation with parameter a on'
+            } # end of multi-line dictionary value
+
+        .......
+
+        # in your configargparse setup
+        import configargparse
+        import yaml
+
+        parser = configargparse.ConfigParser(
+            config_file_parser_class=configargparse.ConfigparserConfigFileParser
+        )
+        parser.add_argument('--system1_settings', type=yaml.safe_load)
+        
+        args = parser.parse_args() # now args.system1 is a valid python dict
 
 
 ArgParser Singletons
