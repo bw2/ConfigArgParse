@@ -457,3 +457,11 @@ Relevant sites:
 
 
 .. |Travis CI Status for bw2/ConfigArgParse| image:: https://travis-ci.org/bw2/ConfigArgParse.svg?branch=master
+
+
+Versioning
+~~~~~~~~~~
+
+This software follows `Semantic Versioning`_
+
+.. _Semantic Versioning: http://semver.org/
