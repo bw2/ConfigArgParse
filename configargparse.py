@@ -749,7 +749,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
             if action is None or isinstance(action, argparse._AppendAction):
                 for list_elem in value:
-                    if accepts_list and isinstance(list_elem, list):
+                    if accepts_list_and_has_nargs and isinstance(list_elem, list):
                         args.append(command_line_key)
                         for sub_elem in list_elem:
                             args.append(str(sub_elem))
