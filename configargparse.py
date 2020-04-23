@@ -741,11 +741,11 @@ class ArgumentParser(argparse.ArgumentParser):
                 self.error("Unexpected value for %s: '%s'. Expecting 'true', "
                            "'false', 'yes', 'no', '1' or '0'" % (key, value))
         elif isinstance(value, list):
-            accepts_list = ((isinstance(action, argparse._StoreAction) or
-                             isinstance(action, argparse._AppendAction)) and 
-                            action.nargs is not None and (
-                                action.nargs in ('+', '*')) or 
-                            (isinstance(action.nargs, int) and action.nargs > 1))
+            accepts_list_and_has_nargs = action is not None and action.nargs is not None and (
+                   isinstance(action, argparse._StoreAction) or isinstance(action, argparse._AppendAction)
+            ) and (
+                action.nargs in ('+', '*') or (isinstance(action.nargs, int) and action.nargs > 1)
+            )
 
             if action is None or isinstance(action, argparse._AppendAction):
                 for list_elem in value:
@@ -755,7 +755,7 @@ class ArgumentParser(argparse.ArgumentParser):
                             args.append(str(sub_elem))
                     else:
                         args.append( "%s=%s" % (command_line_key, str(list_elem)) )
-            elif accepts_list:
+            elif accepts_list_and_has_nargs:
                 args.append( command_line_key )
                 for list_elem in value:
                     args.append( str(list_elem) )
