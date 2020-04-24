@@ -841,7 +841,7 @@ class ArgumentParser(argparse.ArgumentParser):
             user_config_file = os.path.expanduser(user_config_file)
             try:
                 stream = self._config_file_open_func(user_config_file)
-            except:
+            except OSError:
                 self.error('File not found: %s' % user_config_file)
 
             config_files += [stream]
