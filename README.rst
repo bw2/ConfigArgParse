@@ -57,7 +57,7 @@ Features
 Example
 ~~~~~~~
 
-*my_script.py*:
+*config_test.py*:
 
 Script that defines 4 options and a positional arg and then parses and prints the values. Also,
 it prints out the help message as well as the string produced by :code:`format_values()` to show
