@@ -842,8 +842,12 @@ class ArgumentParser(argparse.ArgumentParser):
             try:
                 stream = self._config_file_open_func(user_config_file)
             except Exception as e:
+                if len(e.args) == 2:  # OSError
+                    errno, msg = e.args
+                else:
+                    msg = str(e)
                 self.error("Unable to open config file: %s. Error: %s" % (
-                    user_config_file, e
+                    user_config_file, msg
                 ))
 
             config_files += [stream]
