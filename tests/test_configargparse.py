@@ -1029,6 +1029,20 @@ class TestMisc(TestCase):
         options = p.parse(args=[])
         self.assertDictEqual(vars(options), {})
 
+    def testConfigOpenFuncError(self):
+        # test OSError
+        def error_func(path):
+            raise OSError(9, "some error")
+        self.initParser(config_file_open_func=error_func)
+        self.parser.add_argument('-g', is_config_file=True)
+        self.assertParseArgsRaises("Unable to open config file: file.txt. Error: some error", args="-g file.txt")
+
+        # test other error
+        def error_func(path):
+            raise Exception('custom error')
+        self.initParser(config_file_open_func=error_func)
+        self.parser.add_argument('-g', is_config_file=True)
+        self.assertParseArgsRaises("Unable to open config file: file.txt. Error: custom error", args="-g file.txt")
 
 class TestConfigFileParsers(TestCase):
     """Test ConfigFileParser subclasses in isolation"""
