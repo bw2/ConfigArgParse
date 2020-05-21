@@ -481,9 +481,18 @@ class ArgumentParser(argparse.ArgumentParser):
         # to keep track of where values came from (used by print_values()).
         # The settings dicts for env vars and config files will then map
         # the config key to an (argparse Action obj, string value) 2-tuple.
-        self._source_to_settings = OrderedDict()
+        if not hasattr(self, '_source_to_settings'):
+            # parsing args the first time, can overwrite/initialize a_v_pair
+            self._source_to_settings = OrderedDict()
         if args:
-            a_v_pair = (None, list(args))  # copy args list to isolate changes
+            if _COMMAND_LINE_SOURCE_KEY in self._source_to_settings:
+                # previous parsing results already exist, append new command
+                # line to previous commands
+                a_v_pair = self._source_to_settings[_COMMAND_LINE_SOURCE_KEY]['']
+                command_line = a_v_pair[1] + args
+                a_v_pair = (None, list(command_line))
+            else:
+                a_v_pair = (None, list(args))  # copy args list to isolate changes
             self._source_to_settings[_COMMAND_LINE_SOURCE_KEY] = {'': a_v_pair}
 
         # handle auto_env_var_prefix __init__ arg by setting a.env_var as needed
