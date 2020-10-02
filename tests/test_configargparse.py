@@ -427,6 +427,7 @@ class TestBasicUseCases(TestCase):
         self.add_arg('--c')
         self.add_arg('--b', action="store_true")
         self.add_arg('--a', action="append", type=int)
+        self.add_arg('--m', action="append", nargs=3, metavar=("<a1>", "<a2>", "<a3>"),)
 
         ns = self.parse(args="-x 1", env_vars={}, config_file_contents="""
 
@@ -462,6 +463,8 @@ class TestBasicUseCases(TestCase):
         a = 33
         ---
         z z 1
+        ---
+        m = [[1, 2, 3], [4, 5, 6]]
         """)
 
         self.assertEqual(ns.x, 1)
