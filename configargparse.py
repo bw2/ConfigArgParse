@@ -175,12 +175,11 @@ class DefaultConfigFileParser(ConfigFileParser):
                                 value.append([elem.strip() for elem in l_value[1:idx].split(",")])
                                 l_value = l_value[idx+1:].strip()
                             else:
-                                # bad format?  just append the remainder
+                                # bad format? just append the remainder
                                 value.append([l_value])
                                 l_value = ""
                             if l_value.startswith(","):
                                 l_value = l_value[1:].strip()
-                        print("key:", key, "value:", value)
                     else:
                         # handle special case of lists
                         value = [elem.strip() for elem in value[1:-1].split(",")]
