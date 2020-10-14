@@ -271,7 +271,7 @@ class YAMLConfigFileParser(ConfigFileParser):
         return msg
 
     def _load_yaml(self):
-        """lazy-import PyYAML so that configargparse doesn't have to dependend
+        """lazy-import PyYAML so that configargparse doesn't have to depend
         on it unless this parser is used."""
         try:
             import yaml
@@ -352,11 +352,11 @@ class ArgumentParser(argparse.ArgumentParser):
                 environment variable)
             default_config_files: When specified, this list of config files will
                 be parsed in order, with the values from each config file
-                taking precedence over pervious ones. This allows an application
+                taking precedence over previous ones. This allows an application
                 to look for config files in multiple standard locations such as
                 the install directory, home directory, and current directory.
                 Also, shell * syntax can be used to specify all conf files in a
-                directory. For exmaple:
+                directory. For example:
                 ["/etc/conf/app_config.ini",
                  "/etc/conf/conf-enabled/*.ini",
                 "~/.my_app_config.ini",
@@ -847,7 +847,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
     def format_values(self):
         """Returns a string with all args and settings and where they came from
-        (eg. commandline, config file, enviroment variable or default)
+        (eg. commandline, config file, environment variable or default)
         """
         source_key_to_display_value_map = {
             _COMMAND_LINE_SOURCE_KEY: "Command Line Args: ",
@@ -943,7 +943,7 @@ def add_argument(self, *args, **kwargs):
     Additional Args:
         env_var: If set, the value of this environment variable will override
             any config file or default values for this arg (but can itself
-            be overriden on the commandline). Also, if auto_env_var_prefix is
+            be overridden on the commandline). Also, if auto_env_var_prefix is
             set in the constructor, this env var name will be used instead of
             the automatic name.
         is_config_file_arg: If True, this arg is treated as a config file path
