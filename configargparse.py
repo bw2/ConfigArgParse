@@ -164,8 +164,25 @@ class DefaultConfigFileParser(ConfigFileParser):
                 value = key_value_match.group("value")
 
                 if value.startswith("[") and value.endswith("]"):
-                    # handle special case of lists
-                    value = [elem.strip() for elem in value[1:-1].split(",")]
+                    l_value = value[1:-1]
+                    if l_value.startswith("[") and l_value.endswith("]"):
+                        # handle special case of list of lists
+                        # m = [['1', '2', '3'], ['4', '5', '6']]
+                        value = []
+                        while l_value and 0 < len(l_value):
+                            if l_value.startswith("[") and l_value.endswith("]"):
+                                idx = l_value.find("]")
+                                value.append([elem.strip() for elem in l_value[1:idx].split(",")])
+                                l_value = l_value[idx+1:].strip()
+                            else:
+                                # bad format? just append the remainder
+                                value.append([l_value])
+                                l_value = ""
+                            if l_value.startswith(","):
+                                l_value = l_value[1:].strip()
+                    else:
+                        # handle special case of lists
+                        value = [elem.strip() for elem in value[1:-1].split(",")]
 
                 items[key] = value
                 continue
