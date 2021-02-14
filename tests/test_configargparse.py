@@ -480,7 +480,7 @@ class TestBasicUseCases(TestCase):
             '  b: \\s+ True\n'
             '  a: \\s+ 33\n'
             '  z: \\s+ z 1\n')
-        self.assertEqual(ns.m, [['1','2','3'],['4','5','6']])
+        self.assertEqual(ns.m, [['1', '2', '3'], ['4', '5', '6']])
 
         # -x is not a long arg so can't be set via config file
         self.assertParseArgsRaises("argument -x is required"
@@ -1096,11 +1096,11 @@ class TestConfigFileParsers(TestCase):
             '_b': 'c',
             '_list_arg1': ['a', 'b', 'c'],
             '_str_arg': 'true',
-            '_list_arg2': ['1', '2', '3'],
+            '_list_arg2': [1, 2, 3],
         })
 
         self.assertListEqual(parsed_obj['_list_arg1'], ['a', 'b', 'c'])
-        self.assertListEqual(parsed_obj['_list_arg2'], ['1', '2', '3'])
+        self.assertListEqual(parsed_obj['_list_arg2'], [1, 2, 3])
 
     def testYAMLConfigFileParser_Basic(self):
         try:
