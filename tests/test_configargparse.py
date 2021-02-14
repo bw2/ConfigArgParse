@@ -480,7 +480,7 @@ class TestBasicUseCases(TestCase):
             '  b: \\s+ True\n'
             '  a: \\s+ 33\n'
             '  z: \\s+ z 1\n')
-        self.assertEqual(ns.m, [['1','2','3'],['4','5','6']])
+        self.assertEqual(ns.m, [[1, 2, 3], [4, 5, 6]])
 
         # -x is not a long arg so can't be set via config file
         self.assertParseArgsRaises("argument -x is required"
