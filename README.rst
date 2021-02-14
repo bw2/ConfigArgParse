@@ -89,7 +89,7 @@ Since the script above set the config file as required=True, lets create a confi
 
 .. code:: py
 
-    # settings for my_script.py
+    # settings for config_test.py
     genome = HCMV     # cytomegalovirus genome
     dbsnp = /data/dbsnp/variants.vcf
 
