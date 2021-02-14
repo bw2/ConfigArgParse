@@ -1,4 +1,5 @@
 import argparse
+import json
 import glob
 import os
 import re
@@ -164,28 +165,16 @@ class DefaultConfigFileParser(ConfigFileParser):
                 value = key_value_match.group("value")
 
                 if value.startswith("[") and value.endswith("]"):
-                    l_value = value[1:-1]
-                    if l_value.startswith("[") and l_value.endswith("]"):
-                        # handle special case of list of lists
-                        # m = [['1', '2', '3'], ['4', '5', '6']]
-                        value = []
-                        while l_value and 0 < len(l_value):
-                            if l_value.startswith("[") and l_value.endswith("]"):
-                                idx = l_value.find("]")
-                                value.append([elem.strip() for elem in l_value[1:idx].split(",")])
-                                l_value = l_value[idx+1:].strip()
-                            else:
-                                # bad format? just append the remainder
-                                value.append([l_value])
-                                l_value = ""
-                            if l_value.startswith(","):
-                                l_value = l_value[1:].strip()
-                    else:
-                        # handle special case of lists
+                    # handle special case of k=[1,2,3] or other json-like syntax
+                    try:
+                        value = json.loads(value)
+                    except json.decoder.JSONDecodeError as e:
+                        # for backward compatibility with legacy format (eg. where config value is [a, b, c] instead of proper json ["a", "b", "c"]
                         value = [elem.strip() for elem in value[1:-1].split(",")]
 
                 items[key] = value
                 continue
+
 
             raise ConfigFileParserException("Unexpected line {} in {}: {}".format(i,
                 getattr(stream, 'name', 'stream'), line))
