@@ -212,7 +212,7 @@ particular the following configparser options are set:
 
 .. code:: py
 
-        config = configparser.ConfigParser(
+        config = configparser.ArgParser(
             delimiters=("=",":"),
             allow_no_value=False,
             comment_prefixes=("#",";"),
@@ -250,7 +250,7 @@ given below:
         import configargparse
         import yaml
 
-        parser = configargparse.ConfigParser(
+        parser = configargparse.ArgParser(
             config_file_parser_class=configargparse.ConfigparserConfigFileParser
         )
         parser.add_argument('--system1_settings', type=yaml.safe_load)
