@@ -189,7 +189,7 @@ class TestBasicUseCases(TestCase):
                                    if sys.version_info.major < 3 else
                                    "the following arguments are required: vcf, -g/--my-cfg-file",
                                    args="--genome hg19")
-        self.assertParseArgsRaises("not found: file.txt", args="-g file.txt")
+        self.assertParseArgsRaises("Unable to open config file: file.txt. Error: No such file or director", args="-g file.txt")
 
         # check values after setting args on command line
         config_file2 = tempfile.NamedTemporaryFile(mode="w", delete=True)
@@ -838,7 +838,7 @@ class TestMisc(TestCase):
 
         self.assertRegex(self.format_help(),
             r'usage: .* \[-h\] -c CONFIG_FILE\s+'
-            r'\[-w CONFIG_OUTPUT_PATH\]\s* --arg1 ARG1\s*\[--flag\]\s*'
+            r'\[-w CONFIG_OUTPUT_PATH\]\s* --arg1\s+ARG1\s*\[--flag\]\s*'
             'Args that start with \'--\' \\(eg. --arg1\\) can also be set in a '
             r'config file\s*\(~/.myconfig or specified via -c\).\s*'
             r'Config file syntax allows: key=value,\s*flag=true, stuff=\[a,b,c\] '
@@ -1029,6 +1029,20 @@ class TestMisc(TestCase):
         options = p.parse(args=[])
         self.assertDictEqual(vars(options), {})
 
+    def testConfigOpenFuncError(self):
+        # test OSError
+        def error_func(path):
+            raise OSError(9, "some error")
+        self.initParser(config_file_open_func=error_func)
+        self.parser.add_argument('-g', is_config_file=True)
+        self.assertParseArgsRaises("Unable to open config file: file.txt. Error: some error", args="-g file.txt")
+
+        # test other error
+        def error_func(path):
+            raise Exception('custom error')
+        self.initParser(config_file_open_func=error_func)
+        self.parser.add_argument('-g', is_config_file=True)
+        self.assertParseArgsRaises("Unable to open config file: file.txt. Error: custom error", args="-g file.txt")
 
 class TestConfigFileParsers(TestCase):
     """Test ConfigFileParser subclasses in isolation"""
