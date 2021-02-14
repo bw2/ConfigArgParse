@@ -1,5 +1,8 @@
 # Config file for automatic testing at travis-ci.org
 
+arch:
+  - amd64
+  - ppc64le
 language: python
 
 python:
@@ -10,6 +13,12 @@ python:
   - 2.7
   - pypy
   - pypy3
+jobs:
+ exclude:
+  - arch: ppc64le
+    python: pypy
+  - arch: ppc64le
+    python: pypy3
 
 # command to install dependencies: 
 install: pip install mock
