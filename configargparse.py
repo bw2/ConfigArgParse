@@ -168,7 +168,7 @@ class DefaultConfigFileParser(ConfigFileParser):
                     # handle special case of k=[1,2,3] or other json-like syntax
                     try:
                         value = json.loads(value)
-                    except json.decoder.JSONDecodeError as e:
+                    except Exception as e:
                         # for backward compatibility with legacy format (eg. where config value is [a, b, c] instead of proper json ["a", "b", "c"]
                         value = [elem.strip() for elem in value[1:-1].split(",")]
 
