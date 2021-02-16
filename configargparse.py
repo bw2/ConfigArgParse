@@ -893,7 +893,7 @@ class ArgumentParser(argparse.ArgumentParser):
         """Prints the format_values() string (to sys.stdout or another file)."""
         file.write(self.format_values())
 
-    def format_help(self):
+    def _config_file_help(self):
         msg = ""
         added_config_file_help = False
         added_env_var_help = False
@@ -946,10 +946,13 @@ class ArgumentParser(argparse.ArgumentParser):
             msg += (" If an arg is specified in more than one place, then "
                 "commandline values override %s.") % (
                 " which override ".join(value_sources))
-        if msg:
-            self.description = (self.description or "") + " " + msg
 
-        return argparse.ArgumentParser.format_help(self)
+        return msg
+
+    def format_help(self):
+        msg = self._config_file_help()
+        return (argparse.ArgumentParser.format_help(self)
+              + ("\n{}".format(msg) if msg != "" else ""))
 
 
 def add_argument(self, *args, **kwargs):
