@@ -6,6 +6,7 @@ import re
 import sys
 import types
 from collections import OrderedDict
+import textwrap
 
 if sys.version_info >= (3, 0):
     from io import StringIO
@@ -947,7 +948,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 "commandline values override %s.") % (
                 " which override ".join(value_sources))
 
-        return msg
+        text_width = max(self._get_formatter()._width, 11)
+        return textwrap.fill(msg, text_width)
 
     def format_help(self):
         msg = self._config_file_help()
