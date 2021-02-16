@@ -894,7 +894,7 @@ class ArgumentParser(argparse.ArgumentParser):
         """Prints the format_values() string (to sys.stdout or another file)."""
         file.write(self.format_values())
 
-    def _config_file_help(self):
+    def format_help(self):
         msg = ""
         added_config_file_help = False
         added_env_var_help = False
@@ -949,10 +949,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 " which override ".join(value_sources))
 
         text_width = max(self._get_formatter()._width, 11)
-        return textwrap.fill(msg, text_width)
+        msg = textwrap.fill(msg, text_width)
 
-    def format_help(self):
-        msg = self._config_file_help()
         return (argparse.ArgumentParser.format_help(self)
               + ("\n{}".format(msg) if msg != "" else ""))
 
