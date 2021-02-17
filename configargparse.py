@@ -334,6 +334,7 @@ class YAMLConfigFileParser(ConfigFileParser):
 # used while parsing args to keep track of where they came from
 _COMMAND_LINE_SOURCE_KEY = "command_line"
 _ENV_VAR_SOURCE_KEY = "environment_variables"
+_EXCLUDE_FORM_CONFIG_FILE = ['--help', '-h']
 _CONFIG_FILE_SOURCE_KEY = "config_file"
 _DEFAULTS_SOURCE_KEY = "defaults"
 
@@ -439,6 +440,7 @@ class ArgumentParser(argparse.ArgumentParser):
             self.add_argument(*args_for_setting_config_path, dest="config_file",
                 required=config_arg_is_required, help=config_arg_help_message,
                 is_config_file_arg=True)
+            _EXCLUDE_FORM_CONFIG_FILE.extend(args_for_setting_config_path)
 
         if args_for_writing_out_config_file:
             self.add_argument(*args_for_writing_out_config_file,
@@ -446,6 +448,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 metavar="CONFIG_OUTPUT_PATH",
                 help=write_out_config_file_arg_help_message,
                 is_write_out_config_file_arg=True)
+            _EXCLUDE_FORM_CONFIG_FILE.extend(args_for_writing_out_config_file)
 
     def parse_args(self, args = None, namespace = None,
                    config_file_contents = None, env_vars = os.environ):
@@ -653,7 +656,7 @@ class ArgumentParser(argparse.ArgumentParser):
             for output_file_path in output_file_paths:
                 with self._config_file_open_func(output_file_path, "w") as output_file:
                     output_file.write(file_contents)
-            message = "Wrote config file to " + ", ".join(output_file_paths)
+            message = "Wrote config file to " + ", ".join(output_file_paths) + '\n'
             if exit_after:
                 self.exit(0, message)
             else:
@@ -691,15 +694,15 @@ class ArgumentParser(argparse.ArgumentParser):
                 _, existing_command_line_args = settings['']
                 for action in self._actions:
                     config_file_keys = self.get_possible_config_keys(action)
-                    if config_file_keys and not action.is_positional_arg and \
-                        already_on_command_line(existing_command_line_args,
-                                                action.option_strings,
-                                                self.prefix_chars):
+                    action_in_command_line = already_on_command_line(
+                        existing_command_line_args, action.option_strings, self.prefix_chars)
+                    if any(key in action.option_strings for key in _EXCLUDE_FORM_CONFIG_FILE):
+                        continue
+                    if (config_file_keys and not
+                        action.is_positional_arg and not
+                            action_in_command_line):
                         value = getattr(parsed_namespace, action.dest, None)
-                        if value is not None:
-                            if isinstance(value, bool):
-                                value = str(value).lower()
-                            config_file_items[config_file_keys[0]] = value
+                        config_file_items[config_file_keys[0]] = value
 
             elif source == _ENV_VAR_SOURCE_KEY:
                 for key, (action, value) in settings.items():
