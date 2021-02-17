@@ -952,7 +952,7 @@ class ArgumentParser(argparse.ArgumentParser):
         msg = textwrap.fill(msg, text_width)
 
         return (argparse.ArgumentParser.format_help(self)
-              + ("\n{}".format(msg) if msg != "" else ""))
+              + ("\n{}\n".format(msg) if msg != "" else ""))
 
 
 def add_argument(self, *args, **kwargs):
