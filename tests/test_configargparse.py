@@ -259,7 +259,7 @@ class TestBasicUseCases(TestCase):
                 '  -g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE\n'
                 '  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
                 '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n' +
-                7*r'(.+\n)')
+                7*r'(.+\s*)')
         else:
             self.assertRegex(self.format_help(),
                 'usage: .* \\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?'
@@ -275,7 +275,7 @@ class TestBasicUseCases(TestCase):
                 'g2:\n'
                 '  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
                 '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n' +
-                7*r'(.+\n)')
+                7*r'(.+\s*)')
 
         self.assertParseArgsRaises("invalid choice: 'ZZZ'",
             args="--genome hg19 -g %s --format ZZZ f.vcf" % config_file2.name)
@@ -370,7 +370,7 @@ class TestBasicUseCases(TestCase):
             'group1:\n'
             '  --genome GENOME       Path to genome file\n'
             '  -v\n\n' +
-            5*r'(.+\n)')
+            5*r'(.+\s*)')
         config_file.close()
 
     def testSubParsers(self):
@@ -788,7 +788,7 @@ class TestMisc(TestCase):
             '  -h, --help\\s+ show this help message and exit\n'
             '  -c CONFIG_FILE, --config CONFIG_FILE\\s+ my config file\n'
             '  --genome GENOME\\s+ Path to genome file\n\n' +
-            5*r'(.+\n)')
+            5*r'(.+\s*)')
 
         # just run print_values() to make sure it completes and returns None
         self.assertIsNone(self.parser.print_values(file=sys.stderr))
