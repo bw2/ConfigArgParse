@@ -249,8 +249,7 @@ class TestBasicUseCases(TestCase):
         if not use_groups:
             self.assertRegex(self.format_help(),
                 'usage: .* \\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?'
-                '\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n' +
-                9*r'(.+\s+)'+  # repeated 8 times because .+ matches atmost 1 line
+                '\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n'
                 'positional arguments:\n'
                 '  vcf \\s+ Variant file\\(s\\)\n\n'
                 'optional arguments:\n'
@@ -259,12 +258,12 @@ class TestBasicUseCases(TestCase):
                 '  -v\n'
                 '  -g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE\n'
                 '  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
-                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n')
+                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n' +
+                7*r'(.+\s*)')
         else:
             self.assertRegex(self.format_help(),
                 'usage: .* \\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?'
-                '\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n'+
-                9*r'.+\s+'+  # repeated 8 times because .+ matches atmost 1 line
+                '\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n'
                 'positional arguments:\n'
                 '  vcf \\s+ Variant file\\(s\\)\n\n'
                 'optional arguments:\n'
@@ -275,7 +274,8 @@ class TestBasicUseCases(TestCase):
                 '  -g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE\n\n'
                 'g2:\n'
                 '  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
-                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n')
+                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n' +
+                7*r'(.+\s*)')
 
         self.assertParseArgsRaises("invalid choice: 'ZZZ'",
             args="--genome hg19 -g %s --format ZZZ f.vcf" % config_file2.name)
@@ -360,8 +360,7 @@ class TestBasicUseCases(TestCase):
 
         self.assertRegex(self.format_help(),
             r'usage: .* \[-h\] --genome GENOME \[-v\]\s+ \(-f1 TYPE1_CFG_FILE \|'
-            ' \\s*-f2 TYPE2_CFG_FILE\\)\\s+\\(-f FRMT \\| -b\\)\n\n' +
-            7*r'.+\s+'+  # repeated 7 times because .+ matches atmost 1 line
+            ' \\s*-f2 TYPE2_CFG_FILE\\)\\s+\\(-f FRMT \\| -b\\)\n\n'
             'optional arguments:\n'
             '  -h, --help            show this help message and exit\n'
             '  -f1 TYPE1_CFG_FILE, --type1-cfg-file TYPE1_CFG_FILE\n'
@@ -370,7 +369,8 @@ class TestBasicUseCases(TestCase):
             '  -b, --bam\\s+\\[env var: BAM_FORMAT\\]\n\n'
             'group1:\n'
             '  --genome GENOME       Path to genome file\n'
-            '  -v\n')
+            '  -v\n\n' +
+            5*r'(.+\s*)')
         config_file.close()
 
     def testSubParsers(self):
@@ -783,12 +783,12 @@ class TestMisc(TestCase):
         self.assertEqual(ns.genome, "hg20")
 
         self.assertRegex(self.format_help(),
-            'usage: .* \\[-h\\] -c CONFIG_FILE --genome GENOME\n\n'+
-            7*r'.+\s+'+  # repeated 7 times because .+ matches atmost 1 line
+            'usage: .* \\[-h\\] -c CONFIG_FILE --genome GENOME\n\n'
             'optional arguments:\n'
             '  -h, --help\\s+ show this help message and exit\n'
             '  -c CONFIG_FILE, --config CONFIG_FILE\\s+ my config file\n'
-            '  --genome GENOME\\s+ Path to genome file\n')
+            '  --genome GENOME\\s+ Path to genome file\n\n' +
+            5*r'(.+\s*)')
 
         # just run print_values() to make sure it completes and returns None
         self.assertIsNone(self.parser.print_values(file=sys.stderr))
@@ -842,13 +842,6 @@ class TestMisc(TestCase):
         self.assertRegex(self.format_help(),
             r'usage: .* \[-h\] -c CONFIG_FILE\s+'
             r'\[-w CONFIG_OUTPUT_PATH\]\s* --arg1\s+ARG1\s*\[--flag\]\s*'
-            'Args that start with \'--\' \\(eg. --arg1\\) can also be set in a '
-            r'config file\s*\(~/.myconfig or specified via -c\).\s*'
-            r'Config file syntax allows: key=value,\s*flag=true, stuff=\[a,b,c\] '
-            r'\(for details, see syntax at https://goo.gl/R74nmi\).\s*'
-            r'If an arg is specified in more than\s*one place, then '
-            r'commandline values\s*override config file values which override\s*'
-            r'defaults.\s*'
             r'optional arguments:\s*'
             '-h, --help \\s* show this help message and exit\n\\s*'
             r'-c CONFIG_FILE, --config CONFIG_FILE\s+my config file\s*'
@@ -856,7 +849,14 @@ class TestMisc(TestCase):
             r'the current command line args and writes them\s*'
             r'out to a config file at the given path, then exits\s*'
             r'--arg1 ARG1\s*Arg1 help text\s*'
-            r'--flag \s*Flag help text'
+            r'--flag \s*Flag help text\s*'
+            'Args that start with \'--\' \\(eg. --arg1\\) can also be set in a '
+            r'config file\s*\(~/.myconfig or specified via -c\).\s*'
+            r'Config file syntax allows: key=value,\s*flag=true, stuff=\[a,b,c\] '
+            r'\(for details, see syntax at https://goo.gl/R74nmi\).\s*'
+            r'If an arg is specified in more than\s*one place, then '
+            r'commandline values\s*override config file values which override\s*'
+            r'defaults.'
         )
 
     def test_FormatHelpProg(self):

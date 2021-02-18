@@ -6,6 +6,7 @@ import re
 import sys
 import types
 from collections import OrderedDict
+import textwrap
 
 if sys.version_info >= (3, 0):
     from io import StringIO
@@ -946,10 +947,12 @@ class ArgumentParser(argparse.ArgumentParser):
             msg += (" If an arg is specified in more than one place, then "
                 "commandline values override %s.") % (
                 " which override ".join(value_sources))
-        if msg:
-            self.description = (self.description or "") + " " + msg
 
-        return argparse.ArgumentParser.format_help(self)
+        text_width = max(self._get_formatter()._width, 11)
+        msg = textwrap.fill(msg, text_width)
+
+        return (argparse.ArgumentParser.format_help(self)
+              + ("\n{}\n".format(msg) if msg != "" else ""))
 
 
 def add_argument(self, *args, **kwargs):
