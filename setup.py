@@ -70,6 +70,7 @@ if command not in ['test', 'coverage']:
 
 install_requires = []
 tests_require = [
+    'mock',
     'PyYAML',
 ]
 
