@@ -77,9 +77,9 @@ class TestCase(unittest.TestCase):
 
         return self.parser
 
-    def assertParseArgsRaises(self, regex, *args, **kwargs):
+    def assertParseArgsRaises(self, regex, args, **kwargs):
         self.assertRaisesRegex(argparse.ArgumentError, regex, self.parse,
-                               *args, **kwargs)
+                               args=args, **kwargs)
 
 
 class TestBasicUseCases(TestCase):
@@ -486,6 +486,7 @@ class TestBasicUseCases(TestCase):
         self.assertParseArgsRaises("argument -x is required"
                                    if sys.version_info.major < 3 else
                                    "the following arguments are required: -x, --y",
+                                   args="",
                                    config_file_contents="-x 3")
         self.assertParseArgsRaises("invalid float value: 'abc'",
                                    args="-x 5",
@@ -563,6 +564,7 @@ class TestBasicUseCases(TestCase):
         self.add_arg("-v", "--verbose", env_var="VERBOSE", action="store_true")
         self.assertParseArgsRaises("Unexpected value for VERBOSE: 'bla'. "
                                    "Expecting 'true', 'false', 'yes', 'no', '1' or '0'",
+            args="",
             env_vars={"VERBOSE" : "bla"})
         ns = self.parse("",
                         config_file_contents="verbose=true",
@@ -770,7 +772,8 @@ class TestMisc(TestCase):
         self.add_arg('--genome', help='Path to genome file', required=True)
         self.assertParseArgsRaises("argument -c/--config is required"
                                    if sys.version_info.major < 3 else
-                                   "arguments are required: -c/--config",)
+                                   "arguments are required: -c/--config",
+                                   args="")
 
         temp_cfg2 = tempfile.NamedTemporaryFile(mode="w", delete=True)
         ns = self.parse("-c " + temp_cfg2.name)
