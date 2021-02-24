@@ -1174,7 +1174,14 @@ except ImportError:
 else:
     test_argparse_source_code = inspect.getsource(test.test_argparse)
     test_argparse_source_code = test_argparse_source_code.replace(
-        'argparse.ArgumentParser', 'configargparse.ArgumentParser')
+        'argparse.ArgumentParser', 'configargparse.ArgumentParser').replace(
+        'TestHelpFormattingMetaclass', '_TestHelpFormattingMetaclass').replace(
+        'test_main', '_test_main')
+
+    # pytest tries to collect tests from TestHelpFormattingMetaclass, and
+    # test_main, and raises a warning when it finds it's not a test class
+    # nor test function. Renaming TestHelpFormattingMetaclass and test_main
+    # prevents pytest from trying.
 
     # run or debug a subset of the argparse tests
     #test_argparse_source_code = test_argparse_source_code.replace(
