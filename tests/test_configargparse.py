@@ -794,7 +794,9 @@ class TestMisc(TestCase):
             5*r'(.+\s*)')
 
         # just run print_values() to make sure it completes and returns None
-        self.assertIsNone(self.parser.print_values(file=sys.stderr))
+        output = StringIO()
+        self.assertIsNone(self.parser.print_values(file=output))
+        self.assertIn("Command Line Args:", output.getvalue())
 
         # test ignore_unknown_config_file_keys=False
         self.initParser(ignore_unknown_config_file_keys=False)
