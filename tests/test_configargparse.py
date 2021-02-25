@@ -921,6 +921,7 @@ class TestMisc(TestCase):
             expected_config_file_contents.strip())
         self.assertRaisesRegex(ValueError, "Couldn't open / for writing:",
             self.parse, args = command_line_args + " -w /")
+        cfg_f.close()
 
     def testConstructor_WriteOutConfigFileArgs2(self):
         # Test constructor args:
@@ -965,6 +966,7 @@ class TestMisc(TestCase):
                          expected_config_file_contents.strip())
         self.assertRaisesRegex(ValueError, "Couldn't open / for writing:",
                                 self.parse, args = command_line_args + " -w /")
+        cfg_f.close()
 
     def testConstructor_WriteOutConfigFileArgsLong(self):
         """Test config writing with long version of arg
@@ -1008,6 +1010,7 @@ class TestMisc(TestCase):
             expected_config_file_contents.strip())
         self.assertRaisesRegex(ValueError, "Couldn't open / for writing:",
             self.parse, args = command_line_args + " --write-config /")
+        cfg_f.close()
 
     def testMethodAliases(self):
         p = self.parser
