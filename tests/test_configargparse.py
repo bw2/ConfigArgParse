@@ -511,6 +511,46 @@ class TestBasicUseCases(TestCase):
             env_vars={"bla": "2"})
         self.assertEqual(set(args), {"--bla=3", "-x", "1"})
 
+
+    def testQuotedArgumentValues(self):
+        self.initParser()
+        self.add_arg("-a")
+        self.add_arg("--b")
+        self.add_arg("-c")
+        self.add_arg("--d")
+        self.add_arg("-e")
+        self.add_arg("-q")
+        self.add_arg("--quotes")
+
+        # sys.argv equivalent of -a="1"  --b "1" -c= --d "" -e=: -q "\"'" --quotes "\"'"
+        ns = self.parse(args=['-a=1', '--b', '1', '-c=', '--d', '', '-e=:',
+                '-q', '"\'', '--quotes', '"\''],
+                env_vars={}, config_file_contents="")
+
+        self.assertEqual(ns.a, "1")
+        self.assertEqual(ns.b, "1")
+        self.assertEqual(ns.c, "")
+        self.assertEqual(ns.d, "")
+        self.assertEqual(ns.e, ":")
+        self.assertEqual(ns.q, '"\'')
+        self.assertEqual(ns.quotes, '"\'')
+
+    def testQuotedConfigFileValues(self):
+        self.initParser()
+        self.add_arg("--a")
+        self.add_arg("--b")
+        self.add_arg("--c")
+
+        ns = self.parse(args="", env_vars={}, config_file_contents="""
+        a="1"
+        b=:
+        c=
+        """)
+
+        self.assertEqual(ns.a, "1")
+        self.assertEqual(ns.b, ":")
+        self.assertEqual(ns.c, "")
+
     def testBooleanValuesCanBeExpressedAsNumbers(self):
         self.initParser()
         store_true_env_var_name = "STORE_TRUE"
