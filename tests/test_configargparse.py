@@ -77,9 +77,9 @@ class TestCase(unittest.TestCase):
 
         return self.parser
 
-    def assertParseArgsRaises(self, regex, *args, **kwargs):
+    def assertParseArgsRaises(self, regex, args, **kwargs):
         self.assertRaisesRegex(argparse.ArgumentError, regex, self.parse,
-                               *args, **kwargs)
+                               args=args, **kwargs)
 
 
 class TestBasicUseCases(TestCase):
@@ -486,6 +486,7 @@ class TestBasicUseCases(TestCase):
         self.assertParseArgsRaises("argument -x is required"
                                    if sys.version_info.major < 3 else
                                    "the following arguments are required: -x, --y",
+                                   args="",
                                    config_file_contents="-x 3")
         self.assertParseArgsRaises("invalid float value: 'abc'",
                                    args="-x 5",
@@ -563,6 +564,7 @@ class TestBasicUseCases(TestCase):
         self.add_arg("-v", "--verbose", env_var="VERBOSE", action="store_true")
         self.assertParseArgsRaises("Unexpected value for VERBOSE: 'bla'. "
                                    "Expecting 'true', 'false', 'yes', 'no', '1' or '0'",
+            args="",
             env_vars={"VERBOSE" : "bla"})
         ns = self.parse("",
                         config_file_contents="verbose=true",
@@ -770,7 +772,8 @@ class TestMisc(TestCase):
         self.add_arg('--genome', help='Path to genome file', required=True)
         self.assertParseArgsRaises("argument -c/--config is required"
                                    if sys.version_info.major < 3 else
-                                   "arguments are required: -c/--config",)
+                                   "arguments are required: -c/--config",
+                                   args="")
 
         temp_cfg2 = tempfile.NamedTemporaryFile(mode="w", delete=True)
         ns = self.parse("-c " + temp_cfg2.name)
@@ -791,7 +794,9 @@ class TestMisc(TestCase):
             5*r'(.+\s*)')
 
         # just run print_values() to make sure it completes and returns None
-        self.assertIsNone(self.parser.print_values(file=sys.stderr))
+        output = StringIO()
+        self.assertIsNone(self.parser.print_values(file=output))
+        self.assertIn("Command Line Args:", output.getvalue())
 
         # test ignore_unknown_config_file_keys=False
         self.initParser(ignore_unknown_config_file_keys=False)
@@ -918,6 +923,7 @@ class TestMisc(TestCase):
             expected_config_file_contents.strip())
         self.assertRaisesRegex(ValueError, "Couldn't open / for writing:",
             self.parse, args = command_line_args + " -w /")
+        cfg_f.close()
 
     def testConstructor_WriteOutConfigFileArgs2(self):
         # Test constructor args:
@@ -962,6 +968,7 @@ class TestMisc(TestCase):
                          expected_config_file_contents.strip())
         self.assertRaisesRegex(ValueError, "Couldn't open / for writing:",
                                 self.parse, args = command_line_args + " -w /")
+        cfg_f.close()
 
     def testConstructor_WriteOutConfigFileArgsLong(self):
         """Test config writing with long version of arg
@@ -1005,6 +1012,7 @@ class TestMisc(TestCase):
             expected_config_file_contents.strip())
         self.assertRaisesRegex(ValueError, "Couldn't open / for writing:",
             self.parse, args = command_line_args + " --write-config /")
+        cfg_f.close()
 
     def testMethodAliases(self):
         p = self.parser
@@ -1171,7 +1179,14 @@ except ImportError:
 else:
     test_argparse_source_code = inspect.getsource(test.test_argparse)
     test_argparse_source_code = test_argparse_source_code.replace(
-        'argparse.ArgumentParser', 'configargparse.ArgumentParser')
+        'argparse.ArgumentParser', 'configargparse.ArgumentParser').replace(
+        'TestHelpFormattingMetaclass', '_TestHelpFormattingMetaclass').replace(
+        'test_main', '_test_main')
+
+    # pytest tries to collect tests from TestHelpFormattingMetaclass, and
+    # test_main, and raises a warning when it finds it's not a test class
+    # nor test function. Renaming TestHelpFormattingMetaclass and test_main
+    # prevents pytest from trying.
 
     # run or debug a subset of the argparse tests
     #test_argparse_source_code = test_argparse_source_code.replace(

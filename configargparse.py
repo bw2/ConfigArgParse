@@ -855,6 +855,12 @@ class ArgumentParser(argparse.ArgumentParser):
                     errno, msg = e.args
                 else:
                     msg = str(e)
+                # close previously opened config files
+                for config_file in config_files:
+                    try:
+                        config_file.close()
+                    except Exception:
+                        pass
                 self.error("Unable to open config file: %s. Error: %s" % (
                     user_config_file, msg
                 ))
