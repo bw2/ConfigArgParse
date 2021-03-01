@@ -705,6 +705,28 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.arg, ['Shell', 'someword', 'anotherword'])
         self.assertEqual(ns.a, "positional_value")
 
+    def testCounterCommandLine(self):
+        self.initParser()
+        self.add_arg("--verbose", "-v", action="count", default=0)
+
+        ns = self.parse(args="-v -v -v", env_vars={})
+        self.assertEqual(ns.verbose, 3)
+
+        ns = self.parse(args="-vvv", env_vars={})
+        self.assertEqual(ns.verbose, 3)
+
+    def testCounterConfigFile(self):
+        self.initParser()
+        self.add_arg("--verbose", "-v", action="count", default=0)
+
+        ns = self.parse(args="", env_vars={}, config_file_contents="""
+        verbose""")
+        self.assertEqual(ns.verbose, 1)
+
+        ns = self.parse(args="", env_vars={}, config_file_contents="""
+        verbose=3""")
+        self.assertEqual(ns.verbose, 3)
+
 class TestMisc(TestCase):
     # TODO test different action types with config file, env var
 

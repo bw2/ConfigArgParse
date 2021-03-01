@@ -746,6 +746,11 @@ class ArgumentParser(argparse.ArgumentParser):
             elif value.lower() in ("false", "no", "0"):
                 # don't append when set to "false" / "no"
                 pass
+            elif isinstance(action, argparse._CountAction):
+                for arg in args:
+                    if any([arg.startswith(s) for s in action.option_strings]):
+                        value = 0
+                args += [action.option_strings[0]] * int(value)
             else:
                 self.error("Unexpected value for %s: '%s'. Expecting 'true', "
                            "'false', 'yes', 'no', '1' or '0'" % (key, value))
