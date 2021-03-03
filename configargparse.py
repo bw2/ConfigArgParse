@@ -150,7 +150,7 @@ class DefaultConfigFileParser(ConfigFileParser):
             if not line or line[0] in ["#", ";", "["] or line.startswith("---"):
                 continue
 
-            match = re.match(r'^(?P<key>[\w\-]+)\s*' 
+            match = re.match(r'^(?P<key>[^:=;#\s]+)\s*'
                              r'(?:(?P<equal>[:=\s])\s*([\'"]?)(?P<value>.+?)?\3)?'
                              r'\s*(?:\s[;#]\s*(?P<comment>.*?)\s*)?$', line)
             if match:

@@ -1367,6 +1367,15 @@ class TestConfigFileParsers(TestCase):
             {'line': 'key-dash = value',                  'expected': ('key-dash', 'value', None)},
             {'line': 'key-dash=',                         'expected': ('key-dash', '', None)},
             {'line': 'key-dash',                          'expected': ('key-dash', 'true', None)},
+            {'line': 'key@word = value',                  'expected': ('key@word', 'value', None)},
+            {'line': 'key@word=',                         'expected': ('key@word', '', None)},
+            {'line': 'key@word',                          'expected': ('key@word', 'true', None)},
+            {'line': 'key$word = value',                  'expected': ('key$word', 'value', None)},
+            {'line': 'key$word=',                         'expected': ('key$word', '', None)},
+            {'line': 'key$word',                          'expected': ('key$word', 'true', None)},
+            {'line': 'key.word = value',                  'expected': ('key.word', 'value', None)},
+            {'line': 'key.word=',                         'expected': ('key.word', '', None)},
+            {'line': 'key.word',                          'expected': ('key.word', 'true', None)},
         ]
 
         for test in config_lines:
