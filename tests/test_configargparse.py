@@ -512,6 +512,46 @@ class TestBasicUseCases(TestCase):
             env_vars={"bla": "2"})
         self.assertEqual(set(args), {"--bla=3", "-x", "1"})
 
+
+    def testQuotedArgumentValues(self):
+        self.initParser()
+        self.add_arg("-a")
+        self.add_arg("--b")
+        self.add_arg("-c")
+        self.add_arg("--d")
+        self.add_arg("-e")
+        self.add_arg("-q")
+        self.add_arg("--quotes")
+
+        # sys.argv equivalent of -a="1"  --b "1" -c= --d "" -e=: -q "\"'" --quotes "\"'"
+        ns = self.parse(args=['-a=1', '--b', '1', '-c=', '--d', '', '-e=:',
+                '-q', '"\'', '--quotes', '"\''],
+                env_vars={}, config_file_contents="")
+
+        self.assertEqual(ns.a, "1")
+        self.assertEqual(ns.b, "1")
+        self.assertEqual(ns.c, "")
+        self.assertEqual(ns.d, "")
+        self.assertEqual(ns.e, ":")
+        self.assertEqual(ns.q, '"\'')
+        self.assertEqual(ns.quotes, '"\'')
+
+    def testQuotedConfigFileValues(self):
+        self.initParser()
+        self.add_arg("--a")
+        self.add_arg("--b")
+        self.add_arg("--c")
+
+        ns = self.parse(args="", env_vars={}, config_file_contents="""
+        a="1"
+        b=:
+        c=
+        """)
+
+        self.assertEqual(ns.a, "1")
+        self.assertEqual(ns.b, ":")
+        self.assertEqual(ns.c, "")
+
     def testBooleanValuesCanBeExpressedAsNumbers(self):
         self.initParser()
         store_true_env_var_name = "STORE_TRUE"
@@ -1131,6 +1171,249 @@ class TestConfigFileParsers(TestCase):
 
         self.assertListEqual(parsed_obj['_list_arg1'], ['a', 'b', 'c'])
         self.assertListEqual(parsed_obj['_list_arg2'], [1, 2, 3])
+
+    def testDefaultConfigFileParser_BasicValues(self):
+        p = configargparse.DefaultConfigFileParser()
+
+        # test the all syntax case
+        config_lines = [
+            {'line': 'key = value # comment # comment',   'expected': ('key', 'value', 'comment # comment')},
+            {'line': 'key=value#comment ',                'expected': ('key', 'value#comment', None)},
+            {'line': 'key=value',                         'expected': ('key', 'value', None)},
+            {'line': 'key =value',                        'expected': ('key', 'value', None)},
+            {'line': 'key= value',                        'expected': ('key', 'value', None)},
+            {'line': 'key = value',                       'expected': ('key', 'value', None)},
+            {'line': 'key  =  value',                     'expected': ('key', 'value', None)},
+            {'line': ' key  =  value ',                   'expected': ('key', 'value', None)},
+            {'line': 'key:value',                         'expected': ('key', 'value', None)},
+            {'line': 'key :value',                        'expected': ('key', 'value', None)},
+            {'line': 'key: value',                        'expected': ('key', 'value', None)},
+            {'line': 'key : value',                       'expected': ('key', 'value', None)},
+            {'line': 'key  :  value',                     'expected': ('key', 'value', None)},
+            {'line': ' key  :  value ',                   'expected': ('key', 'value', None)},
+            {'line': 'key value',                         'expected': ('key', 'value', None)},
+            {'line': 'key  value',                        'expected': ('key', 'value', None)},
+            {'line': ' key    value ',                    'expected': ('key', 'value', None)},
+        ]
+
+        for test in config_lines:
+            parsed_obj = p.parse(StringIO(test['line']))
+            parsed_obj = dict(parsed_obj)
+            expected = {test['expected'][0]: test['expected'][1]}
+            self.assertDictEqual(parsed_obj, expected,
+                    msg="Line %r" % (test['line']))
+
+    def testDefaultConfigFileParser_QuotedValues(self):
+        p = configargparse.DefaultConfigFileParser()
+
+        # test the all syntax case
+        config_lines = [
+            {'line': 'key="value"',                       'expected': ('key', 'value', None)},
+            {'line': 'key  =  "value"',                   'expected': ('key', 'value', None)},
+            {'line': ' key  =  "value" ',                 'expected': ('key', 'value', None)},
+            {'line': 'key=" value "',                     'expected': ('key', ' value ', None)},
+            {'line': 'key  =  " value "',                 'expected': ('key', ' value ', None)},
+            {'line': ' key  =  " value " ',               'expected': ('key', ' value ', None)},
+            {'line': "key='value'",                       'expected': ('key', 'value', None)},
+            {'line': "key  =  'value'",                   'expected': ('key', 'value', None)},
+            {'line': " key  =  'value' ",                 'expected': ('key', 'value', None)},
+            {'line': "key=' value '",                     'expected': ('key', ' value ', None)},
+            {'line': "key  =  ' value '",                 'expected': ('key', ' value ', None)},
+            {'line': " key  =  ' value ' ",               'expected': ('key', ' value ', None)},
+            {'line': 'key="',                             'expected': ('key', '"', None)},
+            {'line': 'key  =  "',                         'expected': ('key', '"', None)},
+            {'line': ' key  =  " ',                       'expected': ('key', '"', None)},
+            {'line': 'key = \'"value"\'',                 'expected': ('key', '"value"', None)},
+            {'line': 'key = "\'value\'"',                 'expected': ('key', "'value'", None)},
+            {'line': 'key = ""value""',                   'expected': ('key', '"value"', None)},
+            {'line': 'key = \'\'value\'\'',               'expected': ('key', "'value'", None)},
+            {'line': 'key="value',                        'expected': ('key', '"value', None)},
+            {'line': 'key  =  "value',                    'expected': ('key', '"value', None)},
+            {'line': ' key  =  "value ',                  'expected': ('key', '"value', None)},
+            {'line': 'key=value"',                        'expected': ('key', 'value"', None)},
+            {'line': 'key  =  value"',                    'expected': ('key', 'value"', None)},
+            {'line': ' key  =  value " ',                 'expected': ('key', 'value "', None)},
+            {'line': "key='value",                        'expected': ('key', "'value", None)},
+            {'line': "key  =  'value",                    'expected': ('key', "'value", None)},
+            {'line': " key  =  'value ",                  'expected': ('key', "'value", None)},
+            {'line': "key=value'",                        'expected': ('key', "value'", None)},
+            {'line': "key  =  value'",                    'expected': ('key', "value'", None)},
+            {'line': " key  =  value ' ",                 'expected': ('key', "value '", None)},
+        ]
+
+        for test in config_lines:
+            parsed_obj = p.parse(StringIO(test['line']))
+            parsed_obj = dict(parsed_obj)
+            expected = {test['expected'][0]: test['expected'][1]}
+            self.assertDictEqual(parsed_obj, expected,
+                    msg="Line %r" % (test['line']))
+
+    def testDefaultConfigFileParser_BlankValues(self):
+        p = configargparse.DefaultConfigFileParser()
+
+        # test the all syntax case
+        config_lines = [
+            {'line': 'key=',                              'expected': ('key', '', None)},
+            {'line': 'key =',                             'expected': ('key', '', None)},
+            {'line': 'key= ',                             'expected': ('key', '', None)},
+            {'line': 'key = ',                            'expected': ('key', '', None)},
+            {'line': 'key  =  ',                          'expected': ('key', '', None)},
+            {'line': ' key  =   ',                        'expected': ('key', '', None)},
+            {'line': 'key:',                              'expected': ('key', '', None)},
+            {'line': 'key :',                             'expected': ('key', '', None)},
+            {'line': 'key: ',                             'expected': ('key', '', None)},
+            {'line': 'key : ',                            'expected': ('key', '', None)},
+            {'line': 'key  :  ',                          'expected': ('key', '', None)},
+            {'line': ' key  :   ',                        'expected': ('key', '', None)},
+        ]
+
+        for test in config_lines:
+            parsed_obj = p.parse(StringIO(test['line']))
+            parsed_obj = dict(parsed_obj)
+            expected = {test['expected'][0]: test['expected'][1]}
+            self.assertDictEqual(parsed_obj, expected,
+                    msg="Line %r" % (test['line']))
+
+    def testDefaultConfigFileParser_UnspecifiedValues(self):
+        p = configargparse.DefaultConfigFileParser()
+
+        # test the all syntax case
+        config_lines = [
+            {'line': 'key ',                              'expected': ('key', 'true', None)},
+            {'line': 'key',                               'expected': ('key', 'true', None)},
+            {'line': 'key  ',                             'expected': ('key', 'true', None)},
+            {'line': ' key     ',                         'expected': ('key', 'true', None)},
+        ]
+
+        for test in config_lines:
+            parsed_obj = p.parse(StringIO(test['line']))
+            parsed_obj = dict(parsed_obj)
+            expected = {test['expected'][0]: test['expected'][1]}
+            self.assertDictEqual(parsed_obj, expected,
+                    msg="Line %r" % (test['line']))
+
+    def testDefaultConfigFileParser_ColonEqualSignValue(self):
+        p = configargparse.DefaultConfigFileParser()
+
+        # test the all syntax case
+        config_lines = [
+            {'line': 'key=:',                             'expected': ('key', ':', None)},
+            {'line': 'key =:',                            'expected': ('key', ':', None)},
+            {'line': 'key= :',                            'expected': ('key', ':', None)},
+            {'line': 'key = :',                           'expected': ('key', ':', None)},
+            {'line': 'key  =  :',                         'expected': ('key', ':', None)},
+            {'line': ' key  =  : ',                       'expected': ('key', ':', None)},
+            {'line': 'key:=',                             'expected': ('key', '=', None)},
+            {'line': 'key :=',                            'expected': ('key', '=', None)},
+            {'line': 'key: =',                            'expected': ('key', '=', None)},
+            {'line': 'key : =',                           'expected': ('key', '=', None)},
+            {'line': 'key  :  =',                         'expected': ('key', '=', None)},
+            {'line': ' key  :  = ',                       'expected': ('key', '=', None)},
+            {'line': 'key==',                             'expected': ('key', '=', None)},
+            {'line': 'key ==',                            'expected': ('key', '=', None)},
+            {'line': 'key= =',                            'expected': ('key', '=', None)},
+            {'line': 'key = =',                           'expected': ('key', '=', None)},
+            {'line': 'key  =  =',                         'expected': ('key', '=', None)},
+            {'line': ' key  =  = ',                       'expected': ('key', '=', None)},
+            {'line': 'key::',                             'expected': ('key', ':', None)},
+            {'line': 'key ::',                            'expected': ('key', ':', None)},
+            {'line': 'key: :',                            'expected': ('key', ':', None)},
+            {'line': 'key : :',                           'expected': ('key', ':', None)},
+            {'line': 'key  :  :',                         'expected': ('key', ':', None)},
+            {'line': ' key  :  : ',                       'expected': ('key', ':', None)},
+        ]
+
+        for test in config_lines:
+            parsed_obj = p.parse(StringIO(test['line']))
+            parsed_obj = dict(parsed_obj)
+            expected = {test['expected'][0]: test['expected'][1]}
+            self.assertDictEqual(parsed_obj, expected,
+                    msg="Line %r" % (test['line']))
+
+    def testDefaultConfigFileParser_ValuesWithComments(self):
+        p = configargparse.DefaultConfigFileParser()
+
+        # test the all syntax case
+        config_lines = [
+            {'line': 'key=value#comment ',                'expected': ('key', 'value#comment', None)},
+            {'line': 'key=value #comment',                'expected': ('key', 'value', 'comment')},
+            {'line': ' key  =  value  #  comment',        'expected': ('key', 'value', 'comment')},
+            {'line': 'key:value#comment',                 'expected': ('key', 'value#comment', None)},
+            {'line': 'key:value #comment',                'expected': ('key', 'value', 'comment')},
+            {'line': ' key  :  value  #  comment',        'expected': ('key', 'value', 'comment')},
+            {'line': 'key=value;comment ',                'expected': ('key', 'value;comment', None)},
+            {'line': 'key=value ;comment',                'expected': ('key', 'value', 'comment')},
+            {'line': ' key  =  value  ;  comment',        'expected': ('key', 'value', 'comment')},
+            {'line': 'key:value;comment',                 'expected': ('key', 'value;comment', None)},
+            {'line': 'key:value ;comment',                'expected': ('key', 'value', 'comment')},
+            {'line': ' key  :  value  ;  comment',        'expected': ('key', 'value', 'comment')},
+            {'line': 'key = value # comment # comment',   'expected': ('key', 'value', 'comment # comment')},
+            {'line': 'key = "value # comment" # comment', 'expected': ('key', 'value # comment', 'comment')},
+            {'line': 'key = "#" ; comment',               'expected': ('key', '#', 'comment')},
+            {'line': 'key = ";" # comment',               'expected': ('key', ';', 'comment')},
+        ]
+
+        for test in config_lines:
+            parsed_obj = p.parse(StringIO(test['line']))
+            parsed_obj = dict(parsed_obj)
+            expected = {test['expected'][0]: test['expected'][1]}
+            self.assertDictEqual(parsed_obj, expected,
+                    msg="Line %r" % (test['line']))
+
+    def testDefaultConfigFileParser_NegativeValues(self):
+        p = configargparse.DefaultConfigFileParser()
+
+        # test the all syntax case
+        config_lines = [
+            {'line': 'key = -10',                       'expected': ('key', '-10', None)},
+            {'line': 'key : -10',                       'expected': ('key', '-10', None)},
+            {'line': 'key -10',                         'expected': ('key', '-10', None)},
+            {'line': 'key = "-10"',                     'expected': ('key', '-10', None)},
+            {'line': "key  =  '-10'",                   'expected': ('key', '-10', None)},
+            {'line': 'key=-10',                         'expected': ('key', '-10', None)},
+        ]
+
+        for test in config_lines:
+            parsed_obj = p.parse(StringIO(test['line']))
+            parsed_obj = dict(parsed_obj)
+            expected = {test['expected'][0]: test['expected'][1]}
+            self.assertDictEqual(parsed_obj, expected,
+                    msg="Line %r" % (test['line']))
+
+    def testDefaultConfigFileParser_KeySyntax(self):
+        p = configargparse.DefaultConfigFileParser()
+
+        # test the all syntax case
+        config_lines = [
+            {'line': 'key_underscore = value',            'expected': ('key_underscore', 'value', None)},
+            {'line': 'key_underscore=',                   'expected': ('key_underscore', '', None)},
+            {'line': 'key_underscore',                    'expected': ('key_underscore', 'true', None)},
+            {'line': '_key_underscore = value',           'expected': ('_key_underscore', 'value', None)},
+            {'line': '_key_underscore=',                  'expected': ('_key_underscore', '', None)},
+            {'line': '_key_underscore',                   'expected': ('_key_underscore', 'true', None)},
+            {'line': 'key_underscore_ = value',           'expected': ('key_underscore_', 'value', None)},
+            {'line': 'key_underscore_=',                  'expected': ('key_underscore_', '', None)},
+            {'line': 'key_underscore_',                   'expected': ('key_underscore_', 'true', None)},
+            {'line': 'key-dash = value',                  'expected': ('key-dash', 'value', None)},
+            {'line': 'key-dash=',                         'expected': ('key-dash', '', None)},
+            {'line': 'key-dash',                          'expected': ('key-dash', 'true', None)},
+            {'line': 'key@word = value',                  'expected': ('key@word', 'value', None)},
+            {'line': 'key@word=',                         'expected': ('key@word', '', None)},
+            {'line': 'key@word',                          'expected': ('key@word', 'true', None)},
+            {'line': 'key$word = value',                  'expected': ('key$word', 'value', None)},
+            {'line': 'key$word=',                         'expected': ('key$word', '', None)},
+            {'line': 'key$word',                          'expected': ('key$word', 'true', None)},
+            {'line': 'key.word = value',                  'expected': ('key.word', 'value', None)},
+            {'line': 'key.word=',                         'expected': ('key.word', '', None)},
+            {'line': 'key.word',                          'expected': ('key.word', 'true', None)},
+        ]
+
+        for test in config_lines:
+            parsed_obj = p.parse(StringIO(test['line']))
+            parsed_obj = dict(parsed_obj)
+            expected = {test['expected'][0]: test['expected'][1]}
+            self.assertDictEqual(parsed_obj, expected,
+                    msg="Line %r" % (test['line']))
 
     def testYAMLConfigFileParser_Basic(self):
         try:

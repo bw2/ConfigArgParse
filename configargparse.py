@@ -149,22 +149,19 @@ class DefaultConfigFileParser(ConfigFileParser):
             line = line.strip()
             if not line or line[0] in ["#", ";", "["] or line.startswith("---"):
                 continue
-            white_space = "\\s*"
-            key = r"(?P<key>[^:=;#\s]+?)"
-            value = white_space+r"[:=\s]"+white_space+"(?P<value>.+?)"
-            comment = white_space+"(?P<comment>\\s[;#].*)?"
 
-            key_only_match = re.match("^" + key + comment + "$", line)
-            if key_only_match:
-                key = key_only_match.group("key")
-                items[key] = "true"
-                continue
-
-            key_value_match = re.match("^"+key+value+comment+"$", line)
-            if key_value_match:
-                key = key_value_match.group("key")
-                value = key_value_match.group("value")
-
+            match = re.match(r'^(?P<key>[^:=;#\s]+)\s*'
+                             r'(?:(?P<equal>[:=\s])\s*([\'"]?)(?P<value>.+?)?\3)?'
+                             r'\s*(?:\s[;#]\s*(?P<comment>.*?)\s*)?$', line)
+            if match:
+                key = match.group("key")
+                equal = match.group('equal')
+                value = match.group("value")
+                comment = match.group("comment")
+                if value is None and equal is not None and equal != ' ':
+                    value = ''
+                elif value is None:
+                    value = "true"
                 if value.startswith("[") and value.endswith("]"):
                     # handle special case of k=[1,2,3] or other json-like syntax
                     try:
@@ -172,13 +169,12 @@ class DefaultConfigFileParser(ConfigFileParser):
                     except Exception as e:
                         # for backward compatibility with legacy format (eg. where config value is [a, b, c] instead of proper json ["a", "b", "c"]
                         value = [elem.strip() for elem in value[1:-1].split(",")]
-
+                if comment:
+                    comment = comment.strip()[1:].strip()
                 items[key] = value
-                continue
-
-
-            raise ConfigFileParserException("Unexpected line {} in {}: {}".format(i,
-                getattr(stream, 'name', 'stream'), line))
+            else:
+                raise ConfigFileParserException("Unexpected line {} in {}: {}".format(i,
+                    getattr(stream, 'name', 'stream'), line))
         return items
 
     def serialize(self, items):
