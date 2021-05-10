@@ -227,6 +227,7 @@ class ConfigparserConfigFileParser(ConfigFileParser):
             config.read_string(stream.read())
         except Exception as e:
             raise ConfigFileParserException("Couldn't parse config file: %s" % e)
+
         # convert to dict and remove INI section names
         result = OrderedDict()
         for section in config.sections():
@@ -262,6 +263,7 @@ class ConfigparserConfigFileParser(ConfigFileParser):
         config.write(stream)
         stream.seek(0)
         return stream.read()
+
 
 class YAMLConfigFileParser(ConfigFileParser):
     """Parses YAML config files. Depends on the PyYAML module.
@@ -309,7 +311,6 @@ class YAMLConfigFileParser(ConfigFileParser):
                 result[key] = str(value)
 
         return result
-
 
     def serialize(self, items, default_flow_style=False):
         """Does the inverse of config parsing by taking parsed values and
@@ -453,24 +454,34 @@ class ArgumentParser(argparse.ArgumentParser):
             config_file_contents: String. Used for testing.
             env_vars: Dictionary. Used for testing.
         """
-        args, argv = self.parse_known_args(args = args,
-            namespace = namespace,
-            config_file_contents = config_file_contents,
-            env_vars = env_vars)
+        args, argv = self.parse_known_args(
+            args=args,
+            namespace=namespace,
+            config_file_contents=config_file_contents,
+            env_vars=env_vars,
+            ignore_help_args=False)
+
         if argv:
             self.error('unrecognized arguments: %s' % ' '.join(argv))
         return args
 
-
-    def parse_known_args(self, args = None, namespace = None,
-                         config_file_contents = None, env_vars = os.environ):
+    def parse_known_args(
+            self,
+            args=None,
+            namespace=None,
+            config_file_contents=None,
+            env_vars=os.environ,
+            ignore_help_args=False,
+    ):
         """Supports all the same args as the ArgumentParser.parse_args(..),
         as well as the following additional args.
 
         Additional Args:
             args: a list of args as in argparse, or a string (eg. "-x -y bla")
-            config_file_contents: String. Used for testing.
-            env_vars: Dictionary. Used for testing.
+            config_file_contents (str). Used for testing.
+            env_vars (dict). Used for testing.
+            ignore_help_args (bool): This flag determines behavior when user specifies --help or -h. If False,
+                it will have the default behavior - printing help and exiting. If True, it won't do either.
         """
         if args is None:
             args = sys.argv[1:]
@@ -481,6 +492,9 @@ class ArgumentParser(argparse.ArgumentParser):
 
         for a in self._actions:
             a.is_positional_arg = not a.option_strings
+
+        if ignore_help_args:
+            args = [arg for arg in args if arg not in ("-h", "--help")]
 
         # maps a string describing the source (eg. env var) to a settings dict
         # to keep track of where values came from (used by print_values()).
