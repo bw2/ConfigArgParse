@@ -311,6 +311,16 @@ class TestBasicUseCases(TestCase):
             output = out.getvalue().strip()
             self.assertEqual(output, expected_output)
 
+    def testIgnoreHelpArgs(self):
+        p = self.initParser()
+        self.add_arg('--arg1')
+        args, _ = self.parse_known('--arg2 --help', ignore_help_args=True)
+        self.assertEqual(args.arg1, None)
+        self.add_arg('--arg2')
+        args, _ = self.parse_known('--arg2 3 --help', ignore_help_args=True)
+        self.assertEqual(args.arg2, "3")
+        self.assertRaisesRegex(TypeError, "exit", self.parse_known, '--arg2 3 --help', ignore_help_args=False)
+
     def testPositionalAndConfigVarLists(self):
         self.initParser()
         self.add_arg("a")
@@ -320,7 +330,6 @@ class TestBasicUseCases(TestCase):
 
         self.assertEqual(ns.arg, ['Shell', 'someword', 'anotherword'])
         self.assertEqual(ns.a, "positional_value")
-
 
     def testMutuallyExclusiveArgs(self):
         config_file = tempfile.NamedTemporaryFile(mode="w", delete=True)
