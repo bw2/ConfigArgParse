@@ -49,7 +49,10 @@ def launch_http_server(directory):
 
 command = sys.argv[-1]
 if command == 'publish':
-    os.system('python setup.py sdist upload')
+    os.system('rm -rf dist')    
+    os.system('python setup.py sdist')
+    os.system('python3 setup.py bdist_wheel')
+    os.system('twine upload dist/*whl dist/*gz')
     sys.exit()
 elif command == "coverage":
     try:
