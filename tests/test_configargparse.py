@@ -19,6 +19,11 @@ if sys.version_info >= (3, 0):
 else:
     from StringIO import StringIO
 
+if sys.version_info >= (3, 10):
+    OPTIONAL_ARGS_STRING="options"
+else:
+    OPTIONAL_ARGS_STRING="optional arguments"
+
 # set COLUMNS to get expected wrapping
 os.environ['COLUMNS'] = '80'
 
@@ -252,7 +257,7 @@ class TestBasicUseCases(TestCase):
                 '\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n'
                 'positional arguments:\n'
                 '  vcf \\s+ Variant file\\(s\\)\n\n'
-                'optional arguments:\n'
+                f"{OPTIONAL_ARGS_STRING}:\n"
                 '  -h, --help \\s+ show this help message and exit\n'
                 '  --genome GENOME \\s+ Path to genome file\n'
                 '  -v\n'
@@ -266,7 +271,7 @@ class TestBasicUseCases(TestCase):
                 '\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n'
                 'positional arguments:\n'
                 '  vcf \\s+ Variant file\\(s\\)\n\n'
-                'optional arguments:\n'
+                f"{OPTIONAL_ARGS_STRING}:\n"
                 '  -h, --help \\s+ show this help message and exit\n\n'
                 'g1:\n'
                 '  --genome GENOME \\s+ Path to genome file\n'
@@ -370,7 +375,7 @@ class TestBasicUseCases(TestCase):
         self.assertRegex(self.format_help(),
             r'usage: .* \[-h\] --genome GENOME \[-v\]\s+ \(-f1 TYPE1_CFG_FILE \|'
             ' \\s*-f2 TYPE2_CFG_FILE\\)\\s+\\(-f FRMT \\| -b\\)\n\n'
-            'optional arguments:\n'
+            f"{OPTIONAL_ARGS_STRING}:\n"
             '  -h, --help            show this help message and exit\n'
             '  -f1 TYPE1_CFG_FILE, --type1-cfg-file TYPE1_CFG_FILE\n'
             '  -f2 TYPE2_CFG_FILE, --type2-cfg-file TYPE2_CFG_FILE\n'
@@ -858,7 +863,7 @@ class TestMisc(TestCase):
 
         self.assertRegex(self.format_help(),
             'usage: .* \\[-h\\] -c CONFIG_FILE --genome GENOME\n\n'
-            'optional arguments:\n'
+            f"{OPTIONAL_ARGS_STRING}:\n"
             '  -h, --help\\s+ show this help message and exit\n'
             '  -c CONFIG_FILE, --config CONFIG_FILE\\s+ my config file\n'
             '  --genome GENOME\\s+ Path to genome file\n\n' +
@@ -918,7 +923,7 @@ class TestMisc(TestCase):
         self.assertRegex(self.format_help(),
             r'usage: .* \[-h\] -c CONFIG_FILE\s+'
             r'\[-w CONFIG_OUTPUT_PATH\]\s* --arg1\s+ARG1\s*\[--flag\]\s*'
-            r'optional arguments:\s*'
+            f"{OPTIONAL_ARGS_STRING}:\\s*"
             '-h, --help \\s* show this help message and exit\n\\s*'
             r'-c CONFIG_FILE, --config CONFIG_FILE\s+my config file\s*'
             r'-w CONFIG_OUTPUT_PATH, --write-config CONFIG_OUTPUT_PATH\s*takes\s*'
