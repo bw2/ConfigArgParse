@@ -43,7 +43,7 @@ pydoctor \
     --make-html \
     --quiet \
     --project-base-dir=.\
-    --docformat=plaintext \
+    --docformat=google \
     --html-output="${docs_folder}" \
     ./argparse.py ./configargparse.py || true 
 
