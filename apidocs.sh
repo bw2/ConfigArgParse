@@ -34,20 +34,17 @@ echo "__docformat__ = 'restructuredtext'" >> ./argparse.py
 # Delete the file when the script exits
 trap "rm -f ./argparse.py" EXIT
 
-# Run pydoctor build
+# Run pydoctor build, we stick with plaintext for now but we could turn the google format parsing once I've solve 
 pydoctor \
     --project-name="ConfigArgParse ${project_version}" \
     --project-url="https://github.com/bw2/ConfigArgParse" \
     --html-viewsource-base="https://github.com/bw2/ConfigArgParse/tree/${git_sha}" \
+    --intersphinx=https://docs.python.org/3/objects.inv \
     --make-html \
     --quiet \
     --project-base-dir=.\
-    --docformat=google \
+    --docformat=plaintext \
     --html-output="${docs_folder}" \
     ./argparse.py ./configargparse.py || true 
-    
-# There is currently an error 'Unknown target name: "foo".' in 
-# configargparse.ArgumentParser.__init__ that makes the build fails.
-# But ther than that, it looks good.
 
 echo "API docs generated in ${docs_folder}"
