@@ -83,8 +83,8 @@ class ConfigFileParser(object):
             stream: A config file input stream (such as an open file object).
 
         Returns:
-            OrderedDict of items where the keys have type string and the
-            values have type either string or list (eg. to support config file
+            OrderedDict: Items where the keys are strings and the
+            values are either strings or lists (eg. to support config file
             formats like YAML which allow lists).
         """
         raise NotImplementedError("parse(..) not implemented")
@@ -95,8 +95,8 @@ class ConfigFileParser(object):
 
         Args:
             items: an OrderedDict of items to be converted to the config file
-            format. Keys should be strings, and values should be either strings
-            or lists.
+                format. Keys should be strings, and values should be either strings
+                or lists.
 
         Returns:
             Contents of config file as a string
@@ -110,7 +110,7 @@ class ConfigFileParserException(Exception):
 
 class DefaultConfigFileParser(ConfigFileParser):
     """Based on a simplified subset of INI and YAML formats. Here is the
-    supported syntax:
+    supported syntax::
 
 
         # this is a comment
@@ -342,10 +342,10 @@ class ArgumentParser(argparse.ArgumentParser):
 
     def __init__(self, *args, **kwargs):
 
-        """Supports args of the argparse.ArgumentParser constructor
-        as **kwargs, as well as the following additional args.
+        r"""Supports args of the argparse.ArgumentParser constructor
+        as \*\*kwargs, as well as the following additional args.
 
-        Additional Args:
+        Arguments:
             add_config_file_help: Whether to add a description of config file
                 syntax to the help message.
             add_env_var_help: Whether to add something to the help message for
@@ -361,12 +361,14 @@ class ArgumentParser(argparse.ArgumentParser):
                 taking precedence over previous ones. This allows an application
                 to look for config files in multiple standard locations such as
                 the install directory, home directory, and current directory.
-                Also, shell * syntax can be used to specify all conf files in a
-                directory. For example:
-                ["/etc/conf/app_config.ini",
-                 "/etc/conf/conf-enabled/*.ini",
-                "~/.my_app_config.ini",
-                "./app_config.txt"]
+                Also, shell \* syntax can be used to specify all conf files in a
+                directory. For example::
+
+                    ["/etc/conf/app_config.ini",
+                    "/etc/conf/conf-enabled/*.ini",
+                    "~/.my_app_config.ini",
+                    "./app_config.txt"]
+
             ignore_unknown_config_file_keys: If true, settings that are found
                 in a config file but don't correspond to any defined
                 configargparse args will be ignored. If false, they will be
@@ -449,7 +451,7 @@ class ArgumentParser(argparse.ArgumentParser):
         """Supports all the same args as the ArgumentParser.parse_args(..),
         as well as the following additional args.
 
-        Additional Args:
+        Arguments:
             args: a list of args as in argparse, or a string (eg. "-x -y bla")
             config_file_contents: String. Used for testing.
             env_vars: Dictionary. Used for testing.
@@ -476,7 +478,7 @@ class ArgumentParser(argparse.ArgumentParser):
         """Supports all the same args as the ArgumentParser.parse_args(..),
         as well as the following additional args.
 
-        Additional Args:
+        Arguments:
             args: a list of args as in argparse, or a string (eg. "-x -y bla")
             config_file_contents (str). Used for testing.
             env_vars (dict). Used for testing.
@@ -692,7 +694,7 @@ class ArgumentParser(argparse.ArgumentParser):
             source_to_settings: the dictionary described in parse_known_args()
             parsed_namespace: namespace object created within parse_known_args()
         Returns:
-            an OrderedDict where keys are strings and values are either strings
+            OrderedDict: where keys are strings and values are either strings
             or lists
         """
         config_file_items = OrderedDict()
@@ -981,7 +983,7 @@ def add_argument(self, *args, **kwargs):
     This method supports the same args as ArgumentParser.add_argument(..)
     as well as the additional args below.
 
-    Additional Args:
+    Arguments:
         env_var: If set, the value of this environment variable will override
             any config file or default values for this arg (but can itself
             be overridden on the commandline). Also, if auto_env_var_prefix is
