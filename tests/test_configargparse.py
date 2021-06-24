@@ -8,6 +8,8 @@ import sys
 import tempfile
 import types
 import unittest
+from functools import partial
+from textwrap import dedent
 
 try:
     import mock
@@ -1476,15 +1478,56 @@ class TestConfigFileParsers(TestCase):
         self.assertEqual(input_config_str.getvalue(), output_config_str)
 
         self.assertDictEqual(parsed_obj, {'a': '3', 'list_arg': [1,2,3]})
+    
+    ConfigparserArgumentParser = partial(configargparse.ArgumentParser, config_file_parser_class=configargparse.ConfigparserConfigFileParser)
+    _parser_factories = [ConfigparserArgumentParser, 
+                         configargparse.ArgumentParser,]
 
     def test_add_argument_no_config_file_option(self):
+        
+        for factory in self._parser_factories:
+            parser = factory()
+            parser.add_argument('--version', no_config_file=True, action='store_true')
+            parser.add_argument('--name',)
 
-        parser = configargparse.ArgumentParser()
-        parser.add_argument('--version', no_config_file=True, action='store_true')
-        parser.add_argument('--name',)
+            with self.assertRaisesRegex(ValueError, "Not allowed to set option 'version' from config file"):
+                parser.parse([], config_file_contents="[test]\nname = bla4\nversion = true\n")
 
-        with self.assertRaisesRegex(ValueError, "Not allowed to set option 'version' from config file"):
-            parser.parse([], config_file_contents="\nname = bla4\nversion = true\n")
+    def test_ArgumentParser_config_sections(self):
+
+        parser = self.ConfigparserArgumentParser(config_sections = ['test', 'tool:test'])
+        parser.add_argument('--verbose', action='store_true')
+        parser.add_argument('--name', default=None)
+
+        namespace = parser.parse([], config_file_contents=dedent("""
+        [test]
+        verbose = true
+
+        [tool:test]
+        name = bla4
+
+        [tool:pytest]
+        name = pytest
+        verbose = false
+        """))
+
+        self.assertEqual(namespace.verbose, True)
+        self.assertEqual(namespace.name, 'bla4')
+
+        namespace = parser.parse([], config_file_contents=dedent("""
+        [tool:pytest]
+        name = pytest
+        verbose = false
+        """))
+
+        self.assertEqual(namespace.verbose, False)
+        self.assertEqual(namespace.name, None)
+
+    def test_ArgumentParser_config_sections_not_right_format(self):
+
+        with self.assertRaisesRegex(ValueError, "config_file_parser_class must be a subclass of "
+                    "configargparse.ConfigparserConfigFileParser in order to use config_sections argument."):
+            parser = configargparse.ArgumentParser(config_sections = ['test', 'tool:test'])
 
 
 ################################################################################
