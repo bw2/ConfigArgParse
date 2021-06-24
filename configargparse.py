@@ -231,18 +231,21 @@ class ConfigparserConfigFileParser(ConfigFileParser):
         # convert to dict and remove INI section names
         result = OrderedDict()
         for section in config.sections():
-            for k,v in config[section].items():
-                multiLine2SingleLine = v.replace('\n',' ').replace('\r',' ')
-                # handle special case for lists
-                if '[' in multiLine2SingleLine and ']' in multiLine2SingleLine:
-                    # ensure not a dict with a list value
-                    prelist_string = multiLine2SingleLine.split('[')[0]
-                    if '{' not in prelist_string:
-                        result[k] = literal_eval(multiLine2SingleLine)
+            # Support the config_sections option.
+            has_config_sections = hasattr(self, "config_sections")
+            if (has_config_sections and section in getattr(self, "config_sections") or not has_config_sections):
+                for k,v in config[section].items():
+                    multiLine2SingleLine = v.replace('\n',' ').replace('\r',' ')
+                    # handle special case for lists
+                    if '[' in multiLine2SingleLine and ']' in multiLine2SingleLine:
+                        # ensure not a dict with a list value
+                        prelist_string = multiLine2SingleLine.split('[')[0]
+                        if '{' not in prelist_string:
+                            result[k] = literal_eval(multiLine2SingleLine)
+                        else:
+                            result[k] = multiLine2SingleLine
                     else:
                         result[k] = multiLine2SingleLine
-                else:
-                    result[k] = multiLine2SingleLine
         return result
 
     def serialize(self, items):
@@ -374,9 +377,9 @@ class ArgumentParser(argparse.ArgumentParser):
                 can be retrieved using parse_known_args() instead of parse_args()
             config_file_open_func: function used to open a config file for reading
                 or writing. Needs to return a file-like object.
-            config_file_parser_class: configargparse.ConfigFileParser subclass
+            config_file_parser_class: `configargparse.ConfigFileParser` subclass
                 which determines the config file format. configargparse comes
-                with DefaultConfigFileParser and YAMLConfigFileParser.
+                with `DefaultConfigFileParser`, `YAMLConfigFileParser` and `ConfigparserConfigFileParser`.
             args_for_setting_config_path: A list of one or more command line
                 args to be used for specifying the config file path
                 (eg. ["-c", "--config-file"]). Default: []
@@ -392,6 +395,10 @@ class ArgumentParser(argparse.ArgumentParser):
                 (eg. ["-w", "--write-out-config-file"]). Default: []
             write_out_config_file_arg_help_message: The help message to use for
                 the args in args_for_writing_out_config_file.
+            config_sections (list of str): Preconfigured INI sections to load config values from.
+                Other sections are ignored.
+                This is only applicable if config_file_parser_class is 
+                a subclass of `configargparse.ConfigparserConfigFileParser`.
         """
         # This is the only way to make positional args (tested in the argparse
         # main test suite) and keyword arguments work across both Python 2 and
@@ -415,6 +422,11 @@ class ArgumentParser(argparse.ArgumentParser):
             'write_out_config_file_arg_help_message', "takes the current "
             "command line args and writes them out to a config file at the "
             "given path, then exits")
+        config_sections = kwargs.pop("config_sections", [])
+        # check that config_file_parser_class is a subclass of ConfigparserConfigFileParser
+        if config_sections and not issubclass(config_file_parser_class, ConfigparserConfigFileParser):
+            raise ValueError("config_file_parser_class must be a subclass of "
+                    "configargparse.ConfigparserConfigFileParser in order to use config_sections argument.")
 
         self._config_file_open_func = kwargs.pop('config_file_open_func', open)
 
@@ -429,6 +441,9 @@ class ArgumentParser(argparse.ArgumentParser):
             self._config_file_parser = DefaultConfigFileParser()
         else:
             self._config_file_parser = config_file_parser_class()
+            # support config_sections
+            if config_sections:
+                setattr(self._config_file_parser, "config_sections", config_sections)
 
         self._default_config_files = default_config_files
         self._ignore_unknown_config_file_keys = ignore_unknown_config_file_keys
