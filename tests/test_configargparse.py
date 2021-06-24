@@ -1477,6 +1477,14 @@ class TestConfigFileParsers(TestCase):
 
         self.assertDictEqual(parsed_obj, {'a': '3', 'list_arg': [1,2,3]})
 
+    def test_add_argument_no_config_file_option(self):
+
+        parser = configargparse.ArgumentParser()
+        parser.add_argument('--version', no_config_file=True, action='store_true')
+        parser.add_argument('--name',)
+
+        with self.assertRaisesRegex(ValueError, "Not allowed to set option 'version' from config file"):
+            parser.parse([], config_file_contents="\nname = bla4\nversion = true\n")
 
 
 ################################################################################

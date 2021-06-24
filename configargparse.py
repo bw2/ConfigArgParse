@@ -581,6 +581,9 @@ class ArgumentParser(argparse.ArgumentParser):
             for key, value in config_items.items():
                 if key in known_config_keys:
                     action = known_config_keys[key]
+                    # Support explicit no_config_file option to exclude some options from config
+                    if getattr(action, 'no_config_file', None):
+                        raise ValueError(f"Not allowed to set option '{key}' from config file")
                     discard_this_key = already_on_command_line(
                         args, action.option_strings, self.prefix_chars)
                 else:
@@ -804,7 +807,7 @@ class ArgumentParser(argparse.ArgumentParser):
         # Do not write out the config options for writing out a config file
         if getattr(action, 'is_write_out_config_file_arg', None):
             return keys
-
+        
         for arg in action.option_strings:
             if any(arg.startswith(2*c) for c in self.prefix_chars):
                 keys += [arg[2:], arg] # eg. for '--bla' return ['bla', '--bla']
@@ -981,21 +984,24 @@ def add_argument(self, *args, **kwargs):
     This method supports the same args as ArgumentParser.add_argument(..)
     as well as the additional args below.
 
-    Additional Args:
-        env_var: If set, the value of this environment variable will override
+    Arguments:
+        env_var (str): If set, the value of this environment variable will override
             any config file or default values for this arg (but can itself
             be overridden on the commandline). Also, if auto_env_var_prefix is
             set in the constructor, this env var name will be used instead of
             the automatic name.
-        is_config_file_arg: If True, this arg is treated as a config file path
+        is_config_file_arg (bool): If True, this arg is treated as a config file path
             This provides an alternative way to specify config files in place of
             the ArgumentParser(fromfile_prefix_chars=..) mechanism.
             Default: False
-        is_write_out_config_file_arg: If True, this arg will be treated as a
+        is_write_out_config_file_arg (bool): If True, this arg will be treated as a
             config file path, and, when it is specified, will cause
             configargparse to write all current commandline args to this file
             as config options and then exit.
             Default: False
+        no_config_file (bool): If True, this prevents the argument to be settable with 
+            a config file. It will raise an exception if one tries to set this
+            option from a file.
     """
 
     env_var = kwargs.pop("env_var", None)
@@ -1007,12 +1013,15 @@ def add_argument(self, *args, **kwargs):
     is_write_out_config_file_arg = kwargs.pop(
         "is_write_out_config_file_arg", None)
 
+    no_config_file = kwargs.pop('no_config_file', None)
+
     action = self.original_add_argument_method(*args, **kwargs)
 
     action.is_positional_arg = not action.option_strings
     action.env_var = env_var
     action.is_config_file_arg = is_config_file_arg
     action.is_write_out_config_file_arg = is_write_out_config_file_arg
+    action.no_config_file = no_config_file
 
     if action.is_positional_arg and env_var:
         raise ValueError("env_var can't be set for a positional arg.")
