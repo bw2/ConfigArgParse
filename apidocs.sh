@@ -34,7 +34,6 @@ echo "__docformat__ = 'restructuredtext'" >> ./argparse.py
 # Delete the file when the script exits
 trap "rm -f ./argparse.py" EXIT
 
-# Run pydoctor build, we stick with plaintext for now but we could turn the google format parsing once I've solve 
 pydoctor \
     --project-name="ConfigArgParse ${project_version}" \
     --project-url="https://github.com/bw2/ConfigArgParse" \
