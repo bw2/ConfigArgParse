@@ -581,8 +581,9 @@ class ArgumentParser(argparse.ArgumentParser):
             for key, value in config_items.items():
                 if key in known_config_keys:
                     action = known_config_keys[key]
-                    # Support explicit no_config_file option to exclude some options from config
-                    if getattr(action, 'no_config_file', None):
+                    # Support explicit no_config_file option to exclude some options from config. 
+                    # Also raise error for the special case when one tries to set "help = true" from config file.
+                    if getattr(action, 'no_config_file', None) or action.dest == "help":
                         self.error("Not allowed to set option '%s' from config file" % key)
                     discard_this_key = already_on_command_line(
                         args, action.option_strings, self.prefix_chars)
