@@ -1,4 +1,4 @@
-name: apidocs
+name: unit tests
 
 on:
   push:
