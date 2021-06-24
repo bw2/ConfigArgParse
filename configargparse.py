@@ -583,7 +583,7 @@ class ArgumentParser(argparse.ArgumentParser):
                     action = known_config_keys[key]
                     # Support explicit no_config_file option to exclude some options from config
                     if getattr(action, 'no_config_file', None):
-                        raise ValueError(f"Not allowed to set option '{key}' from config file")
+                        self.error("Not allowed to set option '%s' from config file" % key)
                     discard_this_key = already_on_command_line(
                         args, action.option_strings, self.prefix_chars)
                 else:
