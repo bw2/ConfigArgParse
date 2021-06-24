@@ -1,4 +1,6 @@
 import argparse
+from functools import partial
+from textwrap import dedent
 import configargparse
 from contextlib import contextmanager
 import inspect
@@ -1477,15 +1479,31 @@ class TestConfigFileParsers(TestCase):
 
         self.assertDictEqual(parsed_obj, {'a': '3', 'list_arg': [1,2,3]})
 
+    ConfigparserArgumentParser = partial(configargparse.ArgumentParser, config_file_parser_class=configargparse.ConfigparserConfigFileParser)
+    _parser_factories = [ConfigparserArgumentParser, 
+                         configargparse.ArgumentParser,]
+
     def test_add_argument_no_config_file_option(self):
+        
+        for factory in self._parser_factories:
+            parser = factory()
+            parser.add_argument('--version', no_config_file=True, action='store_true')
+            parser.add_argument('--name',)
 
-        parser = configargparse.ArgumentParser()
-        parser.add_argument('--version', no_config_file=True, action='store_true')
-        parser.add_argument('--name',)
+            with self.assertRaises(SystemExit,):
+                parser.parse([], config_file_contents="[test]\nname = bla4\nversion = true\n")
+    
+    def test_help_option_in_config_raise_error(self):
 
-        with self.assertRaisesRegex(ValueError, "Not allowed to set option 'version' from config file"):
-            parser.parse([], config_file_contents="\nname = bla4\nversion = true\n")
+        for factory in self._parser_factories:
+            parser = factory()
+            parser.add_argument('--name')
 
+            with self.assertRaises(SystemExit):
+                parser.parse([], config_file_contents=dedent("""
+                [test]
+                help = true
+                """))
 
 ################################################################################
 # since configargparse should work as a drop-in replacement for argparse
