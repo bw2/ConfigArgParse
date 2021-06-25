@@ -257,13 +257,13 @@ class TestBasicUseCases(TestCase):
                 '\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n'
                 'positional arguments:\n'
                 '  vcf \\s+ Variant file\\(s\\)\n\n'
-                f"{OPTIONAL_ARGS_STRING}:\n"
+                '%s:\n'
                 '  -h, --help \\s+ show this help message and exit\n'
                 '  --genome GENOME \\s+ Path to genome file\n'
                 '  -v\n'
                 '  -g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE\n'
                 '  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
-                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n' +
+                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n'%OPTIONAL_ARGS_STRING +
                 7*r'(.+\s*)')
         else:
             self.assertRegex(self.format_help(),
@@ -271,7 +271,7 @@ class TestBasicUseCases(TestCase):
                 '\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n'
                 'positional arguments:\n'
                 '  vcf \\s+ Variant file\\(s\\)\n\n'
-                f"{OPTIONAL_ARGS_STRING}:\n"
+                '%s:\n'
                 '  -h, --help \\s+ show this help message and exit\n\n'
                 'g1:\n'
                 '  --genome GENOME \\s+ Path to genome file\n'
@@ -279,7 +279,7 @@ class TestBasicUseCases(TestCase):
                 '  -g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE\n\n'
                 'g2:\n'
                 '  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
-                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n' +
+                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n'%OPTIONAL_ARGS_STRING +
                 7*r'(.+\s*)')
 
         self.assertParseArgsRaises("invalid choice: 'ZZZ'",
@@ -375,7 +375,7 @@ class TestBasicUseCases(TestCase):
         self.assertRegex(self.format_help(),
             r'usage: .* \[-h\] --genome GENOME \[-v\]\s+ \(-f1 TYPE1_CFG_FILE \|'
             ' \\s*-f2 TYPE2_CFG_FILE\\)\\s+\\(-f FRMT \\| -b\\)\n\n'
-            f"{OPTIONAL_ARGS_STRING}:\n"
+            '%s:\n'
             '  -h, --help            show this help message and exit\n'
             '  -f1 TYPE1_CFG_FILE, --type1-cfg-file TYPE1_CFG_FILE\n'
             '  -f2 TYPE2_CFG_FILE, --type2-cfg-file TYPE2_CFG_FILE\n'
@@ -383,7 +383,7 @@ class TestBasicUseCases(TestCase):
             '  -b, --bam\\s+\\[env var: BAM_FORMAT\\]\n\n'
             'group1:\n'
             '  --genome GENOME       Path to genome file\n'
-            '  -v\n\n' +
+            '  -v\n\n'%OPTIONAL_ARGS_STRING +
             5*r'(.+\s*)')
         config_file.close()
 
@@ -863,10 +863,10 @@ class TestMisc(TestCase):
 
         self.assertRegex(self.format_help(),
             'usage: .* \\[-h\\] -c CONFIG_FILE --genome GENOME\n\n'
-            f"{OPTIONAL_ARGS_STRING}:\n"
+            '%s:\n'
             '  -h, --help\\s+ show this help message and exit\n'
             '  -c CONFIG_FILE, --config CONFIG_FILE\\s+ my config file\n'
-            '  --genome GENOME\\s+ Path to genome file\n\n' +
+            '  --genome GENOME\\s+ Path to genome file\n\n'%OPTIONAL_ARGS_STRING +
             5*r'(.+\s*)')
 
         # just run print_values() to make sure it completes and returns None
@@ -923,7 +923,7 @@ class TestMisc(TestCase):
         self.assertRegex(self.format_help(),
             r'usage: .* \[-h\] -c CONFIG_FILE\s+'
             r'\[-w CONFIG_OUTPUT_PATH\]\s* --arg1\s+ARG1\s*\[--flag\]\s*'
-            f"{OPTIONAL_ARGS_STRING}:\\s*"
+            '%s:\\s*'
             '-h, --help \\s* show this help message and exit\n\\s*'
             r'-c CONFIG_FILE, --config CONFIG_FILE\s+my config file\s*'
             r'-w CONFIG_OUTPUT_PATH, --write-config CONFIG_OUTPUT_PATH\s*takes\s*'
@@ -937,7 +937,7 @@ class TestMisc(TestCase):
             r'\(for details, see syntax at https://goo.gl/R74nmi\).\s*'
             r'If an arg is specified in more than\s*one place, then '
             r'commandline values\s*override config file values which override\s*'
-            r'defaults.'
+            r'defaults.'%OPTIONAL_ARGS_STRING
         )
 
     def test_FormatHelpProg(self):
