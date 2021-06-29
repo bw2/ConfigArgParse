@@ -75,6 +75,7 @@ install_requires = []
 tests_require = [
     'mock',
     'PyYAML',
+    'pytest',
 ]
 
 
@@ -113,5 +114,6 @@ setup(
     tests_require=tests_require,
     extras_require = {
         'yaml': ["PyYAML"],
+        'test': tests_require,
     }
 )
