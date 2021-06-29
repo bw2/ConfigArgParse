@@ -1,0 +1,518 @@
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-y: scroll;
+}
+
+nav.navbar {
+    width:100%;
+    margin-bottom: 0;
+}
+
+nav.navbar > .navbar-header {
+    margin-right: 0;
+    margin-left: 0;
+    height: 100%;
+    display: inline-block;
+}
+
+.page-header {
+    margin-top: 22px;
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    background-color: #fff;
+    margin-bottom: 3px;
+    border-bottom: 0;
+    box-shadow: 0 0 8px 8px #fff;
+}
+
+.navbar-brand {
+    padding: 0;
+}
+
+.navbar-brand a, .navbar-brand span {
+    color:#777777;
+    padding: 15px;
+    display: inline-block;
+}
+
+.navbar-brand *:first-child {
+    padding-right: 0;
+}
+
+.navbar-brand *:last-child {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.navbar-brand a:hover {
+    color: #444444;
+    text-decoration: none;
+}
+
+a.projecthome:hover {
+    color: #23527c;
+}
+
+.navlinks  {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+}
+
+.navlinks > a {
+    padding: 10px 0 10px 15px;
+}
+
+.navlinks > a:hover {
+    background-color: transparent;
+    text-decoration: none;
+}
+
+.page-header h1 {
+    margin: 0;
+}
+
+.categoryHeader {
+    font-size: 24px;
+    color: #777;
+    margin-bottom: 1.8em;
+}
+
+/* Footer */
+
+footer.navbar {
+    margin: auto 0 0 0;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    background-color: #fff;
+    border-width: 1px 0 0 0;
+    border-radius: 0;
+    text-align: center;
+}
+
+a[name] {
+    position: relative;
+    bottom: 80px;
+    font-size: 0;
+}
+
+ul {
+    margin-top: 10px;
+    margin-left: 10px;
+    padding-left: 10px;
+}
+
+li {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+li a {
+    text-decoration: none;
+}
+
+ul ul {
+    border-left-color: #e1f5fe;
+    border-left-width: 1px;
+    border-left-style: solid;
+}
+
+ul ul ul {
+    border-left-color: #b3e5fc;
+}
+
+ul ul ul ul {
+    border-left-color: #81d4fa;
+}
+
+ul ul ul ul ul {
+    border-left-color: #4fc3f7;
+}
+
+ul ul ul ul ul ul {
+    border-left-color: #29b6f6;
+}
+
+ul ul ul ul ul ul ul {
+    border-left-color: #03a9f4;
+}
+
+ul ul ul ul ul ul ul {
+    border-left-color: #039be5;
+}
+
+.pre {
+    white-space: pre;
+}
+
+.undocumented {
+    font-style: italic;
+    color: #9e9e9e;
+}
+
+.functionBody p {
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+
+#splitTables > p {
+    margin-bottom: 5px;
+}
+
+#splitTables > table {
+    margin-bottom: 20px;
+    width: 100%;
+    border: 0;
+}
+
+#splitTables > table tr {
+    border-bottom-color: #eee;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    width: 100%;
+}
+
+#splitTables > table tr td {
+    padding: 5px;
+    border-left-color: #eee;
+    border-left-width: 1px;
+    border-left-style: solid;
+}
+
+.fieldTable {
+    width: 100%;
+    display: block;
+    border: 0;
+}
+
+/* Arg name */
+.fieldArg {
+    margin-right: 7px;
+}
+
+.fieldArg:before {
+    margin-right: 6px;
+    content: "\2022";
+    font-size: 14px;
+}
+
+.fieldTable tr:not(.fieldStart) td:first-child{
+    padding-left: 10px;
+}
+
+.fieldTable tr td {
+    padding: 2px;
+}
+
+
+/* Argument name + type column table  */
+.fieldTable tr td.fieldArgContainer {
+    width: 250px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* Argument description column or return value desc, etc */
+.fieldTable tr td::nth-child(2) {
+    padding-left: 10px;
+}
+
+/* Kind column table  */
+#splitTables > table tr td:first-child {
+    /* border-left: none; */
+    width: 150px;
+}
+
+/* Attr name column table  */
+#splitTables > table tr td:nth-child(2) {
+    width: 200px;
+}
+
+/* For smaller displays, i.e. half screen or mobile phone */
+@media only screen and (max-width: 1000px) {
+
+    /* Fix size of summary table columns */
+    #splitTables > table {
+        table-layout: fixed;
+    }
+
+    /* Kind column table  */
+    #splitTables > table tr td:first-child {
+        border-left: none;
+        width: 20%;
+    }
+
+    /* Attr name column table  */
+    #splitTables > table tr td:nth-child(2) {
+        width: 35%;
+    }
+
+    /* Summary column table */
+    #splitTables > table tr td:nth-child(3) {
+        width: 45%;
+    }
+
+}
+
+@media only screen and (max-width: 650px) {
+    /* Argument name + type column table  */
+    .fieldTable tr td.fieldArgContainer {
+        width: 175px;
+    }
+}
+
+@media only screen and (max-width: 400px) {
+    /* Argument name + type column table  */
+    .fieldTable tr td.fieldArgContainer {
+        width: 125px;
+    }
+}
+
+tr.package {
+    background-color: #fff3e0;
+}
+
+tr.module {
+    background-color: #fff8e1;
+}
+
+tr.class, tr.classvariable, tr.baseclassvariable {
+    background-color: #fffde7;
+}
+
+tr.instancevariable, tr.baseinstancevariable, tr.variable, tr.attribute, tr.property {
+    background-color: #f3e5f5;
+}
+
+tr.interface {
+    background-color: #fbe9e7;
+}
+
+tr.method, tr.function, tr.basemethod, tr.baseclassmethod, tr.classmethod {
+    background-color: #f1f8e9;
+}
+
+tr.private {
+    background-color: #f1f1f1;
+}
+
+.fieldName {
+    font-weight: bold;
+}
+
+
+#childList > div {
+    margin: 10px;
+    padding: 10px;
+    padding-bottom: 5px;
+}
+
+.functionBody {
+    margin-left: 15px;
+}
+
+.functionBody > #part {
+    font-style: italic;
+}
+
+.functionBody > #part > a {
+    text-decoration: none;
+}
+
+.functionBody .interfaceinfo {
+    font-style: italic;
+    margin-bottom: 3px;
+    margin-top: 3px;
+}
+
+.functionBody > .undocumented {
+
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+
+/*
+- Links to class/function/etc names are nested like this:
+    <code><a>label</a></code>
+  This applies to inline docstring content marked up as code,
+  for example L{foo} in epytext or `bar` in restructuredtext,
+  but also to links that are present in summary tables.
+- 'functionHeader' is used for lines like `def func():` and `var =`
+*/
+code, .pre, #childList > div .functionHeader,
+#splitTables > table tr td:nth-child(2), .fieldArg {
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+code, #childList > div .functionHeader, .fieldArg {
+    font-size: 90%;
+    color: #222222;
+}
+code > a {
+    color:#c7254e;
+    background-color:#f9f2f4;
+}
+/* top navagation bar */
+.page-header > h1 {
+    margin-top: 0;
+}
+.page-header > h1 > code {
+    color: #971c3a;
+}
+
+/*
+This defines the code style, it's black on light gray.
+It also overwrite the default values inherited from bootstrap min
+*/
+code {
+    padding:2px 4px;
+    background-color: #f4f4f4;
+    border-radius:4px
+}
+
+
+a.sourceLink {
+    color: #337ab7;
+    font-weight: normal;
+    background-color: transparent;
+}
+
+
+#childList > div {
+    border-left-color: #03a9f4;
+    border-left-width: 1px;
+    border-left-style: solid;
+    background: #fafafa;
+}
+
+.moduleDocstring {
+    margin: 20px;
+}
+
+#partOf {
+    margin-top: -13px;
+    margin-bottom: 19px;
+}
+
+.fromInitPy {
+    font-style: italic;
+}
+
+pre {
+    padding-left: 0;
+}
+
+/* Private stuff */
+
+body.private-hidden #splitTables .private,
+body.private-hidden #childList .private,
+body.private-hidden #summaryTree .private {
+    display: none;
+}
+
+/* Show private */
+
+#showPrivate:hover {
+    text-decoration: none;
+}
+
+#showPrivate button {
+    padding: 10px;
+}
+
+#showPrivate button:hover {
+    text-decoration: none;
+}
+
+#current-docs-container {
+    font-style: italic;
+    padding-top: 11px;
+}
+
+/* Deprecation stuff */
+
+.deprecationNotice {
+    margin: 10px;
+}
+
+/* Syntax highlighting for source code */
+
+.py-string {
+    color: #337ab7;
+}
+.py-comment {
+    color: #309078;
+    font-style: italic;
+}
+.py-keyword {
+    font-weight: bold;
+}
+.py-defname {
+    color: #a947b8;
+    font-weight: bold;
+}
+.py-builtin {
+    color: #fc7844;
+    font-weight: bold;
+}
+
+/* Doctest */
+
+pre.py-doctest {
+    padding: .5em;
+}
+.py-prompt, .py-more {
+    color: #a8a8a8;
+}
+.py-output {
+    color: #c7254e;
+}
+
+/* Admonitions */
+
+div.rst-admonition p.rst-admonition-title:after {
+    content: ":";
+}
+
+div.rst-admonition p.rst-admonition-title {
+    margin: 0;
+    padding: 0.1em 0 0.35em 0em;
+    font-weight: bold;
+}
+
+div.rst-admonition p.rst-admonition-title {
+    color: #333333;
+}
+
+div.rst-admonition {
+    padding: 8px;
+    margin-bottom: 20px;
+    background-color: #EEE;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+}
+
+div.warning, div.attention, div.danger, div.error, div.caution {
+    background-color: #ffcf9cb0;
+    border: 1px solid #ffbbaa;
+}
+
+div.danger p.rst-admonition-title, div.error p.rst-admonition-title, div.caution p.rst-admonition-title {
+    color: #b94a48;
+}
+
+div.tip p.rst-admonition-title, div.hint p.rst-admonition-title, div.important p.rst-admonition-title{
+    color: #3a87ad;
+}
+
+div.tip, div.hint, div.important {
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+}

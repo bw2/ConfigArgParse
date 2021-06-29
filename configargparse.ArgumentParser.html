@@ -1,0 +1,701 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>configargparse.ArgumentParser</title>
+    <meta name="generator" content="pydoctor 21.2.2"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=0.75" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default">
+  
+  <div class="container">
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+          <span class="navbar-brand">
+            <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5</a> <a href="index.html">API Documentation</a>
+          </span>
+
+          <a href="moduleIndex.html">
+            Modules
+          </a>
+
+          <a href="classIndex.html">
+            Classes
+          </a>
+
+          <a href="nameIndex.html">
+            Names
+          </a>
+      </div>
+
+    </div>
+  </div>
+</nav>
+
+    
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1 class="class"><code><code><a href="configargparse.html">configargparse</a></code><wbr></wbr>.<code><a href="configargparse.ArgumentParser.html">ArgumentParser</a></code></code></h1>
+        <div id="showPrivate">
+          <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+        </div>
+      </div>
+
+      <div class="categoryHeader">
+        class documentation
+      </div>
+
+      <div class="extrasDocstring">
+        <p><code><span class="py-keyword">class</span> <span class="py-defname">ArgumentParser</span>(<a href="https://docs.python.org/3/library/argparse.html#argparse.ArgumentParser" title="argparse.ArgumentParser">argparse.ArgumentParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L338" class="sourceLink">(source)</a></code></p>
+        <p><a href="classIndex.html#configargparse.ArgumentParser">View In Hierarchy</a></p>
+      </div>
+
+      <div class="moduleDocstring">
+        <div>Drop-in replacement for argparse.ArgumentParser that adds support for
+environment variables and .ini or .yaml-style config files.</div>
+      </div>
+
+      <div id="splitTables">
+        <table class="children sortable" id="id76">
+  
+  
+  <tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__init__">__init__</a></code></td>
+    <td>Supports args of the argparse.ArgumentParser constructor as **kwargs, as well as the following additional args.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#convert_item_to_command_line_arg">convert_item_to_command_line_arg</a></code></td>
+    <td>Converts a config file or env var key + value to a list of commandline args to append to the commandline.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#format_help">format_help</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#format_values">format_values</a></code></td>
+    <td>Returns a string with all args and settings and where they came from (eg. commandline, config file, environment variable or default)</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#get_command_line_key_for_unknown_config_file_setting">get_command_line_key_for_unknown_config_file_setting</a></code></td>
+    <td>Compute a commandline arg key to be used for a config file setting that doesn't correspond to any defined configargparse arg (and so doesn't have a user-specified commandline arg key).</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#get_items_for_config_file_output">get_items_for_config_file_output</a></code></td>
+    <td>Converts the given settings back to a dictionary that can be passed to ConfigFormatParser.serialize(..).</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#get_possible_config_keys">get_possible_config_keys</a></code></td>
+    <td>This method decides which actions can be set in a config file and what their keys will be. It returns a list of 0 or more config keys that can be used to set the given action's value in a config file.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#parse_args">parse_args</a></code></td>
+    <td>Supports all the same args as the ArgumentParser.parse_args(..), as well as the following additional args.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#parse_known_args">parse_known_args</a></code></td>
+    <td>Supports all the same args as the ArgumentParser.parse_args(..), as well as the following additional args.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#print_values">print_values</a></code></td>
+    <td>Prints the format_values() string (to sys.stdout or another file).</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#write_config_file">write_config_file</a></code></td>
+    <td>Write the given settings to output files.</td>
+  </tr><tr class="method private">
+    
+    <td>Method</td>
+    <td><code><a href="#_open_config_files">_open_config_files</a></code></td>
+    <td><span class="undocumented">No summary</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_add_config_file_help">_add_config_file_help</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_add_env_var_help">_add_env_var_help</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_auto_env_var_prefix">_auto_env_var_prefix</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_config_file_open_func">_config_file_open_func</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_config_file_parser">_config_file_parser</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_default_config_files">_default_config_files</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_ignore_unknown_config_file_keys">_ignore_unknown_config_file_keys</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_source_to_settings">_source_to_settings</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr>
+</table>
+        
+
+          
+      </div>
+
+      <div id="childList">
+
+        <div class="basemethod">
+  
+  
+  <a name="configargparse.ArgumentParser.__init__">
+    
+  </a>
+  <a name="__init__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">__init__</span>(self, *args, **kwargs):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L343">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Supports args of the argparse.ArgumentParser constructor
+as **kwargs, as well as the following additional args.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">add_config_file_help</span></td><td class="fieldArgDesc">Whether to add a description of config file
+syntax to the help message.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">add_env_var_help</span></td><td class="fieldArgDesc">Whether to add something to the help message for
+args that can be set through environment variables.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">auto_env_var_prefix</span></td><td class="fieldArgDesc">If set to a string instead of None, all config-
+file-settable options will become also settable via environment
+variables whose names are this prefix followed by the config
+file key, all in upper case. (eg. setting this to "<a href="#id1"><span class="rst-problematic" id="rst-id2">foo_</span></a>" will
+allow an arg like "--my-arg" to also be set via the FOO_MY_ARG
+environment variable)</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">default_config_files</span></td><td class="fieldArgDesc"><p>When specified, this list of config files will
+be parsed in order, with the values from each config file
+taking precedence over previous ones. This allows an application
+to look for config files in multiple standard locations such as
+the install directory, home directory, and current directory.
+Also, shell * syntax can be used to specify all conf files in a
+directory. For example:</p>
+<pre class="rst-literal-block">
+["/etc/conf/app_config.ini",
+"/etc/conf/conf-enabled/*.ini",
+"~/.my_app_config.ini",
+"./app_config.txt"]
+</pre>
+</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">ignore_unknown_config_file_keys</span></td><td class="fieldArgDesc">If true, settings that are found
+in a config file but don't correspond to any defined
+configargparse args will be ignored. If false, they will be
+processed and appended to the commandline like other args, and
+can be retrieved using parse_known_args() instead of parse_args()</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config_file_open_func</span></td><td class="fieldArgDesc">function used to open a config file for reading
+or writing. Needs to return a file-like object.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config_file_parser_class</span></td><td class="fieldArgDesc">configargparse.ConfigFileParser subclass
+which determines the config file format. configargparse comes
+with DefaultConfigFileParser and YAMLConfigFileParser.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">args_for_setting_config_path</span></td><td class="fieldArgDesc">A list of one or more command line
+args to be used for specifying the config file path
+(eg. ["-c", "--config-file"]). Default: []</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config_arg_is_required</span></td><td class="fieldArgDesc">When args_for_setting_config_path is set,
+set this to True to always require users to provide a config path.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config_arg_help_message</span></td><td class="fieldArgDesc">the help message to use for the
+args listed in args_for_setting_config_path.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">args_for_writing_out_config_file</span></td><td class="fieldArgDesc">A list of one or more command line
+args to use for specifying a config file output path. If
+provided, these args cause configargparse to write out a config
+file with settings based on the other provided commandline args,
+environment variants and defaults, and then to exit.
+(eg. ["-w", "--write-out-config-file"]). Default: []</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">write_out_config_file_arg_help_message</span></td><td class="fieldArgDesc">The help message to use for
+the args in args_for_writing_out_config_file.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.ArgumentParser.convert_item_to_command_line_arg">
+    
+  </a>
+  <a name="convert_item_to_command_line_arg">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">convert_item_to_command_line_arg</span>(self, action, key, value):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L735">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Converts a config file or env var key + value to a list of
+commandline args to append to the commandline.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">action</span></td><td class="fieldArgDesc">The argparse Action object for this setting, or None if this
+config file setting doesn't correspond to any defined
+configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key</span></td><td class="fieldArgDesc">string (config file key or env var name)</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">value</span></td><td class="fieldArgDesc">parsed value of type string or list</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.ArgumentParser.format_help">
+    
+  </a>
+  <a name="format_help">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">format_help</span>(self):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L920">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.ArgumentParser.format_values">
+    
+  </a>
+  <a name="format_values">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">format_values</span>(self):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L889">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Returns a string with all args and settings and where they came from
+(eg. commandline, config file, environment variable or default)</div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.ArgumentParser.get_command_line_key_for_unknown_config_file_setting">
+    
+  </a>
+  <a name="get_command_line_key_for_unknown_config_file_setting">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">get_command_line_key_for_unknown_config_file_setting</span>(self, key):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L675">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Compute a commandline arg key to be used for a config file setting
+that doesn't correspond to any defined configargparse arg (and so
+doesn't have a user-specified commandline arg key).<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key</span></td><td class="fieldArgDesc">The config file key that was being set.</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.ArgumentParser.get_items_for_config_file_output">
+    
+  </a>
+  <a name="get_items_for_config_file_output">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">get_items_for_config_file_output</span>(self, source_to_settings, parsed_namespace):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L688">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Converts the given settings back to a dictionary that can be passed
+to ConfigFormatParser.serialize(..).<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">source_to_settings</span></td><td class="fieldArgDesc">the dictionary described in parse_known_args()</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">parsed_namespace</span></td><td class="fieldArgDesc">namespace object created within parse_known_args()</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/collections.html#collections.OrderedDict">OrderedDict</a></code></td><td class="fieldArgDesc">where keys are strings and values are either strings
+or lists</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.ArgumentParser.get_possible_config_keys">
+    
+  </a>
+  <a name="get_possible_config_keys">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">get_possible_config_keys</span>(self, action):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L799">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>This method decides which actions can be set in a config file and
+what their keys will be. It returns a list of 0 or more config keys that
+can be used to set the given action's value in a config file.</div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.ArgumentParser.parse_args">
+    
+  </a>
+  <a name="parse_args">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">parse_args</span>(self, args=None, namespace=None, config_file_contents=None, env_vars=os.environ):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L449">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Supports all the same args as the ArgumentParser.parse_args(..),
+as well as the following additional args.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">args</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">namespace</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config_file_contents</span></td><td class="fieldArgDesc">String. Used for testing.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">env_vars</span></td><td class="fieldArgDesc">Dictionary. Used for testing.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args</span></td><td class="fieldArgDesc">a list of args as in argparse, or a string (eg. "-x -y bla")</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.ArgumentParser.parse_known_args">
+    
+  </a>
+  <a name="parse_known_args">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">parse_known_args</span>(self, args=None, namespace=None, config_file_contents=None, env_vars=os.environ, ignore_help_args=False):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L470">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Supports all the same args as the ArgumentParser.parse_args(..),
+as well as the following additional args.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">args</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">namespace</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config_file_contents:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code></td><td class="fieldArgDesc"></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">env_vars:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict">dict</a></code></td><td class="fieldArgDesc"></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">ignore_help_args:</span><code><a href="https://docs.python.org/3/library/functions.html#bool">bool</a></code></td><td class="fieldArgDesc">This flag determines behavior when user specifies --help or -h. If False,
+it will have the default behavior - printing help and exiting. If True, it won't do either.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args</span></td><td class="fieldArgDesc">a list of args as in argparse, or a string (eg. "-x -y bla")</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.ArgumentParser.print_values">
+    
+  </a>
+  <a name="print_values">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">print_values</span>(self, file=sys.stdout):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L916">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Prints the format_values() string (to sys.stdout or another file).</div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.ArgumentParser.write_config_file">
+    
+  </a>
+  <a name="write_config_file">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">write_config_file</span>(self, parsed_namespace, output_file_paths, exit_after=False):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L644">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Write the given settings to output files.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">parsed_namespace</span></td><td class="fieldArgDesc">namespace object created within parse_known_args()</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">output_file_paths</span></td><td class="fieldArgDesc">any number of file paths to write the config to</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">exit_after</span></td><td class="fieldArgDesc">whether to exit the program after writing the config files</td></tr></table></div>
+  </div>
+</div><div class="basemethod private">
+  
+  
+  <a name="configargparse.ArgumentParser._open_config_files">
+    
+  </a>
+  <a name="_open_config_files">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">_open_config_files</span>(self, command_line_args):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L817">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Tries to parse config file path(s) from within command_line_args.
+Returns a list of opened config files, including files specified on the
+commandline as well as any default_config_files specified in the
+constructor that are present on disk.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">command_line_args</span></td><td class="fieldArgDesc">List of all args</td></tr></table></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="configargparse.ArgumentParser._add_config_file_help">
+    
+  </a>
+  <a name="_add_config_file_help">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_add_config_file_help</span>: <code><a href="https://docs.python.org/3/library/functions.html#bool">bool</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L423">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="configargparse.ArgumentParser._add_env_var_help">
+    
+  </a>
+  <a name="_add_env_var_help">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_add_env_var_help</span>: <code><a href="https://docs.python.org/3/library/functions.html#bool">bool</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L424">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="configargparse.ArgumentParser._auto_env_var_prefix">
+    
+  </a>
+  <a name="_auto_env_var_prefix">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_auto_env_var_prefix</span> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L425">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="configargparse.ArgumentParser._config_file_open_func">
+    
+  </a>
+  <a name="_config_file_open_func">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_config_file_open_func</span> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L421">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="configargparse.ArgumentParser._config_file_parser">
+    
+  </a>
+  <a name="_config_file_parser">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_config_file_parser</span> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L431">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="configargparse.ArgumentParser._default_config_files">
+    
+  </a>
+  <a name="_default_config_files">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_default_config_files</span> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L435">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="configargparse.ArgumentParser._ignore_unknown_config_file_keys">
+    
+  </a>
+  <a name="_ignore_unknown_config_file_keys">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_ignore_unknown_config_file_keys</span> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L436">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="configargparse.ArgumentParser._source_to_settings">
+    
+  </a>
+  <a name="_source_to_settings">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_source_to_settings</span> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L505">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div>
+
+      </div>
+    </div>
+
+    <footer class="navbar navbar-default">
+  
+  <div class="container">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    21.2.2 at 2021-06-29 19:44:12.
+  </div>
+</footer>
+
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>

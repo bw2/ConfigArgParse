@@ -1,0 +1,584 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>argparse</title>
+    <meta name="generator" content="pydoctor 21.2.2"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=0.75" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default">
+  
+  <div class="container">
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+          <span class="navbar-brand">
+            <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5</a> <a href="index.html">API Documentation</a>
+          </span>
+
+          <a href="moduleIndex.html">
+            Modules
+          </a>
+
+          <a href="classIndex.html">
+            Classes
+          </a>
+
+          <a href="nameIndex.html">
+            Names
+          </a>
+      </div>
+
+    </div>
+  </div>
+</nav>
+
+    
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1 class="module"><code><code><a href="argparse.html">argparse</a></code></code></h1>
+        <div id="showPrivate">
+          <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+        </div>
+      </div>
+
+      <div class="categoryHeader">
+        module documentation
+      </div>
+
+      <div class="extrasDocstring">
+        <a href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py" class="sourceLink">(source)</a>
+        <p></p>
+      </div>
+
+      <div class="moduleDocstring">
+        <div><p>Command-line parsing library</p>
+<p>This module is an optparse-inspired command-line parsing library that:</p>
+<blockquote>
+<ul class="rst-simple">
+<li>handles both optional and positional arguments</li>
+<li>produces highly informative usage messages</li>
+<li>supports parsers that dispatch to sub-parsers</li>
+</ul>
+</blockquote>
+<p>The following is a simple usage example that sums integers from the
+command-line and writes the result to a file:</p>
+<pre class="rst-literal-block">
+parser = argparse.ArgumentParser(
+    description='sum the integers at the command line')
+parser.add_argument(
+    'integers', metavar='int', nargs='+', type=int,
+    help='an integer to be summed')
+parser.add_argument(
+    '--log', default=sys.stdout, type=argparse.FileType('w'),
+    help='the file where the sum should be written')
+args = parser.parse_args()
+args.log.write('%s' % sum(args.integers))
+args.log.close()
+</pre>
+<p>The module contains the following public classes:</p>
+<blockquote>
+<ul class="rst-simple">
+<li><dl class="rst-first rst-docutils">
+<dt>ArgumentParser -- The main entry point for command-line parsing. As the</dt>
+<dd>example above shows, the add_argument() method is used to populate
+the parser with actions for optional and positional arguments. Then
+the parse_args() method is invoked to convert the args at the
+command-line into an object with attributes.</dd>
+</dl>
+</li>
+<li><dl class="rst-first rst-docutils">
+<dt>ArgumentError -- The exception raised by ArgumentParser objects when</dt>
+<dd>there are errors with the parser's actions. Errors raised while
+parsing the command-line are caught by ArgumentParser and emitted
+as command-line messages.</dd>
+</dl>
+</li>
+<li><dl class="rst-first rst-docutils">
+<dt>FileType -- A factory for defining types of files to be created. As the</dt>
+<dd>example above shows, instances of FileType are typically passed as
+the type= argument of add_argument() calls.</dd>
+</dl>
+</li>
+<li><dl class="rst-first rst-docutils">
+<dt>Action -- The base class for parser actions. Typically actions are</dt>
+<dd>selected by passing strings like 'store_true' or 'append_const' to
+the action= argument of add_argument(). However, for greater
+customization of ArgumentParser actions, subclasses of Action may
+be defined and passed as the action= argument.</dd>
+</dl>
+</li>
+<li><dl class="rst-first rst-docutils">
+<dt>HelpFormatter, RawDescriptionHelpFormatter, RawTextHelpFormatter,</dt>
+<dd>ArgumentDefaultsHelpFormatter -- Formatter classes which
+may be passed as the formatter_class= argument to the
+ArgumentParser constructor. HelpFormatter is the default,
+RawDescriptionHelpFormatter and RawTextHelpFormatter tell the parser
+not to change the formatting for help text, and
+ArgumentDefaultsHelpFormatter adds information about argument defaults
+to the help.</dd>
+</dl>
+</li>
+</ul>
+</blockquote>
+<p>All other classes in this module are considered implementation details.
+(Also note that HelpFormatter and RawDescriptionHelpFormatter are only
+considered public as object names -- the API of the formatter objects is
+still considered an implementation detail.)</p>
+</div>
+      </div>
+
+      <div id="splitTables">
+        <table class="children sortable" id="id1">
+  
+  
+  <tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.Action.html">Action</a></code></td>
+    <td>Information about how to convert command line strings to Python objects.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.ArgumentDefaultsHelpFormatter.html">ArgumentDefaultsHelpFormatter</a></code></td>
+    <td>Help message formatter which adds default values to argument help.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.ArgumentError.html">ArgumentError</a></code></td>
+    <td>An error from creating or using an argument (optional or positional).</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.ArgumentParser.html">ArgumentParser</a></code></td>
+    <td>Object for parsing command line strings into Python objects.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.ArgumentTypeError.html">ArgumentTypeError</a></code></td>
+    <td>An error from trying to convert a command line string to a type.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.BooleanOptionalAction.html">BooleanOptionalAction</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.FileType.html">FileType</a></code></td>
+    <td>Factory for creating file object types</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.HelpFormatter.html">HelpFormatter</a></code></td>
+    <td>Formatter for generating usage messages and argument help strings.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.MetavarTypeHelpFormatter.html">MetavarTypeHelpFormatter</a></code></td>
+    <td>Help message formatter which uses the argument 'type' as the default metavar value (instead of the argument 'dest')</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.Namespace.html">Namespace</a></code></td>
+    <td>Simple object for storing attributes.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.RawDescriptionHelpFormatter.html">RawDescriptionHelpFormatter</a></code></td>
+    <td>Help message formatter which retains any formatting in descriptions.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.RawTextHelpFormatter.html">RawTextHelpFormatter</a></code></td>
+    <td>Help message formatter which retains formatting of all help text.</td>
+  </tr><tr class="variable">
+    
+    <td>Variable</td>
+    <td><code><a href="#__version__">__version__</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="variable">
+    
+    <td>Variable</td>
+    <td><code><a href="#ONE_OR_MORE">ONE_OR_MORE</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="variable">
+    
+    <td>Variable</td>
+    <td><code><a href="#OPTIONAL">OPTIONAL</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="variable">
+    
+    <td>Variable</td>
+    <td><code><a href="#PARSER">PARSER</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="variable">
+    
+    <td>Variable</td>
+    <td><code><a href="#REMAINDER">REMAINDER</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="variable">
+    
+    <td>Variable</td>
+    <td><code><a href="#SUPPRESS">SUPPRESS</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="variable">
+    
+    <td>Variable</td>
+    <td><code><a href="#ZERO_OR_MORE">ZERO_OR_MORE</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._ActionsContainer.html">_ActionsContainer</a></code></td>
+    <td><span class="undocumented">No class docstring; 0/12 instance variable, 1/18 method documented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._AppendAction.html">_AppendAction</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._AppendConstAction.html">_AppendConstAction</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._ArgumentGroup.html">_ArgumentGroup</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._AttributeHolder.html">_AttributeHolder</a></code></td>
+    <td>Abstract base class that provides __repr__.</td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._CountAction.html">_CountAction</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._ExtendAction.html">_ExtendAction</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._HelpAction.html">_HelpAction</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._MutuallyExclusiveGroup.html">_MutuallyExclusiveGroup</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._StoreAction.html">_StoreAction</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._StoreConstAction.html">_StoreConstAction</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._StoreFalseAction.html">_StoreFalseAction</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._StoreTrueAction.html">_StoreTrueAction</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._SubParsersAction.html">_SubParsersAction</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._VersionAction.html">_VersionAction</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="function private">
+    
+    <td>Function</td>
+    <td><code><a href="#_copy_items">_copy_items</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="function private">
+    
+    <td>Function</td>
+    <td><code><a href="#_get_action_name">_get_action_name</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="variable private">
+    
+    <td>Variable</td>
+    <td><code><a href="#_UNRECOGNIZED_ARGS_ATTR">_UNRECOGNIZED_ARGS_ATTR</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr>
+</table>
+        
+
+          
+      </div>
+
+      <div id="childList">
+
+        <div class="basevariable">
+  
+  
+  <a name="argparse.__version__">
+    
+  </a>
+  <a name="__version__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__version__</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L65">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basevariable">
+  
+  
+  <a name="argparse.ONE_OR_MORE">
+    
+  </a>
+  <a name="ONE_OR_MORE">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">ONE_OR_MORE</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L98">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basevariable">
+  
+  
+  <a name="argparse.OPTIONAL">
+    
+  </a>
+  <a name="OPTIONAL">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">OPTIONAL</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L96">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basevariable">
+  
+  
+  <a name="argparse.PARSER">
+    
+  </a>
+  <a name="PARSER">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">PARSER</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L99">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basevariable">
+  
+  
+  <a name="argparse.REMAINDER">
+    
+  </a>
+  <a name="REMAINDER">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">REMAINDER</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L100">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basevariable">
+  
+  
+  <a name="argparse.SUPPRESS">
+    
+  </a>
+  <a name="SUPPRESS">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">SUPPRESS</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L94">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basevariable">
+  
+  
+  <a name="argparse.ZERO_OR_MORE">
+    
+  </a>
+  <a name="ZERO_OR_MORE">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">ZERO_OR_MORE</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L97">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basefunction private">
+  
+  
+  <a name="argparse._copy_items">
+    
+  </a>
+  <a name="_copy_items">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">_copy_items</span>(items):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L138">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basefunction private">
+  
+  
+  <a name="argparse._get_action_name">
+    
+  </a>
+  <a name="_get_action_name">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">_get_action_name</span>(argument):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L721">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basevariable private">
+  
+  
+  <a name="argparse._UNRECOGNIZED_ARGS_ATTR">
+    
+  </a>
+  <a name="_UNRECOGNIZED_ARGS_ATTR">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_UNRECOGNIZED_ARGS_ATTR</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L101">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div>
+
+      </div>
+    </div>
+
+    <footer class="navbar navbar-default">
+  
+  <div class="container">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    21.2.2 at 2021-06-29 19:44:12.
+  </div>
+</footer>
+
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>

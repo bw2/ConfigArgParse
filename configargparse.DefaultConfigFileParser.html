@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>configargparse.DefaultConfigFileParser</title>
+    <meta name="generator" content="pydoctor 21.2.2"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=0.75" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default">
+  
+  <div class="container">
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+          <span class="navbar-brand">
+            <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5</a> <a href="index.html">API Documentation</a>
+          </span>
+
+          <a href="moduleIndex.html">
+            Modules
+          </a>
+
+          <a href="classIndex.html">
+            Classes
+          </a>
+
+          <a href="nameIndex.html">
+            Names
+          </a>
+      </div>
+
+    </div>
+  </div>
+</nav>
+
+    
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1 class="class"><code><code><a href="configargparse.html">configargparse</a></code><wbr></wbr>.<code><a href="configargparse.DefaultConfigFileParser.html">DefaultConfigFileParser</a></code></code></h1>
+        <div id="showPrivate">
+          <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+        </div>
+      </div>
+
+      <div class="categoryHeader">
+        class documentation
+      </div>
+
+      <div class="extrasDocstring">
+        <p><code><span class="py-keyword">class</span> <span class="py-defname">DefaultConfigFileParser</span>(<a href="configargparse.ConfigFileParser.html" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L111" class="sourceLink">(source)</a></code></p>
+        <p><a href="classIndex.html#configargparse.DefaultConfigFileParser">View In Hierarchy</a></p>
+      </div>
+
+      <div class="moduleDocstring">
+        <div><p>Based on a simplified subset of INI and YAML formats. Here is the
+supported syntax:</p>
+<pre class="rst-literal-block">
+# this is a comment
+; this is also a comment (.ini style)
+---            # lines that start with --- are ignored (yaml style)
+-------------------
+[section]      # .ini-style section names are treated as comments
+
+# how to specify a key-value pair (all of these are equivalent):
+name value     # key is case sensitive: "Name" isn't "name"
+name = value   # (.ini style)  (white space is ignored, so name = value same as name=value)
+name: value    # (yaml style)
+--name value   # (argparse style)
+
+# how to set a flag arg (eg. arg which has action="store_true")
+--name
+name
+name = True    # "True" and "true" are the same
+
+# how to specify a list arg (eg. arg which has action="append")
+fruit = [apple, orange, lemon]
+indexes = [1, 12, 35 , 40]
+</pre>
+</div>
+      </div>
+
+      <div id="splitTables">
+        <table class="children sortable" id="id73">
+  
+  
+  <tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#get_syntax_description">get_syntax_description</a></code></td>
+    <td>Returns a string describing the config file syntax.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#parse">parse</a></code></td>
+    <td>Parses the keys + values from a config file.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#serialize">serialize</a></code></td>
+    <td>Does the inverse of config parsing by taking parsed values and converting them back to a string representing config file contents.</td>
+  </tr>
+</table>
+        
+
+          
+      </div>
+
+      <div id="childList">
+
+        <div class="basemethod">
+  
+  
+  <a name="configargparse.DefaultConfigFileParser.get_syntax_description">
+    
+  </a>
+  <a name="get_syntax_description">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">get_syntax_description</span>(self):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L139">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="configargparse.ConfigFileParser.html#get_syntax_description">configargparse.ConfigFileParser.get_syntax_description</a></code></div>
+    
+    <div>Returns a string describing the config file syntax.</div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.DefaultConfigFileParser.parse">
+    
+  </a>
+  <a name="parse">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">parse</span>(self, stream):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L144">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="configargparse.ConfigFileParser.html#parse">configargparse.ConfigFileParser.parse</a></code></div>
+    
+    <div>Parses the keys + values from a config file.</div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.DefaultConfigFileParser.serialize">
+    
+  </a>
+  <a name="serialize">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">serialize</span>(self, items):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L180">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="configargparse.ConfigFileParser.html#serialize">configargparse.ConfigFileParser.serialize</a></code></div>
+    
+    <div>Does the inverse of config parsing by taking parsed values and
+converting them back to a string representing config file contents.</div>
+  </div>
+</div>
+
+      </div>
+    </div>
+
+    <footer class="navbar navbar-default">
+  
+  <div class="container">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    21.2.2 at 2021-06-29 19:44:12.
+  </div>
+</footer>
+
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>

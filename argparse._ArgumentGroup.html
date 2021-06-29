@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>argparse._ArgumentGroup</title>
+    <meta name="generator" content="pydoctor 21.2.2"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=0.75" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default">
+  
+  <div class="container">
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+          <span class="navbar-brand">
+            <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5</a> <a href="index.html">API Documentation</a>
+          </span>
+
+          <a href="moduleIndex.html">
+            Modules
+          </a>
+
+          <a href="classIndex.html">
+            Classes
+          </a>
+
+          <a href="nameIndex.html">
+            Names
+          </a>
+      </div>
+
+    </div>
+  </div>
+</nav>
+
+    
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1 class="class private"><code><code><a href="argparse.html">argparse</a></code><wbr></wbr>.<code><a href="argparse._ArgumentGroup.html">_ArgumentGroup</a></code></code></h1>
+        <div id="showPrivate">
+          <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+        </div>
+      </div>
+
+      <div class="categoryHeader">
+        class documentation
+      </div>
+
+      <div class="extrasDocstring">
+        <p><code><span class="py-keyword">class</span> <span class="py-defname">_ArgumentGroup</span>(<a href="argparse._ActionsContainer.html" title="argparse._ActionsContainer">_ActionsContainer</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L1611" class="sourceLink">(source)</a></code></p><p>Known subclasses: <code><a href="argparse._MutuallyExclusiveGroup.html">argparse._MutuallyExclusiveGroup</a></code></p>
+        <p><a href="classIndex.html#argparse._ArgumentGroup">View In Hierarchy</a></p>
+      </div>
+
+      <div class="moduleDocstring">
+        <div><p class="undocumented">Undocumented</p></div>
+      </div>
+
+      <div id="splitTables">
+        <table class="children sortable" id="id63">
+  
+  
+  <tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__init__">__init__</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#title">title</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method private">
+    
+    <td>Method</td>
+    <td><code><a href="#_add_action">_add_action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="method private">
+    
+    <td>Method</td>
+    <td><code><a href="#_remove_action">_remove_action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_actions">_actions</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_defaults">_defaults</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_group_actions">_group_actions</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_has_negative_number_optionals">_has_negative_number_optionals</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_mutually_exclusive_groups">_mutually_exclusive_groups</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_option_string_actions">_option_string_actions</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="instancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#_registries">_registries</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr>
+</table>
+        
+          <p class="inheritedFrom">
+            Inherited from <code><a href="argparse._ActionsContainer.html">_ActionsContainer</a></code>:
+          </p>
+          <table class="children sortable" id="id64">
+  
+  
+  <tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#add_argument">add_argument</a></code></td>
+    <td>add_argument(dest, ..., name=value, ...) add_argument(option_string, option_string, ..., name=value, ...)</td>
+  </tr><tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#add_argument_group">add_argument_group</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#add_mutually_exclusive_group">add_mutually_exclusive_group</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#get_default">get_default</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#register">register</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#set_defaults">set_defaults</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse._ActionsContainer.html#argument_default">argument_default</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse._ActionsContainer.html#conflict_handler">conflict_handler</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse._ActionsContainer.html#description">description</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse._ActionsContainer.html#prefix_chars">prefix_chars</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#_add_container_actions">_add_container_actions</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#_check_conflict">_check_conflict</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#_get_handler">_get_handler</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#_get_optional_kwargs">_get_optional_kwargs</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#_get_positional_kwargs">_get_positional_kwargs</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#_handle_conflict_error">_handle_conflict_error</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#_handle_conflict_resolve">_handle_conflict_resolve</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#_pop_action_class">_pop_action_class</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse._ActionsContainer.html#_registry_get">_registry_get</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse._ActionsContainer.html#_action_groups">_action_groups</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse._ActionsContainer.html#_negative_number_matcher">_negative_number_matcher</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr>
+</table>
+          
+
+          
+      </div>
+
+      <div id="childList">
+
+        <div class="basemethod">
+  
+  
+  <a name="argparse._ArgumentGroup.__init__">
+    
+  </a>
+  <a name="__init__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">__init__</span>(self, container, title=None, description=None, **kwargs):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L1613">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="argparse._ActionsContainer.html#__init__">argparse._ActionsContainer.__init__</a></code></div><div class="interfaceinfo">overridden in <code><a href="argparse._MutuallyExclusiveGroup.html">argparse._MutuallyExclusiveGroup</a></code></div>
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="argparse._ArgumentGroup.title">
+    
+  </a>
+  <a name="title">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">title</span> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L1623">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basemethod private">
+  
+  
+  <a name="argparse._ArgumentGroup._add_action">
+    
+  </a>
+  <a name="_add_action">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">_add_action</span>(self, action):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L1635">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="argparse._ActionsContainer.html#_add_action">argparse._ActionsContainer._add_action</a></code></div><div class="interfaceinfo">overridden in <code><a href="argparse._MutuallyExclusiveGroup.html">argparse._MutuallyExclusiveGroup</a></code></div>
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basemethod private">
+  
+  
+  <a name="argparse._ArgumentGroup._remove_action">
+    
+  </a>
+  <a name="_remove_action">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">_remove_action</span>(self, action):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L1640">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="argparse._ActionsContainer.html#_remove_action">argparse._ActionsContainer._remove_action</a></code></div><div class="interfaceinfo">overridden in <code><a href="argparse._MutuallyExclusiveGroup.html">argparse._MutuallyExclusiveGroup</a></code></div>
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="argparse._ArgumentGroup._actions">
+    
+  </a>
+  <a name="_actions">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_actions</span> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L1628">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    <div class="interfaceinfo">overrides <code><a href="argparse._ActionsContainer.html#_actions">argparse._ActionsContainer._actions</a></code></div>
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="argparse._ArgumentGroup._defaults">
+    
+  </a>
+  <a name="_defaults">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_defaults</span> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L1630">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    <div class="interfaceinfo">overrides <code><a href="argparse._ActionsContainer.html#_defaults">argparse._ActionsContainer._defaults</a></code></div>
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="argparse._ArgumentGroup._group_actions">
+    
+  </a>
+  <a name="_group_actions">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_group_actions</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#list">list</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L1624">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="argparse._ArgumentGroup._has_negative_number_optionals">
+    
+  </a>
+  <a name="_has_negative_number_optionals">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_has_negative_number_optionals</span> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L1631">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    <div class="interfaceinfo">overrides <code><a href="argparse._ActionsContainer.html#_has_negative_number_optionals">argparse._ActionsContainer._has_negative_number_optionals</a></code></div>
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="argparse._ArgumentGroup._mutually_exclusive_groups">
+    
+  </a>
+  <a name="_mutually_exclusive_groups">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_mutually_exclusive_groups</span> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L1633">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    <div class="interfaceinfo">overrides <code><a href="argparse._ActionsContainer.html#_mutually_exclusive_groups">argparse._ActionsContainer._mutually_exclusive_groups</a></code></div>
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="argparse._ArgumentGroup._option_string_actions">
+    
+  </a>
+  <a name="_option_string_actions">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_option_string_actions</span> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L1629">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    <div class="interfaceinfo">overrides <code><a href="argparse._ActionsContainer.html#_option_string_actions">argparse._ActionsContainer._option_string_actions</a></code></div>
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseinstancevariable private">
+  
+  
+  <a name="argparse._ArgumentGroup._registries">
+    
+  </a>
+  <a name="_registries">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_registries</span> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/argparse.py#L1627">
+      
+      (source)
+    </a>
+  </div>
+  <div class="functionBody">
+    <div class="interfaceinfo">overrides <code><a href="argparse._ActionsContainer.html#_registries">argparse._ActionsContainer._registries</a></code></div>
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div>
+
+      </div>
+    </div>
+
+    <footer class="navbar navbar-default">
+  
+  <div class="container">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    21.2.2 at 2021-06-29 19:44:12.
+  </div>
+</footer>
+
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>
