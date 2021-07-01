@@ -29,7 +29,7 @@
       
       <div class="navlinks">
           <span class="navbar-brand">
-            <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5</a> <a href="index.html">API Documentation</a>
+            <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5.1</a> <a href="index.html">API Documentation</a>
           </span>
 
           <a href="moduleIndex.html">
@@ -65,7 +65,7 @@
       </div>
 
       <div class="extrasDocstring">
-        <p><code><span class="py-keyword">class</span> <span class="py-defname">ArgumentParser</span>(<a href="https://docs.python.org/3/library/argparse.html#argparse.ArgumentParser" title="argparse.ArgumentParser">argparse.ArgumentParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L338" class="sourceLink">(source)</a></code></p>
+        <p><code><span class="py-keyword">class</span> <span class="py-defname">ArgumentParser</span>(<a href="https://docs.python.org/3/library/argparse.html#argparse.ArgumentParser" title="argparse.ArgumentParser">argparse.ArgumentParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L338" class="sourceLink">(source)</a></code></p>
         <p><a href="classIndex.html#configargparse.ArgumentParser">View In Hierarchy</a></p>
       </div>
 
@@ -113,6 +113,11 @@ environment variables and .ini or .yaml-style config files.</div>
     <td>Method</td>
     <td><code><a href="#get_possible_config_keys">get_possible_config_keys</a></code></td>
     <td>This method decides which actions can be set in a config file and what their keys will be. It returns a list of 0 or more config keys that can be used to set the given action's value in a config file.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#get_source_to_settings_dict">get_source_to_settings_dict</a></code></td>
+    <td><span class="undocumented">No summary</span></td>
   </tr><tr class="method">
     
     <td>Method</td>
@@ -199,7 +204,7 @@ environment variables and .ini or .yaml-style config files.</div>
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">__init__</span>(self, *args, **kwargs):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L343">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L343">
       
       (source)
     </a>
@@ -259,7 +264,7 @@ the args in args_for_writing_out_config_file.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">convert_item_to_command_line_arg</span>(self, action, key, value):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L735">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L747">
       
       (source)
     </a>
@@ -284,7 +289,7 @@ configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fiel
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">format_help</span>(self):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L920">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L931">
       
       (source)
     </a>
@@ -306,7 +311,7 @@ configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fiel
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">format_values</span>(self):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L889">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L900">
       
       (source)
     </a>
@@ -329,7 +334,7 @@ configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fiel
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">get_command_line_key_for_unknown_config_file_setting</span>(self, key):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L675">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L687">
       
       (source)
     </a>
@@ -353,7 +358,7 @@ doesn't have a user-specified commandline arg key).<table class="fieldTable"><tr
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">get_items_for_config_file_output</span>(self, source_to_settings, parsed_namespace):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L688">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L700">
       
       (source)
     </a>
@@ -377,7 +382,7 @@ or lists</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">get_possible_config_keys</span>(self, action):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L799">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L811">
       
       (source)
     </a>
@@ -392,6 +397,37 @@ can be used to set the given action's value in a config file.</div>
 </div><div class="basemethod">
   
   
+  <a name="configargparse.ArgumentParser.get_source_to_settings_dict">
+    
+  </a>
+  <a name="get_source_to_settings_dict">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">get_source_to_settings_dict</span>(self):
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L644">
+      
+      (source)
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div><p>If called after parse_args() or parse_known_args(), this dict. will contain up to 4 keys corresponding
+to where a given option's value is coming from:</p>
+<blockquote>
+"command_line"
+"environment_variables"
+"config_file"
+"defaults"</blockquote>
+<p>Each such key, will be mapped to another dictionary containing the options set via that method. Here the key
+will be the option name, and the value will be a 2-tuple of the form (argparse Action obj, string value).</p>
+</div>
+  </div>
+</div><div class="basemethod">
+  
+  
   <a name="configargparse.ArgumentParser.parse_args">
     
   </a>
@@ -401,7 +437,7 @@ can be used to set the given action's value in a config file.</div>
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">parse_args</span>(self, args=None, namespace=None, config_file_contents=None, env_vars=os.environ):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L449">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L449">
       
       (source)
     </a>
@@ -424,7 +460,7 @@ as well as the following additional args.<table class="fieldTable"><tr class="fi
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">parse_known_args</span>(self, args=None, namespace=None, config_file_contents=None, env_vars=os.environ, ignore_help_args=False):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L470">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L470">
       
       (source)
     </a>
@@ -448,7 +484,7 @@ it will have the default behavior - printing help and exiting. If True, it won't
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">print_values</span>(self, file=sys.stdout):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L916">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L927">
       
       (source)
     </a>
@@ -470,7 +506,7 @@ it will have the default behavior - printing help and exiting. If True, it won't
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">write_config_file</span>(self, parsed_namespace, output_file_paths, exit_after=False):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L644">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L658">
       
       (source)
     </a>
@@ -492,7 +528,7 @@ it will have the default behavior - printing help and exiting. If True, it won't
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">_open_config_files</span>(self, command_line_args):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L817">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L828">
       
       (source)
     </a>
@@ -517,7 +553,7 @@ constructor that are present on disk.<table class="fieldTable"><tr class="fieldS
   <div class="functionHeader">
     
     <span class="py-defname">_add_config_file_help</span>: <code><a href="https://docs.python.org/3/library/functions.html#bool">bool</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L423">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L423">
       
       (source)
     </a>
@@ -539,7 +575,7 @@ constructor that are present on disk.<table class="fieldTable"><tr class="fieldS
   <div class="functionHeader">
     
     <span class="py-defname">_add_env_var_help</span>: <code><a href="https://docs.python.org/3/library/functions.html#bool">bool</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L424">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L424">
       
       (source)
     </a>
@@ -561,7 +597,7 @@ constructor that are present on disk.<table class="fieldTable"><tr class="fieldS
   <div class="functionHeader">
     
     <span class="py-defname">_auto_env_var_prefix</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L425">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L425">
       
       (source)
     </a>
@@ -583,7 +619,7 @@ constructor that are present on disk.<table class="fieldTable"><tr class="fieldS
   <div class="functionHeader">
     
     <span class="py-defname">_config_file_open_func</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L421">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L421">
       
       (source)
     </a>
@@ -605,7 +641,7 @@ constructor that are present on disk.<table class="fieldTable"><tr class="fieldS
   <div class="functionHeader">
     
     <span class="py-defname">_config_file_parser</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L431">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L431">
       
       (source)
     </a>
@@ -627,7 +663,7 @@ constructor that are present on disk.<table class="fieldTable"><tr class="fieldS
   <div class="functionHeader">
     
     <span class="py-defname">_default_config_files</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L435">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L435">
       
       (source)
     </a>
@@ -649,7 +685,7 @@ constructor that are present on disk.<table class="fieldTable"><tr class="fieldS
   <div class="functionHeader">
     
     <span class="py-defname">_ignore_unknown_config_file_keys</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L436">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L436">
       
       (source)
     </a>
@@ -671,7 +707,7 @@ constructor that are present on disk.<table class="fieldTable"><tr class="fieldS
   <div class="functionHeader">
     
     <span class="py-defname">_source_to_settings</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a867d187d39d2aa2b3dff32dd3be150b76aed388/configargparse.py#L505">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8eb8731dfe32125b83d14b9332990af0eb072cc/configargparse.py#L505">
       
       (source)
     </a>
@@ -689,9 +725,9 @@ constructor that are present on disk.<table class="fieldTable"><tr class="fieldS
     <footer class="navbar navbar-default">
   
   <div class="container">
-    <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5</a>,
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5.1</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    21.2.2 at 2021-06-29 19:44:12.
+    21.2.2 at 2021-07-01 13:11:02.
   </div>
 </footer>
 
