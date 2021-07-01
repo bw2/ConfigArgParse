@@ -40,7 +40,7 @@ def replace_error_method(arg_parser):
     def error_method(self, message):
         raise argparse.ArgumentError(None, message)
 
-    def exit_method(self, status, message):
+    def exit_method(self, status, message=None):
         self._exit_method_called = True
 
     arg_parser._exit_method_called = False

@@ -257,7 +257,7 @@ class ConfigparserConfigFileParser(ConfigFileParser):
             strict=True,
             empty_lines_in_values=False,
         )
-        items = {"DEFAULT":items}
+        items = {"DEFAULT": items}
         config.read_dict(items)
         stream = io.StringIO()
         config.write(stream)
@@ -641,6 +641,20 @@ class ArgumentParser(argparse.ArgumentParser):
         self.write_config_file(namespace, output_file_paths, exit_after=True)
         return namespace, unknown_args
 
+    def get_source_to_settings_dict(self):
+        """If called after parse_args() or parse_known_args(), this dict. will contain up to 4 keys corresponding
+        to where a given option's value is coming from:
+            "command_line"
+            "environment_variables"
+            "config_file"
+            "defaults"
+        Each such key, will be mapped to another dictionary containing the options set via that method. Here the key
+        will be the option name, and the value will be a 2-tuple of the form (argparse Action obj, string value).
+        """
+
+        return self._source_to_settings
+
+
     def write_config_file(self, parsed_namespace, output_file_paths, exit_after=False):
         """Write the given settings to output files.
 
@@ -665,12 +679,10 @@ class ArgumentParser(argparse.ArgumentParser):
             for output_file_path in output_file_paths:
                 with self._config_file_open_func(output_file_path, "w") as output_file:
                     output_file.write(file_contents)
-            message = "Wrote config file to " + ", ".join(output_file_paths)
-            if exit_after:
-                self.exit(0, message)
-            else:
-                print(message)
 
+            print("Wrote config file to " + ", ".join(output_file_paths))
+            if exit_after:
+                self.exit(0)
 
     def get_command_line_key_for_unknown_config_file_setting(self, key):
         """Compute a commandline arg key to be used for a config file setting
@@ -812,7 +824,6 @@ class ArgumentParser(argparse.ArgumentParser):
                 keys += [arg[2:], arg] # eg. for '--bla' return ['bla', '--bla']
 
         return keys
-
 
     def _open_config_files(self, command_line_args):
         """Tries to parse config file path(s) from within command_line_args.
