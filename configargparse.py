@@ -109,9 +109,11 @@ class ConfigFileParserException(Exception):
 
 
 class DefaultConfigFileParser(ConfigFileParser):
-    """Based on a simplified subset of INI and YAML formats. Here is the
-    supported syntax::
+    """
+    Based on a simplified subset of INI and YAML formats. Here is the
+    supported syntax
 
+    .. code::
 
         # this is a comment
         ; this is also a comment (.ini style)
@@ -353,8 +355,8 @@ class ArgumentParser(argparse.ArgumentParser):
             auto_env_var_prefix: If set to a string instead of None, all config-
                 file-settable options will become also settable via environment
                 variables whose names are this prefix followed by the config
-                file key, all in upper case. (eg. setting this to "foo_" will
-                allow an arg like "--my-arg" to also be set via the FOO_MY_ARG
+                file key, all in upper case. (eg. setting this to ``foo_`` will
+                allow an arg like ``--my-arg`` to also be set via the FOO_MY_ARG
                 environment variable)
             default_config_files: When specified, this list of config files will
                 be parsed in order, with the values from each config file
@@ -642,12 +644,13 @@ class ArgumentParser(argparse.ArgumentParser):
         return namespace, unknown_args
 
     def get_source_to_settings_dict(self):
-        """If called after parse_args() or parse_known_args(), this dict. will contain up to 4 keys corresponding
+        """
+        If called after parse_args() or parse_known_args(), this dict. will contain up to 4 keys corresponding
         to where a given option's value is coming from:
-            "command_line"
-            "environment_variables"
-            "config_file"
-            "defaults"
+        - "command_line"
+        - "environment_variables"
+        - "config_file"
+        - "defaults"
         Each such key, will be mapped to another dictionary containing the options set via that method. Here the key
         will be the option name, and the value will be a 2-tuple of the form (argparse Action obj, string value).
         """
