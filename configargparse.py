@@ -532,9 +532,13 @@ class ArgumentParser(argparse.ArgumentParser):
             # Make list-string into list.
             if action.nargs or isinstance(action, argparse._AppendAction):
                 nargs = True
-                element_capture = re.match(r'\[(.*)\]', value)
-                if element_capture:
-                    value = [val.strip() for val in element_capture.group(1).split(',') if val.strip()]
+                if value.startswith("[") and value.endswith("]"):
+                    # handle special case of k=[1,2,3] or other json-like syntax
+                    try:
+                        value = json.loads(value)
+                    except Exception:
+                        # for backward compatibility with legacy format (eg. where config value is [a, b, c] instead of proper json ["a", "b", "c"]
+                        value = [elem.strip() for elem in value[1:-1].split(",")]
             env_var_args += self.convert_item_to_command_line_arg(
                 action, key, value)
 
