@@ -65,14 +65,14 @@
       </div>
 
       <div class="extrasDocstring">
-        <p><code><span class="py-keyword">class</span> <span class="py-defname">DefaultConfigFileParser</span>(<a href="configargparse.ConfigFileParser.html" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/b175beb6ca000a0e020abbdb86ddb269e1555acd/configargparse.py#L111" class="sourceLink">(source)</a></code></p>
+        <p><code><span class="py-keyword">class</span> <span class="py-defname">DefaultConfigFileParser</span>(<a href="configargparse.ConfigFileParser.html" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/ead81953da005940ab81ad40e95820ce955f0c10/configargparse.py#L116" class="sourceLink">(source)</a></code></p>
         <p><a href="classIndex.html#configargparse.DefaultConfigFileParser">View In Hierarchy</a></p>
       </div>
 
       <div class="moduleDocstring">
         <div><p>Based on a simplified subset of INI and YAML formats. Here is the
-supported syntax:</p>
-<pre class="rst-literal-block">
+supported syntax</p>
+<pre class="rst-code rst-literal-block">
 # this is a comment
 ; this is also a comment (.ini style)
 ---            # lines that start with --- are ignored (yaml style)
@@ -98,7 +98,7 @@ indexes = [1, 12, 35 , 40]
       </div>
 
       <div id="splitTables">
-        <table class="children sortable" id="id73">
+        <table class="children sortable" id="id80">
   
   
   <tr class="method">
@@ -110,7 +110,7 @@ indexes = [1, 12, 35 , 40]
     
     <td>Method</td>
     <td><code><a href="#parse">parse</a></code></td>
-    <td>Parses the keys + values from a config file.</td>
+    <td>Parses the keys and values from a config file.</td>
   </tr><tr class="method">
     
     <td>Method</td>
@@ -137,7 +137,7 @@ indexes = [1, 12, 35 , 40]
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">get_syntax_description</span>(self):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b175beb6ca000a0e020abbdb86ddb269e1555acd/configargparse.py#L139">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/ead81953da005940ab81ad40e95820ce955f0c10/configargparse.py#L146">
       
       (source)
     </a>
@@ -159,7 +159,7 @@ indexes = [1, 12, 35 , 40]
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">parse</span>(self, stream):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b175beb6ca000a0e020abbdb86ddb269e1555acd/configargparse.py#L144">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/ead81953da005940ab81ad40e95820ce955f0c10/configargparse.py#L151">
       
       (source)
     </a>
@@ -167,7 +167,13 @@ indexes = [1, 12, 35 , 40]
   <div class="docstring functionBody">
     <div class="interfaceinfo">overrides <code><a href="configargparse.ConfigFileParser.html#parse">configargparse.ConfigFileParser.parse</a></code></div>
     
-    <div>Parses the keys + values from a config file.</div>
+    <div><p>Parses the keys and values from a config file.</p>
+<p>NOTE: For keys that were specified to configargparse as
+action="store_true" or "store_false", the config file value must be
+one of: "yes", "no", "true", "false". Otherwise an error will be raised.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">stream:</span><code>IO</code></td><td class="fieldArgDesc">A config file input stream (such as an open file object).</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/collections.html#collections.OrderedDict">OrderedDict</a></code></td><td class="fieldArgDesc">Items where the keys are strings and the
+values are either strings or lists (eg. to support config file
+formats like YAML which allow lists).</td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -181,7 +187,7 @@ indexes = [1, 12, 35 , 40]
   <div class="functionHeader">
     
     <span class="py-keyword">def</span> <span class="py-defname">serialize</span>(self, items):
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b175beb6ca000a0e020abbdb86ddb269e1555acd/configargparse.py#L180">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/ead81953da005940ab81ad40e95820ce955f0c10/configargparse.py#L187">
       
       (source)
     </a>
@@ -190,7 +196,9 @@ indexes = [1, 12, 35 , 40]
     <div class="interfaceinfo">overrides <code><a href="configargparse.ConfigFileParser.html#serialize">configargparse.ConfigFileParser.serialize</a></code></div>
     
     <div>Does the inverse of config parsing by taking parsed values and
-converting them back to a string representing config file contents.</div>
+converting them back to a string representing config file contents.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">items</span></td><td class="fieldArgDesc">an OrderedDict of items to be converted to the config file
+format. Keys should be strings, and values should be either strings
+or lists.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td colspan="2">Contents of config file as a string</td></tr></table></div>
   </div>
 </div>
 
@@ -202,7 +210,7 @@ converting them back to a string representing config file contents.</div>
   <div class="container">
     <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5.1</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    21.2.2 at 2021-08-05 23:06:53.
+    21.2.2 at 2021-08-05 23:08:36.
   </div>
 </footer>
 
