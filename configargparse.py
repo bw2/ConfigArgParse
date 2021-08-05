@@ -19,9 +19,14 @@ else:
     from StringIO import StringIO
 
 
-ACTION_TYPES_THAT_DONT_NEED_A_VALUE = (argparse._StoreTrueAction,
+ACTION_TYPES_THAT_DONT_NEED_A_VALUE = [argparse._StoreTrueAction,
     argparse._StoreFalseAction, argparse._CountAction,
-    argparse._StoreConstAction, argparse._AppendConstAction)
+    argparse._StoreConstAction, argparse._AppendConstAction]
+
+if sys.version_info >= (3, 9):
+    ACTION_TYPES_THAT_DONT_NEED_A_VALUE.append(argparse.BooleanOptionalAction)
+
+ACTION_TYPES_THAT_DONT_NEED_A_VALUE = tuple(ACTION_TYPES_THAT_DONT_NEED_A_VALUE)
 
 
 # global ArgumentParser instances
