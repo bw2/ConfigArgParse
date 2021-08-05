@@ -13,6 +13,10 @@ ConfigArgParse
     :alt: Travis CI build
     :target: https://travis-ci.org/bw2/ConfigArgParse
 
+.. image:: https://img.shields.io/badge/-API_Documentation-blue
+    :alt: API Documentation
+    :target: https://bw2.github.io/ConfigArgParse/
+
 Overview
 ~~~~~~~~
 
@@ -321,6 +325,10 @@ HelpFormatters:
 - DefaultsFormatter = ArgumentDefaultsHelpFormatter
 - DefaultsRawFormatter = ArgumentDefaultsRawHelpFormatter
 
+API Documentation
+~~~~~~~~~~~~~~~~~
+
+You can review the generated API Documentation for the ``configargparse`` module: `HERE <https://bw2.github.io/ConfigArgParse/>`_
 
 Design Notes
 ~~~~~~~~~~~~
