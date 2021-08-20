@@ -458,7 +458,7 @@ class ArgumentParser(argparse.ArgumentParser):
             args: a list of args as in argparse, or a string (eg. "-x -y bla")
             config_file_contents: String. Used for testing.
             env_vars: Dictionary. Used for testing.
-        
+
         Returns:
             argparse.Namespace: namespace
         """
@@ -480,6 +480,7 @@ class ArgumentParser(argparse.ArgumentParser):
             config_file_contents=None,
             env_vars=os.environ,
             ignore_help_args=False,
+            ignore_write_args=False,
     ):
         """Supports all the same args as the `argparse.ArgumentParser.parse_args()`,
         as well as the following additional args.
@@ -490,7 +491,9 @@ class ArgumentParser(argparse.ArgumentParser):
             env_vars (dict). Used for testing.
             ignore_help_args (bool): This flag determines behavior when user specifies ``--help`` or ``-h``. If False,
                 it will have the default behavior - printing help and exiting. If True, it won't do either.
-        
+            ignore_write_args (bool): This flag determines if "is_write_out_config_file_arg" options are
+                enabled or not. If True, config files will not be written.
+
         Returns:
             tuple[argparse.Namespace, list[str]]: tuple namescpace, unknown_args
         """
@@ -646,12 +649,15 @@ class ArgumentParser(argparse.ArgumentParser):
         # parse all args (including commandline, config file, and env var)
         namespace, unknown_args = argparse.ArgumentParser.parse_known_args(
             self, args=args, namespace=namespace)
-        # handle any args that have is_write_out_config_file_arg set to true
-        # check if the user specified this arg on the commandline
-        output_file_paths = [getattr(namespace, a.dest, None) for a in self._actions
-                             if getattr(a, "is_write_out_config_file_arg", False)]
-        output_file_paths = [a for a in output_file_paths if a is not None]
-        self.write_config_file(namespace, output_file_paths, exit_after=True)
+        if ignore_write_args:
+            # handle any args that have is_write_out_config_file_arg set to
+            # true check if the user specified this arg on the commandline
+            output_file_paths = [
+                getattr(namespace, a.dest, None) for a in self._actions
+                if getattr(a, "is_write_out_config_file_arg", False)]
+            output_file_paths = [a for a in output_file_paths if a is not None]
+            self.write_config_file(namespace, output_file_paths,
+                                   exit_after=True)
         return namespace, unknown_args
 
     def get_source_to_settings_dict(self):
@@ -708,7 +714,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         Args:
             key: The config file key that was being set.
-        
+
         Returns:
             str: command line key
         """
@@ -774,7 +780,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 configargparse arg.
             key: string (config file key or env var name)
             value: parsed value of type string or list
-        
+
         Returns:
             list[str]: args
         """
@@ -859,7 +865,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         Args:
             command_line_args: List of all args
-        
+
         Returns:
             list[IO]: open config files
         """
@@ -1041,7 +1047,7 @@ def add_argument(self, *args, **kwargs):
             configargparse to write all current commandline args to this file
             as config options and then exit.
             Default: False
-    
+
     Returns:
         argparse.Action: the new argparse action
     """
@@ -1096,7 +1102,7 @@ def already_on_command_line(existing_args_list, potential_command_line_args, pre
     return any(
         potential_arg in arg_names for potential_arg in potential_command_line_args
     )
-#TODO: Update to latest version of pydoctor when https://github.com/twisted/pydoctor/pull/414 has been merged 
+#TODO: Update to latest version of pydoctor when https://github.com/twisted/pydoctor/pull/414 has been merged
 # such that the alises can be documented automatically.
 
 # wrap ArgumentParser's add_argument(..) method with the one above
