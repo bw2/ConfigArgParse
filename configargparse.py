@@ -784,15 +784,24 @@ class ArgumentParser(argparse.ArgumentParser):
             command_line_key = \
                 self.get_command_line_key_for_unknown_config_file_setting(key)
         else:
-            command_line_key = action.option_strings[-1]
+            if not isinstance(action, argparse.BooleanOptionalAction):
+                command_line_key = action.option_strings[-1]
 
         # handle boolean value
         if action is not None and isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
             if value.lower() in ("true", "yes", "1"):
-                args.append( command_line_key )
+                if not isinstance(action, argparse.BooleanOptionalAction):
+                    args.append( command_line_key )
+                else:
+                    # --foo
+                    args.append(action.option_strings[0])
             elif value.lower() in ("false", "no", "0"):
                 # don't append when set to "false" / "no"
-                pass
+                if not isinstance(action, argparse.BooleanOptionalAction):
+                    pass
+                else:
+                    # --no-foo
+                    args.append(action.option_strings[1])
             elif isinstance(action, argparse._CountAction):
                 for arg in args:
                     if any([arg.startswith(s) for s in action.option_strings]):
