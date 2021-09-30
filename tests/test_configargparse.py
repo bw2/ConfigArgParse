@@ -97,6 +97,7 @@ class TestBasicUseCases(TestCase):
         self.add_arg("-x", "--arg-x", action="store_true")
         self.add_arg("-y", "--arg-y", dest="y1", type=int, required=True)
         self.add_arg("--arg-z", action="append", type=float, required=True)
+        self.add_arg('--foo', action=argparse.BooleanOptionalAction, default=False)
 
         # make sure required args are enforced
         self.assertParseArgsRaises("too few arg"
@@ -112,12 +113,13 @@ class TestBasicUseCases(TestCase):
             args="file1.txt file2.txt file3.txt -x -y 1")
 
         # check values after setting args on command line
-        ns = self.parse(args="file1.txt --arg-x -y 3 --arg-z 10",
+        ns = self.parse(args="file1.txt --arg-x -y 3 --arg-z 10 --foo",
                         config_file_contents="")
         self.assertListEqual(ns.filenames, ["file1.txt"])
         self.assertEqual(ns.arg_x, True)
         self.assertEqual(ns.y1, 3)
         self.assertEqual(ns.arg_z, [10])
+        self.assertEqual(ns.foo, True)
 
         self.assertRegex(self.format_values(),
             'Command Line Args:   file1.txt --arg-x -y 3 --arg-z 10')
@@ -129,23 +131,27 @@ class TestBasicUseCases(TestCase):
             arg-y = 10
             arg-z = 30
             arg-z = 40
+            foo = True
             """)
         self.assertListEqual(ns.filenames, ["file1.txt", "file2.txt"])
         self.assertEqual(ns.arg_x, True)
         self.assertEqual(ns.y1, 10)
         self.assertEqual(ns.arg_z, [40])
+        self.assertEqual(ns.foo, True)
 
         self.assertRegex(self.format_values(),
             'Command Line Args: \\s+ file1.txt file2.txt\n'
             'Config File \\(method arg\\):\n'
             '  arg-x: \\s+ True\n'
             '  arg-y: \\s+ 10\n'
-            '  arg-z: \\s+ 40\n')
+            '  arg-z: \\s+ 40\n'
+            '  foo: \\s+ True\n')
 
         # check values after setting args in both command line and config file
         ns = self.parse(args="file1.txt file2.txt --arg-x -y 3 --arg-z 100 ",
             config_file_contents="""arg-y = 31.5
                                     arg-z = 30
+                                    foo = True
                                  """)
         self.format_help()
         self.format_values()
@@ -153,6 +159,7 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.arg_x, True)
         self.assertEqual(ns.y1, 3)
         self.assertEqual(ns.arg_z, [100])
+        self.assertEqual(ns.foo, True)
 
         self.assertRegex(self.format_values(),
             "Command Line Args:   file1.txt file2.txt --arg-x -y 3 --arg-z 100")
