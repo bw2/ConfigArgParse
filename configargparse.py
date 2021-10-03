@@ -25,6 +25,9 @@ ACTION_TYPES_THAT_DONT_NEED_A_VALUE = [argparse._StoreTrueAction,
 
 if sys.version_info >= (3, 9):
     ACTION_TYPES_THAT_DONT_NEED_A_VALUE.append(argparse.BooleanOptionalAction)
+    is_boolean_optional_action = lambda action: isinstance(action, argparse.BooleanOptionalAction)
+else:
+    is_boolean_optional_action = lambda action: False
 
 ACTION_TYPES_THAT_DONT_NEED_A_VALUE = tuple(ACTION_TYPES_THAT_DONT_NEED_A_VALUE)
 
@@ -458,7 +461,7 @@ class ArgumentParser(argparse.ArgumentParser):
             args: a list of args as in argparse, or a string (eg. "-x -y bla")
             config_file_contents: String. Used for testing.
             env_vars: Dictionary. Used for testing.
-        
+
         Returns:
             argparse.Namespace: namespace
         """
@@ -490,7 +493,7 @@ class ArgumentParser(argparse.ArgumentParser):
             env_vars (dict). Used for testing.
             ignore_help_args (bool): This flag determines behavior when user specifies ``--help`` or ``-h``. If False,
                 it will have the default behavior - printing help and exiting. If True, it won't do either.
-        
+
         Returns:
             tuple[argparse.Namespace, list[str]]: tuple namescpace, unknown_args
         """
@@ -708,7 +711,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         Args:
             key: The config file key that was being set.
-        
+
         Returns:
             str: command line key
         """
@@ -774,7 +777,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 configargparse arg.
             key: string (config file key or env var name)
             value: parsed value of type string or list
-        
+
         Returns:
             list[str]: args
         """
@@ -784,20 +787,20 @@ class ArgumentParser(argparse.ArgumentParser):
             command_line_key = \
                 self.get_command_line_key_for_unknown_config_file_setting(key)
         else:
-            if not isinstance(action, argparse.BooleanOptionalAction):
+            if not is_boolean_optional_action(action):
                 command_line_key = action.option_strings[-1]
 
         # handle boolean value
         if action is not None and isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
             if value.lower() in ("true", "yes", "1"):
-                if not isinstance(action, argparse.BooleanOptionalAction):
+                if not is_boolean_optional_action(action):
                     args.append( command_line_key )
                 else:
                     # --foo
                     args.append(action.option_strings[0])
             elif value.lower() in ("false", "no", "0"):
                 # don't append when set to "false" / "no"
-                if not isinstance(action, argparse.BooleanOptionalAction):
+                if not is_boolean_optional_action(action):
                     pass
                 else:
                     # --no-foo

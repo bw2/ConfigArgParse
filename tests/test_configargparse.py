@@ -97,7 +97,10 @@ class TestBasicUseCases(TestCase):
         self.add_arg("-x", "--arg-x", action="store_true")
         self.add_arg("-y", "--arg-y", dest="y1", type=int, required=True)
         self.add_arg("--arg-z", action="append", type=float, required=True)
-        self.add_arg('--foo', action=argparse.BooleanOptionalAction, default=False)
+        if sys.version_info >= (3, 9):
+            self.add_arg('--foo', action=argparse.BooleanOptionalAction, default=False)
+        else:
+            self.add_arg('--foo', action="store_true", default=False)
 
         # make sure required args are enforced
         self.assertParseArgsRaises("too few arg"
