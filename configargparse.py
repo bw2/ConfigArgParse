@@ -991,8 +991,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 self._add_config_file_help = False  # prevent duplication
                 added_config_file_help = True
 
-                msg += ("Args that start with '%s' (eg. %s) can also be set in "
-                        "a config file") % (cc, config_settable_args[0][0])
+                msg += ("Args that start with '%s' can also be set in "
+                        "a config file") % cc
                 config_arg_string = " or ".join(a.option_strings[0]
                     for a in config_path_actions if a.option_strings)
                 if config_arg_string:
@@ -1022,8 +1022,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 value_sources = ["config file values"] + value_sources
             if added_env_var_help:
                 value_sources = ["environment variables"] + value_sources
-            msg += (" If an arg is specified in more than one place, then "
-                "commandline values override %s.") % (
+            msg += " In general, command-line values override %s." % (
                 " which override ".join(value_sources))
 
         text_width = max(self._get_formatter()._width, 11)

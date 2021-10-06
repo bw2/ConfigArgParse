@@ -934,20 +934,19 @@ class TestMisc(TestCase):
             r'usage: .* \[-h\] -c CONFIG_FILE\s+'
             r'\[-w CONFIG_OUTPUT_PATH\]\s* --arg1\s+ARG1\s*\[--flag\]\s*'
             '%s:\\s*'
-            '-h, --help \\s* show this help message and exit\n\\s*'
-            r'-c CONFIG_FILE, --config CONFIG_FILE\s+my config file\s*'
-            r'-w CONFIG_OUTPUT_PATH, --write-config CONFIG_OUTPUT_PATH\s*takes\s*'
-            r'the current command line args and writes them\s*'
-            r'out to a config file at the given path, then exits\s*'
-            r'--arg1 ARG1\s*Arg1 help text\s*'
-            r'--flag \s*Flag help text\s*'
-            'Args that start with \'--\' \\(eg. --arg1\\) can also be set in a '
-            r'config file\s*\(~/.myconfig or specified via -c\).\s*'
-            r'Config file syntax allows: key=value,\s*flag=true, stuff=\[a,b,c\] '
-            r'\(for details, see syntax at https://goo.gl/R74nmi\).\s*'
-            r'If an arg is specified in more than\s*one place, then '
-            r'commandline values\s*override config file values which override\s*'
-            r'defaults.'%OPTIONAL_ARGS_STRING
+            '-h, --help \\s* show this help message and exit '
+            r'-c CONFIG_FILE, --config CONFIG_FILE\s+my config file '
+            r'-w CONFIG_OUTPUT_PATH, --write-config CONFIG_OUTPUT_PATH takes '
+            r'the current command line args and writes them '
+            r'out to a config file at the given path, then exits '
+            r'--arg1 ARG1 Arg1 help text '
+            r'--flag Flag help text '
+            'Args that start with \'--\' can also be set in a '
+            r'config file \(~/.myconfig or specified via -c\). '
+            r'Config file syntax allows: key=value, flag=true, stuff=\[a,b,c\] '
+            r'\(for details, see syntax at https://goo.gl/R74nmi\). '
+            r'In general, command-line values override config file values '
+            r'which override defaults. '.replace(' ', '\s*') % OPTIONAL_ARGS_STRING
         )
 
     def test_FormatHelpProg(self):
