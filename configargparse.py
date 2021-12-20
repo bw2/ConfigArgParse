@@ -910,31 +910,35 @@ class ArgumentParser(argparse.ArgumentParser):
             if not parsed_arg:
                 continue
             namespace, _ = parsed_arg
-            user_config_file = getattr(namespace, action.dest, None)
+            user_config_files = getattr(namespace, action.dest, None)
 
-            if not user_config_file:
+            if user_config_files is None:
                 continue
 
-            # open user-provided config file
-            user_config_file = os.path.expanduser(user_config_file)
-            try:
-                stream = self._config_file_open_func(user_config_file)
-            except Exception as e:
-                if len(e.args) == 2:  # OSError
-                    errno, msg = e.args
-                else:
-                    msg = str(e)
-                # close previously opened config files
-                for config_file in config_files:
-                    try:
-                        config_file.close()
-                    except Exception:
-                        pass
-                self.error("Unable to open config file: %s. Error: %s" % (
-                    user_config_file, msg
-                ))
+            if not isinstance(user_config_files, list):
+                user_config_files = [user_config_files]
 
-            config_files += [stream]
+            for user_config_file in user_config_files:
+                # open user-provided config file
+                user_config_file = os.path.expanduser(user_config_file)
+                try:
+                    stream = self._config_file_open_func(user_config_file)
+                except Exception as e:
+                    if len(e.args) == 2:  # OSError
+                        errno, msg = e.args
+                    else:
+                        msg = str(e)
+                    # close previously opened config files
+                    for config_file in config_files:
+                        try:
+                            config_file.close()
+                        except Exception:
+                            pass
+                    self.error("Unable to open config file: %s. Error: %s" % (
+                        user_config_file, msg
+                    ))
+
+                config_files += [stream]
 
         return config_files
 
