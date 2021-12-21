@@ -962,7 +962,7 @@ class ArgumentParser(argparse.ArgumentParser):
             a for a in self._actions if getattr(a, "is_config_file_arg", False)]
 
         if not user_config_file_arg_actions:
-            return config_files
+            return config_files, command_line_args
 
         for action in user_config_file_arg_actions:
             # try to parse out the config file path by using a clean new
