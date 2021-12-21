@@ -572,58 +572,14 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # prepare for reading config file(s)
         known_config_keys = {config_key: action for action in self._actions
-            for config_key in self.get_possible_config_keys(action)}
+            for config_key in self.get_possible_config_keys(action, allow_config_file_args=True)}
 
-        # open the config file(s)
-        config_streams = []
-        if config_file_contents is not None:
-            stream = StringIO(config_file_contents)
-            stream.name = "method arg"
-            config_streams = [stream]
-        elif not skip_config_file_parsing:
-            config_streams = self._open_config_files(args)
-
-        # parse each config file
-        for stream in reversed(config_streams):
-            try:
-                config_items = self._config_file_parser.parse(stream)
-            except ConfigFileParserException as e:
-                self.error(e)
-            finally:
-                if hasattr(stream, "close"):
-                    stream.close()
-
-            # add each config item to the commandline unless it's there already
-            config_args = []
-            nargs = False
-            for key, value in config_items.items():
-                if key in known_config_keys:
-                    action = known_config_keys[key]
-                    discard_this_key = already_on_command_line(
-                        args, action.option_strings, self.prefix_chars)
-                else:
-                    action = None
-                    discard_this_key = self._ignore_unknown_config_file_keys or \
-                        already_on_command_line(
-                            args,
-                            [self.get_command_line_key_for_unknown_config_file_setting(key)],
-                            self.prefix_chars)
-
-                if not discard_this_key:
-                    config_args += self.convert_item_to_command_line_arg(
-                        action, key, value)
-                    source_key = "%s|%s" %(_CONFIG_FILE_SOURCE_KEY, stream.name)
-                    if source_key not in self._source_to_settings:
-                        self._source_to_settings[source_key] = OrderedDict()
-                    self._source_to_settings[source_key][key] = (action, value)
-                    if (action and action.nargs or
-                        isinstance(action, argparse._AppendAction)):
-                        nargs = True
-
-            if nargs:
-                args = args + config_args
-            else:
-                args = config_args + args
+        # parse all config files
+        args = self.collate_all_config_args(
+            args, config_file_contents,
+            known_config_keys,
+            skip_config_file_parsing
+        )
 
         # save default settings for use by print_values()
         default_settings = OrderedDict()
@@ -656,6 +612,105 @@ class ArgumentParser(argparse.ArgumentParser):
         output_file_paths = [a for a in output_file_paths if a is not None]
         self.write_config_file(namespace, output_file_paths, exit_after=True)
         return namespace, unknown_args
+
+    def collate_all_config_args(
+        self,
+        args,
+        config_file_contents,
+        known_config_keys,
+        skip_config_file_parsing,
+        parsed_config_files = []
+    ):
+        """Parse all config files. If a config option is found in a config file,
+        it will further be parsed in a recursive fashion.
+        """
+        # open the config file(s)
+        config_streams = []
+        if config_file_contents is not None:
+            stream = StringIO(config_file_contents)
+            stream.name = "method arg"
+            config_streams = [stream]
+        elif not skip_config_file_parsing:
+            config_streams, args = self._open_config_files(args)
+
+        # parse each config file
+        config_keys = self._get_config_file_args_keys()
+        new_config_files = []
+        for stream in reversed(config_streams):
+            try:
+                config_items = self._config_file_parser.parse(stream)
+            except ConfigFileParserException as e:
+                self.error(e)
+            finally:
+                if hasattr(stream, "close"):
+                    stream.close()
+
+            # add each config item to the commandline unless it's there already
+            config_args = []
+            nargs = False
+            for key, value in config_items.items():
+                if key in known_config_keys:
+                    action = known_config_keys[key]
+                    if key not in config_keys:
+                        # if the key is not that of a config file,
+                        # check if already on command line
+                        discard_this_key = already_on_command_line(
+                            args, action.option_strings, self.prefix_chars)
+                    else:
+                        # if the key corresponds to a config argument, we remove
+                        # the already visited config files to avoid circular dependencies
+                        if isinstance(value, list):
+                            for c in value:
+                                if c not in parsed_config_files and c not in new_config_files:
+                                    new_config_files.append(c)
+                        else:
+                            if value not in parsed_config_files and value not in new_config_files:
+                                new_config_files.append(value)
+                        discard_this_key= True
+                else:
+                    action = None
+                    discard_this_key = self._ignore_unknown_config_file_keys or \
+                        already_on_command_line(
+                            args,
+                            [self.get_command_line_key_for_unknown_config_file_setting(key)],
+                            self.prefix_chars)
+
+                if not discard_this_key:
+                    config_args += self.convert_item_to_command_line_arg(
+                        action, key, value)
+                    source_key = "%s|%s" %(_CONFIG_FILE_SOURCE_KEY, stream.name)
+                    if source_key not in self._source_to_settings:
+                        self._source_to_settings[source_key] = OrderedDict()
+                    self._source_to_settings[source_key][key] = (action, value)
+                    if (action and action.nargs or
+                        isinstance(action, argparse._AppendAction)):
+                        nargs = True
+
+            if nargs:
+                args = args + config_args
+            else:
+                args = config_args + args
+
+        if len(new_config_files) > 0:
+            # Add the newly found config files to
+            # the list of files to not parse again
+            parsed_config_files.extend(new_config_files)
+
+            # Set the config file arguments to the
+            # newly discovered ones
+            args.append(config_keys[0])
+            args.extend(new_config_files)
+
+            # recursively call the collating function
+            args = self.collate_all_config_args(
+                args,
+                config_file_contents,
+                known_config_keys,
+                skip_config_file_parsing,
+                parsed_config_files
+            )
+
+        return args
 
     def get_source_to_settings_dict(self):
         """
@@ -843,7 +898,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         return args
 
-    def get_possible_config_keys(self, action):
+    def get_possible_config_keys(self, action, allow_config_file_args=False):
         """This method decides which actions can be set in a config file and
         what their keys will be. It returns a list of 0 or more config keys that
         can be used to set the given action's value in a config file.
@@ -860,8 +915,28 @@ class ArgumentParser(argparse.ArgumentParser):
         for arg in action.option_strings:
             if any(arg.startswith(2*c) for c in self.prefix_chars):
                 keys += [arg[2:], arg] # eg. for '--bla' return ['bla', '--bla']
+            elif getattr(action, 'is_config_file_arg', False) and allow_config_file_args:
+                if any(arg.startswith(c) for c in self.prefix_chars):
+                    keys += [arg[1:], arg] # eg. for '-bla' return ['bla', '-bla']
+        return keys
+
+    def _get_config_file_args_keys(self):
+        keys = []
+
+        for a in self._actions:
+            if getattr(a, 'is_config_file_arg', False):
+                for arg in a.option_strings:
+                    keys.append(arg)
+
+        for key in reversed(keys):
+            cleaned_key = key
+            while cleaned_key[0] == '-':
+                cleaned_key = cleaned_key[1:]
+            if cleaned_key != key:
+                keys.append(cleaned_key)
 
         return keys
+
 
     def _open_config_files(self, command_line_args):
         """Tries to parse config file path(s) from within command_line_args.
@@ -887,7 +962,7 @@ class ArgumentParser(argparse.ArgumentParser):
             a for a in self._actions if getattr(a, "is_config_file_arg", False)]
 
         if not user_config_file_arg_actions:
-            return config_files
+            return config_files, command_line_args
 
         for action in user_config_file_arg_actions:
             # try to parse out the config file path by using a clean new
@@ -909,34 +984,40 @@ class ArgumentParser(argparse.ArgumentParser):
             parsed_arg = arg_parser.parse_known_args(args=command_line_args)
             if not parsed_arg:
                 continue
-            namespace, _ = parsed_arg
-            user_config_file = getattr(namespace, action.dest, None)
+            namespace, command_line_args = parsed_arg
+            user_config_files = getattr(namespace, action.dest, None)
 
-            if not user_config_file:
+            if user_config_files is None:
                 continue
 
-            # open user-provided config file
-            user_config_file = os.path.expanduser(user_config_file)
-            try:
-                stream = self._config_file_open_func(user_config_file)
-            except Exception as e:
-                if len(e.args) == 2:  # OSError
-                    errno, msg = e.args
-                else:
-                    msg = str(e)
-                # close previously opened config files
-                for config_file in config_files:
-                    try:
-                        config_file.close()
-                    except Exception:
-                        pass
-                self.error("Unable to open config file: %s. Error: %s" % (
-                    user_config_file, msg
-                ))
+            if not isinstance(user_config_files, list):
+                user_config_files = [user_config_files]
 
-            config_files += [stream]
+            for user_config_file in user_config_files:
+                # open user-provided config file
+                user_config_file = os.path.expanduser(user_config_file)
+                try:
+                    stream = self._config_file_open_func(user_config_file)
+                except Exception as e:
+                    if len(e.args) == 2:  # OSError
+                        errno, msg = e.args
+                    else:
+                        msg = str(e)
+                    # close previously opened config files
+                    for config_file in config_files:
+                        try:
+                            config_file.close()
+                        except Exception:
+                            pass
+                    self.error("Unable to open config file: %s. Error: %s" % (
+                        user_config_file, msg
+                    ))
 
-        return config_files
+                config_files += [stream]
+
+        # we return both the config files and the remaining args
+        # to make sure the config files don't get parsed multiple times
+        return config_files, command_line_args
 
     def format_values(self):
         """Returns a string with all args and settings and where they came from
