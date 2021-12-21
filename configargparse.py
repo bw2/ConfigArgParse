@@ -984,7 +984,7 @@ class ArgumentParser(argparse.ArgumentParser):
             parsed_arg = arg_parser.parse_known_args(args=command_line_args)
             if not parsed_arg:
                 continue
-            namespace, remaining_args = parsed_arg
+            namespace, command_line_args = parsed_arg
             user_config_files = getattr(namespace, action.dest, None)
 
             if user_config_files is None:
@@ -1017,7 +1017,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # we return both the config files and the remaining args
         # to make sure the config files don't get parsed multiple times
-        return config_files, remaining_args
+        return config_files, command_line_args
 
     def format_values(self):
         """Returns a string with all args and settings and where they came from
