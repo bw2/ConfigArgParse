@@ -889,6 +889,8 @@ class ArgumentParser(argparse.ArgumentParser):
         if not user_config_file_arg_actions:
             return config_files
 
+        positional_args = [a for a in self._actions if getattr(a, "is_positional_arg", False)]
+
         for action in user_config_file_arg_actions:
             # try to parse out the config file path by using a clean new
             # ArgumentParser that only knows this one arg/action.
@@ -896,6 +898,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 prefix_chars=self.prefix_chars,
                 add_help=False)
 
+            [arg_parser._add_action(a) for a in positional_args]
             arg_parser._add_action(action)
 
             # make parser not exit on error by replacing its error method.
