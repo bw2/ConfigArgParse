@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 import configargparse
 from contextlib import contextmanager
 import inspect
@@ -1486,7 +1487,31 @@ class TestConfigFileParsers(TestCase):
 
         self.assertDictEqual(parsed_obj, {'a': '3', 'list_arg': [1,2,3]})
 
+    def testYAMLConfigFileParser_w_ArgumentParser_parsed_values(self):
+        try:
+            import yaml
+        except:
+            raise AssertionError("WARNING: PyYAML not installed. "
+                            "Couldn't test YAMLConfigFileParser")
+            return
+        
+        parser = configargparse.ArgumentParser(config_file_parser_class=configargparse.YAMLConfigFileParser)
+        parser.add_argument('-c', '--config', is_config_file=True)
+        parser.add_argument('--verbosity', action='count')
+        parser.add_argument('--verbose', action='store_true')
+        parser.add_argument('--level', type=int)
 
+        config_lines = ["verbosity: 3", 
+                        "verbose: true", 
+                        "level: 35"]
+        config_str = "\n".join(config_lines)+"\n"
+        config_file = Path(tempfile.gettempdir()) / "temp_YAMLConfigFileParser"
+        with config_file.open('w') as f:
+            f.write(config_str)
+        args = parser.parse_args([f"--config={config_file}"])
+        assert args.verbosity == 3
+        assert args.verbose == True
+        assert args.level == 35
 
 ################################################################################
 # since configargparse should work as a drop-in replacement for argparse
