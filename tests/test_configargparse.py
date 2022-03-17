@@ -1508,7 +1508,7 @@ class TestConfigFileParsers(TestCase):
         config_file = Path(tempfile.gettempdir()) / "temp_YAMLConfigFileParser"
         with config_file.open('w') as f:
             f.write(config_str)
-        args = parser.parse_args([f"--config={config_file}"])
+        args = parser.parse_args(["--config=%s"%config_file.as_posix()])
         assert args.verbosity == 3
         assert args.verbose == True
         assert args.level == 35
