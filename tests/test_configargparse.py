@@ -1,5 +1,4 @@
 import argparse
-from pathlib import Path
 import configargparse
 from contextlib import contextmanager
 import inspect
@@ -1505,10 +1504,10 @@ class TestConfigFileParsers(TestCase):
                         "verbose: true", 
                         "level: 35"]
         config_str = "\n".join(config_lines)+"\n"
-        config_file = Path(tempfile.gettempdir()) / "temp_YAMLConfigFileParser"
-        with config_file.open('w') as f:
+        config_file = tempfile.gettempdir()+"/temp_YAMLConfigFileParser.cfg"
+        with open(config_file, 'w') as f:
             f.write(config_str)
-        args = parser.parse_args(["--config=%s"%config_file.as_posix()])
+        args = parser.parse_args(["--config=%s"%config_file])
         assert args.verbosity == 3
         assert args.verbose == True
         assert args.level == 35
