@@ -793,31 +793,29 @@ class ArgumentParser(argparse.ArgumentParser):
         # handle 'store_true', 'store_false', 'count' and alike actions.
         if action is not None and isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
             
-            if isinstance(action, argparse._CountAction):
+            
+            if isinstance(value,str) and value.lower() in ("true", "yes", "1"):
+                if not is_boolean_optional_action(action):
+                    args.append( command_line_key )
+                else:
+                    # --foo
+                    args.append(action.option_strings[0])
+            elif isinstance(value,str) and value.lower() in ("false", "no", "0"):
+                # don't append when set to "false" / "no"
+                if not is_boolean_optional_action(action):
+                    pass
+                else:
+                    # --no-foo
+                    args.append(action.option_strings[1])
+            elif isinstance(action, argparse._CountAction):
                 for arg in args:
                     if any([arg.startswith(s) for s in action.option_strings]):
                         value = 0
                 args += [action.option_strings[0]] * int(value)
-            elif isinstance(value, str):
-                if value.lower() in ("true", "yes", "1"):
-                    if not is_boolean_optional_action(action):
-                        args.append( command_line_key )
-                    else:
-                        # --foo
-                        args.append(action.option_strings[0])
-                elif value.lower() in ("false", "no", "0"):
-                    # don't append when set to "false" / "no"
-                    if not is_boolean_optional_action(action):
-                        pass
-                    else:
-                        # --no-foo
-                        args.append(action.option_strings[1])
-                else:
-                    self.error("Unexpected value for %s: '%s'. Expecting 'true', "
-                            "'false', 'yes', 'no', '1' or '0'" % (key, value))
             else:
-                self.error("Unexpected value for %s: '%s'. Expecting a string or int." % (key, value))
-        
+                self.error("Unexpected value for %s: '%s'. Expecting 'true', "
+                        "'false', 'yes', 'no', '1' or '0'" % (key, value))
+
         elif isinstance(value, list):
             accepts_list_and_has_nargs = action is not None and action.nargs is not None and (
                    isinstance(action, argparse._StoreAction) or isinstance(action, argparse._AppendAction)
