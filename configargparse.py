@@ -776,7 +776,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 config file setting doesn't correspond to any defined
                 configargparse arg.
             key: string (config file key or env var name)
-            value: parsed value of type string or list
+            value: parsed value of type: string, list, bool, int. 
+                Any other types will raise ValueError.
 
         Returns:
             list[str]: args
@@ -794,13 +795,13 @@ class ArgumentParser(argparse.ArgumentParser):
         if action is not None and isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
             
             
-            if isinstance(value,str) and value.lower() in ("true", "yes", "1"):
+            if isinstance(value, (str, bool)) and value.lower() in (True, "true", "yes", "1"):
                 if not is_boolean_optional_action(action):
                     args.append( command_line_key )
                 else:
                     # --foo
                     args.append(action.option_strings[0])
-            elif isinstance(value,str) and value.lower() in ("false", "no", "0"):
+            elif isinstance(value, (str, bool)) and value.lower() in (False, "false", "no", "0"):
                 # don't append when set to "false" / "no"
                 if not is_boolean_optional_action(action):
                     pass
@@ -840,6 +841,8 @@ class ArgumentParser(argparse.ArgumentParser):
                             "to 'append' or nargs is set to '*', '+', or > 1") % (key, value))
         elif isinstance(value, str):
             args.append( "%s=%s" % (command_line_key, value) )
+        elif isinstance(value, int):
+            args.append( "%s=%s" % (command_line_key, str(value)) )
         else:
             raise ValueError("Unexpected value type {} for value: {}".format(
                 type(value), value))
