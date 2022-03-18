@@ -372,7 +372,7 @@ _TRIPLE_QUOTED_STR_REGEX = re.compile(r'(^\"\"\"(\s+)?(([^\"]|\"([^\"]|\"[^\"]))
                                       r'(^\'\'\'(\s+)?(([^\']|\'([^\']|\'[^\']))*(\'\'?)?)?(\s+)?(?:\\.|[^\'\\])?\'\'\'$)', flags=re.DOTALL)
 
 @functools.lru_cache(maxsize=256, typed=True)
-def is_quoted(text:str, triple:bool=True) -> bool:
+def is_quoted(text, triple=True):
     """
     Detect whether a string is a quoted representation. 
 
@@ -381,7 +381,7 @@ def is_quoted(text:str, triple:bool=True) -> bool:
     return bool(_QUOTED_STR_REGEX.match(text)) or \
         (triple and bool(_TRIPLE_QUOTED_STR_REGEX.match(text)))
 
-def unquote_str(text:str, triple:bool=True) -> str:
+def unquote_str(text, triple=True):
     """
     Unquote a maybe quoted string representation. 
     If the string is not detected as being a quoted representation, it returns the same string as passed.
@@ -400,7 +400,7 @@ def unquote_str(text:str, triple:bool=True) -> str:
         return s
     return text
 
-def parse_toml_section_name(section_name:str) -> Tuple[str, ...]:
+def parse_toml_section_name(section_name):
     """
     Parse a TOML section name to a sequence of strings.
 
@@ -419,7 +419,7 @@ def parse_toml_section_name(section_name:str) -> Tuple[str, ...]:
             section.append(unquote_str(a.strip(), triple=False))
     return tuple(section)
 
-def get_toml_section(data:Dict[str, Any], section:Union[Tuple[str, ...], str]) -> Optional[Dict[str, Any]]:
+def get_toml_section(data, section):
     """
     Given some TOML data (as loaded with L{toml.load()}), returns the requested section of the data.
     Returns C{None} if the section is not found.
@@ -441,14 +441,14 @@ class TomlConfigParser(ConfigFileParser):
     Create a TOML parser bounded to the list of provided sections.
     """
 
-    def __init__(self, sections: List[str]) -> None:
+    def __init__(self, sections):
         super().__init__()
         self.sections = sections
     
-    def __call__(self) -> ConfigFileParser:
+    def __call__(self):
         return self
 
-    def parse(self, stream:TextIO) -> Dict[str, Any]:
+    def parse(self, stream):
         """Parses the keys and values from a TOML config file."""
         # parse with configparser to allow multi-line values
         import toml
@@ -458,7 +458,7 @@ class TomlConfigParser(ConfigFileParser):
             raise ConfigFileParserException("Couldn't parse TOML file: %s" % e)
 
         # convert to dict and filter based on section names
-        result: Dict[str, Any] = OrderedDict()
+        result = OrderedDict()
 
         for section in self.sections:
             data = get_toml_section(config, section)
@@ -477,7 +477,7 @@ class TomlConfigParser(ConfigFileParser):
         
         return result
 
-    def get_syntax_description(self) -> str:
+    def get_syntax_description(self):
         return ("Config file syntax is Tom's Obvious, Minimal Language. "
                 "See https://github.com/toml-lang/toml/blob/v0.5.0/README.md for details.")
 
@@ -487,15 +487,15 @@ class IniConfigParser(ConfigFileParser):
     Optionaly convert multiline strings to list.
     """
 
-    def __init__(self, sections:List[str], split_ml_text_to_list:bool) -> None:
+    def __init__(self, sections, split_ml_text_to_list):
         super().__init__()
         self.sections = sections
         self.split_ml_text_to_list = split_ml_text_to_list
 
-    def __call__(self) -> ConfigFileParser:
+    def __call__(self):
         return self
 
-    def parse(self, stream:TextIO) -> Dict[str, Any]:
+    def parse(self, stream):
         """Parses the keys and values from an INI config file."""
         # parse with configparser to allow multi-line values
         import configparser
@@ -541,7 +541,7 @@ class IniConfigParser(ConfigFileParser):
                         result[k] = v
         return result
 
-    def get_syntax_description(self) -> str:
+    def get_syntax_description(self):
         msg = ("Uses configparser module to parse an INI file which allows multi-line values. "
                 "See https://docs.python.org/3/library/configparser.html for details. "
                 "This parser includes support for quoting strings literal as well as python list syntax evaluation. ")
@@ -558,14 +558,14 @@ class CompositeConfigParser(ConfigFileParser):
     until it succeeds, else raise execption with all encountered errors. 
     """
 
-    def __init__(self, config_parser_types: List[Callable[[], ConfigFileParser]]) -> None:
+    def __init__(self, config_parser_types):
         super().__init__()
         self.parsers = [p() for p in config_parser_types]
 
-    def __call__(self) -> ConfigFileParser:
+    def __call__(self):
         return self
 
-    def parse(self, stream:TextIO) -> Dict[str, Any]:
+    def parse(self, stream):
         errors = []
         for p in self.parsers:
             try:
@@ -576,8 +576,8 @@ class CompositeConfigParser(ConfigFileParser):
         raise ConfigFileParserException(
                 f"Error parsing config: {', '.join(repr(str(e)) for e in errors)}")
     
-    def get_syntax_description(self) -> str:
-        def guess_format_name(classname:str) -> str:
+    def get_syntax_description(self) :
+        def guess_format_name(classname):
             return classname.strip('_').replace('Parser', 
                 '').replace('Config', '').replace('File', '').upper()
         
