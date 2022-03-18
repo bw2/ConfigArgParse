@@ -338,17 +338,17 @@ class YAMLConfigFileParser(ConfigFileParser):
 
 
 """
-Provides L{configargparse.ConfigFileParser} classes to parse C{TOML} and C{INI} files with **mandatory** support for sections.
-Useful to integrate configuration into project files like C{pyproject.toml} or C{setup.cfg}.
+Provides `configargparse.ConfigFileParser` classes to parse ``TOML`` and ``INI`` files with **mandatory** support for sections.
+Useful to integrate configuration into project files like ``pyproject.toml`` or ``setup.cfg``.
 
-L{TomlConfigParser} usage: 
+`TomlConfigParser` usage: 
 
 >>> TomlParser = TomlConfigParser(['tool.my_super_tool']) # Simple TOML parser.
 >>> parser = ArgumentParser(..., default_config_files=['./pyproject.toml'], config_file_parser_class=TomlParser)
 
-L{IniConfigParser} works the same way (also it optionaly convert multiline strings to list with argument C{split_ml_text_to_list}).
+`IniConfigParser` works the same way (also it optionaly convert multiline strings to list with argument ``split_ml_text_to_list``).
 
-L{CompositeConfigParser} usage:
+`CompositeConfigParser` usage:
 
 >>> MY_CONFIG_SECTIONS = ['tool.my_super_tool', 'tool:my_super_tool', 'my_super_tool']
 >>> TomlParser =  TomlConfigParser(MY_CONFIG_SECTIONS)
@@ -376,7 +376,7 @@ def is_quoted(text, triple=True):
     """
     Detect whether a string is a quoted representation. 
 
-    @param triple: Also match tripple quoted strings.
+    :param triple: Also match tripple quoted strings.
     """
     return bool(_QUOTED_STR_REGEX.match(text)) or \
         (triple and bool(_TRIPLE_QUOTED_STR_REGEX.match(text)))
@@ -385,9 +385,9 @@ def unquote_str(text, triple=True):
     """
     Unquote a maybe quoted string representation. 
     If the string is not detected as being a quoted representation, it returns the same string as passed.
-    It supports all kinds of python quotes: C{\"\"\"}, C{'''}, C{"} and C{'}.
+    It supports all kinds of python quotes: ``\"\"\"``, ``'''``, ``"`` and ``'``.
 
-    @param triple: Also unquote tripple quoted strings.
+    :param triple: Also unquote tripple quoted strings.
     @raises ValueError: If the string is detected as beeing quoted but literal_eval() fails to evaluate it as string.
         This would be a bug in the regex. 
     """
@@ -421,8 +421,8 @@ def parse_toml_section_name(section_name):
 
 def get_toml_section(data, section):
     """
-    Given some TOML data (as loaded with L{toml.load()}), returns the requested section of the data.
-    Returns C{None} if the section is not found.
+    Given some TOML data (as loaded with `toml.load()`), returns the requested section of the data.
+    Returns ``None`` if the section is not found.
     """
     sections = parse_toml_section_name(section) if isinstance(section, str) else section
     itemdata = data.get(sections[0])
@@ -612,7 +612,7 @@ class IniConfigParser(ConfigFileParser):
 
 class CompositeConfigParser(ConfigFileParser):
     """
-    Createa a config parser composed by others L{ConfigFileParser}s.  
+    Createa a config parser composed by others `ConfigFileParser`s.  
 
     The composite parser will successively try to parse the file with each parser, 
     until it succeeds, else raise execption with all encountered errors. 
