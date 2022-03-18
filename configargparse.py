@@ -900,7 +900,7 @@ class ArgumentParser(argparse.ArgumentParser):
             try:
                 config_items = self._config_file_parser.parse(stream)
             except ConfigFileParserException as e:
-                self.error(e)
+                self.error(str(e))
             finally:
                 if hasattr(stream, "close"):
                     stream.close()
