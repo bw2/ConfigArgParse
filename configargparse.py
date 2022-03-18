@@ -441,13 +441,18 @@ class TomlConfigParser(ConfigFileParser):
     Create a TOML parser bounded to the list of provided sections.
 
     Example::
-
-        [tool.my-software]
+        # this is a comment
+        [tool.my-software] # TOML section table.
+        # how to specify a key-value pair
+        format-string = "restructuredtext" # strings must be quoted
+        # how to set an arg which has action="store_true"
+        warnings-as-errors = true
+        # how to set an arg which has action="count" or type=int
+        verbosity = 1
+        # how to specify a list arg (eg. arg which has action="append")
         repeatable-option = ["https://docs.python.org/3/objects.inv",
                        "https://twistedmatrix.com/documents/current/api/objects.inv"]
-        format-string = "restructuredtext"
-        verbose = 1
-        warnings-as-errors = true
+        # how to specify a multiline text:
         multi-line-text = '''
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
             Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
@@ -510,14 +515,22 @@ class IniConfigParser(ConfigFileParser):
 
     Example (if split_ml_text_to_list=False)::
 
+        # this is a comment
+        ; also a comment
         [my-software]
+        # how to specify a key-value pair
+        format-string: restructuredtext 
+        # white space are ignored, so name = value same as name=value
+        # this is why you can quote strings 
+        quoted-string = '\thello\tmom...  '
+        # how to set an arg which has action="store_true"
+        warnings-as-errors = true
+        # how to set an arg which has action="count" or type=int
+        verbosity = 1
+        # how to specify a list arg (eg. arg which has action="append")
         repeatable-option = ["https://docs.python.org/3/objects.inv",
                        "https://twistedmatrix.com/documents/current/api/objects.inv"]
-        format-string = restructuredtext
-        verbose = 1
-        warnings-as-errors = true
-        privacy = ["HIDDEN:pydoctor.test",
-                   "PUBLIC:pydoctor._configparser",]
+        # how to specify a multiline text:
         multi-line-text = 
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
             Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
@@ -525,22 +538,18 @@ class IniConfigParser(ConfigFileParser):
     
     Example (if split_ml_text_to_list=True)::
 
+        # the same rules are applicable with the following changes:
         [my-software]
-        repeatable-option =
+        # how to specify a list arg (eg. arg which has action="append")
+        repeatable-option = # Just enter one value per line (the list literal format can also be used)
             https://docs.python.org/3/objects.inv
             https://twistedmatrix.com/documents/current/api/objects.inv
-        format-string = restructuredtext
-        verbose = 1
-        warnings-as-errors = true
-        privacy =
-            HIDDEN:pydoctor.test
-            PUBLIC:pydoctor._configparser
+        # how to specify a multiline text (you have to quote it):
         multi-line-text = '''
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
             Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
             Maecenas quis dapibus leo, a pellentesque leo. 
             '''
-    
     """
 
     def __init__(self, sections, split_ml_text_to_list):
@@ -638,8 +647,9 @@ class CompositeConfigParser(ConfigFileParser):
     
     def get_syntax_description(self) :
         def guess_format_name(classname):
-            return classname.strip('_').replace('Parser', 
-                '').replace('Config', '').replace('File', '').upper()
+            strip = classname.lower().strip('_').replace('parser', 
+                '').replace('config', '').replace('file', '')
+            return strip.upper() if strip else '??'
         
         msg = "Uses multiple config parser settings (in order): \n"
         for i, parser in enumerate(self.parsers): 
