@@ -439,9 +439,31 @@ def get_toml_section(data, section):
 class TomlConfigParser(ConfigFileParser):
     """
     Create a TOML parser bounded to the list of provided sections.
+
+    Example::
+
+        [tool.my-software]
+        repeatable-option = ["https://docs.python.org/3/objects.inv",
+                       "https://twistedmatrix.com/documents/current/api/objects.inv"]
+        format-string = "restructuredtext"
+        verbose = 1
+        warnings-as-errors = true
+        multi-line-text = '''
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+            Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
+            Maecenas quis dapibus leo, a pellentesque leo. 
+            '''
+
+    Note that the config file fragment above is also valid for the `IniConfigParser` class and would be parsed the same manner. 
+    Thought, any valid TOML config file will not be necessarly parsable with `IniConfigParser` (INI files must be rigorously indented whereas TOML files).
+    
+    See the `TOML specification <>`_ for details. 
     """
 
     def __init__(self, sections):
+        """
+        :param sections: The section names bounded to the new parser.
+        """
         super().__init__()
         self.sections = sections
     
@@ -485,9 +507,47 @@ class IniConfigParser(ConfigFileParser):
     """
     Create a INI parser bounded to the list of provided sections.
     Optionaly convert multiline strings to list.
+
+    Example (if split_ml_text_to_list=False)::
+
+        [my-software]
+        repeatable-option = ["https://docs.python.org/3/objects.inv",
+                       "https://twistedmatrix.com/documents/current/api/objects.inv"]
+        format-string = restructuredtext
+        verbose = 1
+        warnings-as-errors = true
+        privacy = ["HIDDEN:pydoctor.test",
+                   "PUBLIC:pydoctor._configparser",]
+        multi-line-text = 
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+            Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
+            Maecenas quis dapibus leo, a pellentesque leo. 
+    
+    Example (if split_ml_text_to_list=True)::
+
+        [my-software]
+        repeatable-option =
+            https://docs.python.org/3/objects.inv
+            https://twistedmatrix.com/documents/current/api/objects.inv
+        format-string = restructuredtext
+        verbose = 1
+        warnings-as-errors = true
+        privacy =
+            HIDDEN:pydoctor.test
+            PUBLIC:pydoctor._configparser
+        multi-line-text = '''
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+            Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
+            Maecenas quis dapibus leo, a pellentesque leo. 
+            '''
+    
     """
 
     def __init__(self, sections, split_ml_text_to_list):
+        """
+        :param sections: The section names bounded to the new parser.
+        :split_ml_text_to_list: Wether to convert multiline strings to list
+        """
         super().__init__()
         self.sections = sections
         self.split_ml_text_to_list = split_ml_text_to_list
@@ -923,8 +983,8 @@ class ArgumentParser(argparse.ArgumentParser):
         Returns:
             dict[str, dict[str, tuple[argparse.Action, str]]]: source to settings dict
         """
-
-        return self._source_to_settings
+        # _source_to_settings is set in parse_know_args().
+        return self._source_to_settings # type:ignore[attribute-error]
 
 
     def write_config_file(self, parsed_namespace, output_file_paths, exit_after=False):
@@ -1044,6 +1104,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # handle boolean value
         if action is not None and isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
+            assert isinstance(value, str), "config parser should convert anything that is not a list to string."
             if value.lower() in ("true", "yes", "1"):
                 if not is_boolean_optional_action(action):
                     args.append( command_line_key )
@@ -1205,7 +1266,7 @@ class ArgumentParser(argparse.ArgumentParser):
         }
 
         r = StringIO()
-        for source, settings in self._source_to_settings.items():
+        for source, settings in self._source_to_settings.items(): #type:ignore[argument-error]
             source = source.split("|")
             source = source_key_to_display_value_map[source[0]] % tuple(source[1:])
             r.write(source)
