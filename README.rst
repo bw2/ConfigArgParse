@@ -167,7 +167,7 @@ Config File Syntax
 
 Only command line args that have a long version (eg. one that starts with '--')
 can be set in a config file. For example, "--color" can be set by putting
-"color=green" in a config file. The config file syntax depends on the constuctor
+"color=green" in a config file. The config file syntax depends on the constructor
 arg: :code:`config_file_parser_class` which can be set to one of the provided
 classes: :code:`DefaultConfigFileParser`, :code:`YAMLConfigFileParser`,
 :code:`ConfigparserConfigFileParser` or to your own subclass of the
@@ -434,7 +434,7 @@ Design choices:
 2. config file and env. var settings should be processed by appending
    them to the command line (another benefit of #1). This is an
    easy-to-implement solution and implicitly takes care of checking that
-   all "required" args are provied, etc., plus the behavior should be
+   all "required" args are provided, etc., plus the behavior should be
    easy for users to understand.
 3. configargparse shouldn't override argparse's
    convert_arg_line_to_args method so that all argparse unit tests
