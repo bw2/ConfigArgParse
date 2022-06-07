@@ -316,6 +316,8 @@ class YAMLConfigFileParser(ConfigFileParser):
         for key, value in parsed_obj.items():
             if isinstance(value, list):
                 result[key] = value
+            elif isinstance(value, dict):
+                result[key] = value
             elif value is None:
                 pass
             else:
