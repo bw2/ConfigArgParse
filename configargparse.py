@@ -295,14 +295,21 @@ class YAMLConfigFileParser(ConfigFileParser):
             raise ConfigFileParserException("Could not import yaml. "
                 "It can be installed by running 'pip install PyYAML'")
 
-        return yaml
+        try:
+            from yaml import CSafeLoader as SafeLoader
+            from yaml import CDumper as Dumper
+        except ImportError:
+            from yaml import SafeLoader
+            from yaml import Dumper
+
+        return yaml, SafeLoader, Dumper
 
     def parse(self, stream):
         # see ConfigFileParser.parse docstring
-        yaml = self._load_yaml()
+        yaml, SafeLoader, _ = self._load_yaml()
 
         try:
-            parsed_obj = yaml.safe_load(stream)
+            parsed_obj = yaml.load(stream, Loader=SafeLoader)
         except Exception as e:
             raise ConfigFileParserException("Couldn't parse config file: %s" % e)
 
@@ -327,11 +334,11 @@ class YAMLConfigFileParser(ConfigFileParser):
         # see ConfigFileParser.serialize docstring
 
         # lazy-import so there's no dependency on yaml unless this class is used
-        yaml = self._load_yaml()
+        yaml, _, Dumper = self._load_yaml()
 
         # it looks like ordering can't be preserved: http://pyyaml.org/ticket/29
         items = dict(items)
-        return yaml.dump(items, default_flow_style=default_flow_style)
+        return yaml.dump(items, default_flow_style=default_flow_style, Dumper=Dumper)
 
 
 # used while parsing args to keep track of where they came from
