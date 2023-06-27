@@ -4,6 +4,9 @@ A drop-in replacement for `argparse` that allows options to also be set via conf
 :see: `configargparse.ArgumentParser`, `configargparse.add_argument`
 """
 import argparse
+import ast
+import csv
+import functools
 import json
 import glob
 import os
@@ -341,6 +344,325 @@ class YAMLConfigFileParser(ConfigFileParser):
         return yaml.dump(items, default_flow_style=default_flow_style, Dumper=Dumper)
 
 
+"""
+Provides `configargparse.ConfigFileParser` classes to parse ``TOML`` and ``INI`` files with **mandatory** support for sections.
+Useful to integrate configuration into project files like ``pyproject.toml`` or ``setup.cfg``.
+
+`TomlConfigParser` usage: 
+
+>>> TomlParser = TomlConfigParser(['tool.my_super_tool']) # Simple TOML parser.
+>>> parser = ArgumentParser(..., default_config_files=['./pyproject.toml'], config_file_parser_class=TomlParser)
+
+`IniConfigParser` works the same way (also it optionaly convert multiline strings to list with argument ``split_ml_text_to_list``).
+
+`CompositeConfigParser` usage:
+
+>>> MY_CONFIG_SECTIONS = ['tool.my_super_tool', 'tool:my_super_tool', 'my_super_tool']
+>>> TomlParser =  TomlConfigParser(MY_CONFIG_SECTIONS)
+>>> IniParser = IniConfigParser(MY_CONFIG_SECTIONS, split_ml_text_to_list=True)
+>>> MixedParser = CompositeConfigParser([TomlParser, IniParser]) # This parser supports both TOML and INI formats.
+>>> parser = ArgumentParser(..., default_config_files=['./pyproject.toml', 'setup.cfg', 'my_super_tool.ini'], config_file_parser_class=MixedParser)
+
+"""
+
+# I did not invented these regex, just put together some stuff from:
+# - https://stackoverflow.com/questions/11859442/how-to-match-string-in-quotes-using-regex
+# - and https://stackoverflow.com/a/41005190
+
+_QUOTED_STR_REGEX = re.compile(r'(^\"(?:\\.|[^\"\\])*\"$)|'
+                               r'(^\'(?:\\.|[^\'\\])*\'$)')
+
+_TRIPLE_QUOTED_STR_REGEX = re.compile(r'(^\"\"\"(\s+)?(([^\"]|\"([^\"]|\"[^\"]))*(\"\"?)?)?(\s+)?(?:\\.|[^\"\\])?\"\"\"$)|'
+                                                                                                 # Unescaped quotes at the end of a string generates 
+                                                                                                 # "SyntaxError: EOL while scanning string literal", 
+                                                                                                 # so we don't account for those kind of strings as quoted.
+                                      r'(^\'\'\'(\s+)?(([^\']|\'([^\']|\'[^\']))*(\'\'?)?)?(\s+)?(?:\\.|[^\'\\])?\'\'\'$)', flags=re.DOTALL)
+
+@functools.lru_cache(maxsize=256, typed=True)
+def is_quoted(text, triple=True):
+    """
+    Detect whether a string is a quoted representation. 
+
+    :param triple: Also match tripple quoted strings.
+    """
+    return bool(_QUOTED_STR_REGEX.match(text)) or \
+        (triple and bool(_TRIPLE_QUOTED_STR_REGEX.match(text)))
+
+def unquote_str(text, triple=True):
+    """
+    Unquote a maybe quoted string representation. 
+    If the string is not detected as being a quoted representation, it returns the same string as passed.
+    It supports all kinds of python quotes: ``\"\"\"``, ``'''``, ``"`` and ``'``.
+
+    :param triple: Also unquote tripple quoted strings.
+    @raises ValueError: If the string is detected as beeing quoted but literal_eval() fails to evaluate it as string.
+        This would be a bug in the regex. 
+    """
+    if is_quoted(text, triple=triple):
+        try:
+            s = ast.literal_eval(text)
+            assert isinstance(s, str)
+        except Exception as e:
+            raise ValueError(f"Error trying to unquote the quoted string: {text}: {e}") from e
+        return s
+    return text
+
+def parse_toml_section_name(section_name):
+    """
+    Parse a TOML section name to a sequence of strings.
+
+    The following names are all valid: 
+
+    .. python::
+
+        "a.b.c"            # this is best practice -> returns ("a", "b", "c")
+        " d.e.f "          # same as [d.e.f] -> returns ("d", "e", "f")
+        " g .  h  . i "    # same as [g.h.i] -> returns ("g", "h", "i")
+        ' j . "ʞ" . "l" '  # same as [j."ʞ"."l"], double or simple quotes here are supported. -> returns ("j", "ʞ", "l")
+    """
+    section = []
+    for row in csv.reader([section_name], delimiter='.'):
+        for a in row:
+            section.append(unquote_str(a.strip(), triple=False))
+    return tuple(section)
+
+def get_toml_section(data, section):
+    """
+    Given some TOML data (as loaded with `toml.load()`), returns the requested section of the data.
+    Returns ``None`` if the section is not found.
+    """
+    sections = parse_toml_section_name(section) if isinstance(section, str) else section
+    itemdata = data.get(sections[0])
+    if not itemdata:
+        return None
+    sections = sections[1:]
+    if sections:
+        return get_toml_section(itemdata, sections)
+    else:
+        if not isinstance(itemdata, dict):
+            return None
+        return itemdata
+
+class TomlConfigParser(ConfigFileParser):
+    """
+    Create a TOML parser bounded to the list of provided sections.
+
+    Example::
+        # this is a comment
+        [tool.my-software] # TOML section table.
+        # how to specify a key-value pair
+        format-string = "restructuredtext" # strings must be quoted
+        # how to set an arg which has action="store_true"
+        warnings-as-errors = true
+        # how to set an arg which has action="count" or type=int
+        verbosity = 1
+        # how to specify a list arg (eg. arg which has action="append")
+        repeatable-option = ["https://docs.python.org/3/objects.inv",
+                       "https://twistedmatrix.com/documents/current/api/objects.inv"]
+        # how to specify a multiline text:
+        multi-line-text = '''
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+            Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
+            Maecenas quis dapibus leo, a pellentesque leo. 
+            '''
+
+    Note that the config file fragment above is also valid for the `IniConfigParser` class and would be parsed the same manner. 
+    Thought, any valid TOML config file will not be necessarly parsable with `IniConfigParser` (INI files must be rigorously indented whereas TOML files).
+    
+    See the `TOML specification <>`_ for details. 
+    """
+
+    def __init__(self, sections):
+        """
+        :param sections: The section names bounded to the new parser.
+        """
+        super().__init__()
+        self.sections = sections
+    
+    def __call__(self):
+        return self
+
+    def parse(self, stream):
+        """Parses the keys and values from a TOML config file."""
+        # parse with configparser to allow multi-line values
+        import toml
+        try:
+            config = toml.load(stream)
+        except Exception as e:
+            raise ConfigFileParserException("Couldn't parse TOML file: %s" % e)
+
+        # convert to dict and filter based on section names
+        result = OrderedDict()
+
+        for section in self.sections:
+            data = get_toml_section(config, section)
+            if data:
+                # Seems a little weird, but anything that is not a list is converted to string, 
+                # It will be converted back to boolean, int or whatever after.
+                # Because config values are still passed to argparser for computation.
+                for key, value in data.items():
+                    if isinstance(value, list):
+                        result[key] = value
+                    elif value is None:
+                        pass
+                    else:
+                        result[key] = str(value)
+                break
+        
+        return result
+
+    def get_syntax_description(self):
+        return ("Config file syntax is Tom's Obvious, Minimal Language. "
+                "See https://github.com/toml-lang/toml/blob/v0.5.0/README.md for details.")
+
+class IniConfigParser(ConfigFileParser):
+    """
+    Create a INI parser bounded to the list of provided sections.
+    Optionaly convert multiline strings to list.
+
+    Example (if split_ml_text_to_list=False)::
+
+        # this is a comment
+        ; also a comment
+        [my-software]
+        # how to specify a key-value pair
+        format-string: restructuredtext 
+        # white space are ignored, so name = value same as name=value
+        # this is why you can quote strings 
+        quoted-string = '\thello\tmom...  '
+        # how to set an arg which has action="store_true"
+        warnings-as-errors = true
+        # how to set an arg which has action="count" or type=int
+        verbosity = 1
+        # how to specify a list arg (eg. arg which has action="append")
+        repeatable-option = ["https://docs.python.org/3/objects.inv",
+                       "https://twistedmatrix.com/documents/current/api/objects.inv"]
+        # how to specify a multiline text:
+        multi-line-text = 
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+            Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
+            Maecenas quis dapibus leo, a pellentesque leo. 
+    
+    Example (if split_ml_text_to_list=True)::
+
+        # the same rules are applicable with the following changes:
+        [my-software]
+        # how to specify a list arg (eg. arg which has action="append")
+        repeatable-option = # Just enter one value per line (the list literal format can also be used)
+            https://docs.python.org/3/objects.inv
+            https://twistedmatrix.com/documents/current/api/objects.inv
+        # how to specify a multiline text (you have to quote it):
+        multi-line-text = '''
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+            Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
+            Maecenas quis dapibus leo, a pellentesque leo. 
+            '''
+    """
+
+    def __init__(self, sections, split_ml_text_to_list):
+        """
+        :param sections: The section names bounded to the new parser.
+        :split_ml_text_to_list: Wether to convert multiline strings to list
+        """
+        super().__init__()
+        self.sections = sections
+        self.split_ml_text_to_list = split_ml_text_to_list
+
+    def __call__(self):
+        return self
+
+    def parse(self, stream):
+        """Parses the keys and values from an INI config file."""
+        # parse with configparser to allow multi-line values
+        import configparser
+        config = configparser.ConfigParser()
+        try:
+            config.read_string(stream.read())
+        except Exception as e:
+            raise ConfigFileParserException("Couldn't parse INI file: %s" % e)
+
+        # convert to dict and filter based on INI section names
+        result = OrderedDict()
+        for section in config.sections() + [configparser.DEFAULTSECT]:
+            if section not in self.sections:
+                continue
+            for k,v in config[section].items():
+                strip_v = v.strip()
+                if not strip_v:
+                    # ignores empty values, anyway allow_no_value=False by default so this should not happend.
+                    continue
+                # evaluate lists
+                if strip_v.startswith('[') and strip_v.endswith(']'):
+                    try:
+                        result[k] = ast.literal_eval(strip_v)
+                    except ValueError as e:
+                        # error evaluating object
+                        raise ConfigFileParserException("Error evaluating list: " + str(e) + ". Put quotes around your text if it's meant to be a string.") from e
+                else:
+                    if is_quoted(strip_v):
+                        # evaluate quoted string
+                        try:
+                            result[k] = unquote_str(strip_v)
+                        except ValueError as e:
+                            # error unquoting string
+                            raise ConfigFileParserException(str(e)) from e
+                    # split multi-line text into list of strings if split_ml_text_to_list is enabled.
+                    elif self.split_ml_text_to_list and '\n' in v.rstrip('\n'):
+                        try:
+                            result[k] = [unquote_str(i) for i in strip_v.split('\n') if i]
+                        except ValueError as e:
+                            # error unquoting string
+                            raise ConfigFileParserException(str(e)) from e
+                    else:
+                        result[k] = v
+        return result
+
+    def get_syntax_description(self):
+        msg = ("Uses configparser module to parse an INI file which allows multi-line values. "
+                "See https://docs.python.org/3/library/configparser.html for details. "
+                "This parser includes support for quoting strings literal as well as python list syntax evaluation. ")
+        if self.split_ml_text_to_list:
+            msg += ("Alternatively lists can be constructed with a plain multiline string, "
+                "each non-empty line will be converted to a list item.")
+        return msg
+
+class CompositeConfigParser(ConfigFileParser):
+    """
+    Createa a config parser composed by others `ConfigFileParser`s.  
+
+    The composite parser will successively try to parse the file with each parser, 
+    until it succeeds, else raise execption with all encountered errors. 
+    """
+
+    def __init__(self, config_parser_types):
+        super().__init__()
+        self.parsers = [p() for p in config_parser_types]
+
+    def __call__(self):
+        return self
+
+    def parse(self, stream):
+        errors = []
+        for p in self.parsers:
+            try:
+                return p.parse(stream) # type: ignore[no-any-return]
+            except Exception as e:
+                stream.seek(0)
+                errors.append(e)
+        raise ConfigFileParserException(
+                f"Error parsing config: {', '.join(repr(str(e)) for e in errors)}")
+    
+    def get_syntax_description(self) :
+        def guess_format_name(classname):
+            strip = classname.lower().strip('_').replace('parser', 
+                '').replace('config', '').replace('file', '')
+            return strip.upper() if strip else '??'
+        
+        msg = "Uses multiple config parser settings (in order): \n"
+        for i, parser in enumerate(self.parsers): 
+            msg += f"[{i+1}] {guess_format_name(parser.__class__.__name__)}: {parser.get_syntax_description()} \n"
+        return msg
+
 # used while parsing args to keep track of where they came from
 _COMMAND_LINE_SOURCE_KEY = "command_line"
 _ENV_VAR_SOURCE_KEY = "environment_variables"
@@ -595,7 +917,7 @@ class ArgumentParser(argparse.ArgumentParser):
             try:
                 config_items = self._config_file_parser.parse(stream)
             except ConfigFileParserException as e:
-                self.error(e)
+                self.error(str(e))
             finally:
                 if hasattr(stream, "close"):
                     stream.close()
@@ -678,8 +1000,8 @@ class ArgumentParser(argparse.ArgumentParser):
         Returns:
             dict[str, dict[str, tuple[argparse.Action, str]]]: source to settings dict
         """
-
-        return self._source_to_settings
+        # _source_to_settings is set in parse_know_args().
+        return self._source_to_settings # type:ignore[attribute-error]
 
 
     def write_config_file(self, parsed_namespace, output_file_paths, exit_after=False):
@@ -799,6 +1121,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # handle boolean value
         if action is not None and isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
+            assert isinstance(value, str), "config parser should convert anything that is not a list to string."
             if value.lower() in ("true", "yes", "on", "1"):
                 if not is_boolean_optional_action(action):
                     args.append( command_line_key )
@@ -960,7 +1283,7 @@ class ArgumentParser(argparse.ArgumentParser):
         }
 
         r = StringIO()
-        for source, settings in self._source_to_settings.items():
+        for source, settings in self._source_to_settings.items(): #type:ignore[argument-error]
             source = source.split("|")
             source = source_key_to_display_value_map[source[0]] % tuple(source[1:])
             r.write(source)

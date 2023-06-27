@@ -265,6 +265,128 @@ given below:
         
         args = parser.parse_args() # now args.system1 is a valid python dict
 
+*IniConfigParser*  - INI parser with support for sections.
+
+This parser somewhat ressembles ``ConfigparserConfigFileParser``. It uses configparser and apply the same kind of processing to 
+values written with python list syntax. 
+
+With the following additions: 
+   - Must be created with argument to bind the parser to a list of sections.
+   - Does not convert multiline strings to single line.
+   - Optional support for converting multiline strings to list (if ``split_ml_text_to_list=True``). 
+   - Optional support for quoting strings in config file 
+      (useful when text must not be converted to list or when text 
+      should contain trailing whitespaces).
+
+This config parser can be used to integrate with ``setup.cfg`` files.
+
+Example::
+
+      # this is a comment
+      ; also a comment
+      [my_super_tool]
+      # how to specify a key-value pair
+      format-string: restructuredtext 
+      # white space are ignored, so name = value same as name=value
+      # this is why you can quote strings 
+      quoted-string = '\thello\tmom...  '
+      # how to set an arg which has action="store_true"
+      warnings-as-errors = true
+      # how to set an arg which has action="count" or type=int
+      verbosity = 1
+      # how to specify a list arg (eg. arg which has action="append")
+      repeatable-option = ["https://docs.python.org/3/objects.inv",
+                     "https://twistedmatrix.com/documents/current/api/objects.inv"]
+      # how to specify a multiline text:
+      multi-line-text = 
+         Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+         Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
+         Maecenas quis dapibus leo, a pellentesque leo. 
+
+If you use ``IniConfigParser(sections, split_ml_text_to_list=True)``::
+
+      # the same rules are applicable with the following changes:
+      [my-software]
+      # how to specify a list arg (eg. arg which has action="append")
+      repeatable-option = # Just enter one value per line (the list literal format can also be used)
+         https://docs.python.org/3/objects.inv
+         https://twistedmatrix.com/documents/current/api/objects.inv
+      # how to specify a multiline text (you have to quote it):
+      multi-line-text = '''
+         Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+         Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
+         Maecenas quis dapibus leo, a pellentesque leo. 
+         '''
+
+Usage:
+
+.. code:: py
+
+   import configargparse
+   parser = configargparse.ArgParser(
+            default_config_files=['setup.cfg', 'my_super_tool.ini'],
+            config_file_parser_class=configargparse.IniConfigParser(['tool:my_super_tool', 'my_super_tool']),
+        )
+   ...
+
+*TomlConfigParser*  - TOML parser with support for sections.
+
+`TOML <https://github.com/toml-lang/toml/blob/main/toml.md>`_ parser. This config parser can be used to integrate with ``pyproject.toml`` files.
+
+Example::
+
+   # this is a comment
+   [tool.my-software] # TOML section table.
+   # how to specify a key-value pair
+   format-string = "restructuredtext" # strings must be quoted
+   # how to set an arg which has action="store_true"
+   warnings-as-errors = true
+   # how to set an arg which has action="count" or type=int
+   verbosity = 1
+   # how to specify a list arg (eg. arg which has action="append")
+   repeatable-option = ["https://docs.python.org/3/objects.inv",
+                  "https://twistedmatrix.com/documents/current/api/objects.inv"]
+   # how to specify a multiline text:
+   multi-line-text = '''
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+      Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
+      Maecenas quis dapibus leo, a pellentesque leo. 
+      '''
+
+Usage:
+
+.. code:: py
+
+   import configargparse
+   parser = configargparse.ArgParser(
+            default_config_files=['pyproject.toml', 'my_super_tool.toml'],
+            config_file_parser_class=configargparse.TomlConfigParser(['tool.my_super_tool']),
+        )
+   ...
+
+*CompositeConfigParser*  - Create a config parser to understand multiple formats.
+
+This parser will successively try to parse the file with each parser, until it succeeds, 
+else fail showing all encountered error messages.
+
+The following code will make configargparse understand both TOML and INI formats. 
+Making it easy to integrate in both ``pyproject.toml`` and ``setup.cfg``.
+
+.. code:: py
+
+   import configargparse
+   my_tool_sections = ['tool.my_super_tool', 'tool:my_super_tool', 'my_super_tool']
+                    # pyproject.toml like section, setup.cfg like section, custom section
+   parser = configargparse.ArgParser(
+            default_config_files=['setup.cfg', 'my_super_tool.ini'],
+            config_file_parser_class=configargparse.CompositeConfigParser(
+               [configargparse.TomlConfigParser(my_tool_sections), 
+                configargparse.IniConfigParser(my_tool_sections, split_ml_text_to_list=True)]
+               ),
+        )
+   ...
+
+Note that it's required to put the TOML parser first because the INI syntax basically would accept anything whereas TOML. 
 
 ArgParser Singletons
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -452,11 +574,15 @@ Design choices:
    file (eg. short args like -x would be excluded). Also, that way
    config keys are automatically documented whenever the command line
    args are documented in the help message.
-5. don't force users to put config file settings in the right .ini
-   [sections]. This doesn't have a clear benefit since all options are
-   command-line settable, and so have a globally unique key anyway.
-   Enforcing sections just makes things harder for the user and adds
-   complexity to the implementation.
+5. > don't force users to put config file settings in the right .ini
+      [sections]. This doesn't have a clear benefit since all options are
+      command-line settable, and so have a globally unique key anyway.
+      Enforcing sections just makes things harder for the user and adds
+      complexity to the implementation.
+   This design choice is preventing configargparse to fully integrate 
+   with common Python project config file like setup.cfg or pyproject.toml. 
+   This is why some additionnal parser classes are included that parses only 
+   a subset of the values defined in INI or TOML config files.
 6. if necessary, config-file-only args can be added later by
    implementing a separate add method and using the namespace arg as in
    appsettings_v0.5
