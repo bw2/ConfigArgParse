@@ -90,7 +90,7 @@ class ConfigFileParser(object):
 
         NOTE: For keys that were specified to configargparse as
         action="store_true" or "store_false", the config file value must be
-        one of: "yes", "no", "true", "false". Otherwise an error will be raised.
+        one of: "yes", "no", "on", "off", "true", "false". Otherwise an error will be raised.
 
         Args:
             stream (IO): A config file input stream (such as an open file object).
@@ -295,14 +295,21 @@ class YAMLConfigFileParser(ConfigFileParser):
             raise ConfigFileParserException("Could not import yaml. "
                 "It can be installed by running 'pip install PyYAML'")
 
-        return yaml
+        try:
+            from yaml import CSafeLoader as SafeLoader
+            from yaml import CDumper as Dumper
+        except ImportError:
+            from yaml import SafeLoader
+            from yaml import Dumper
+
+        return yaml, SafeLoader, Dumper
 
     def parse(self, stream):
         # see ConfigFileParser.parse docstring
-        yaml = self._load_yaml()
+        yaml, SafeLoader, _ = self._load_yaml()
 
         try:
-            parsed_obj = yaml.safe_load(stream)
+            parsed_obj = yaml.load(stream, Loader=SafeLoader)
         except Exception as e:
             raise ConfigFileParserException("Couldn't parse config file: %s" % e)
 
@@ -327,11 +334,11 @@ class YAMLConfigFileParser(ConfigFileParser):
         # see ConfigFileParser.serialize docstring
 
         # lazy-import so there's no dependency on yaml unless this class is used
-        yaml = self._load_yaml()
+        yaml, _, Dumper = self._load_yaml()
 
         # it looks like ordering can't be preserved: http://pyyaml.org/ticket/29
         items = dict(items)
-        return yaml.dump(items, default_flow_style=default_flow_style)
+        return yaml.dump(items, default_flow_style=default_flow_style, Dumper=Dumper)
 
 
 # used while parsing args to keep track of where they came from
@@ -792,13 +799,13 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # handle boolean value
         if action is not None and isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
-            if value.lower() in ("true", "yes", "1"):
+            if value.lower() in ("true", "yes", "on", "1"):
                 if not is_boolean_optional_action(action):
                     args.append( command_line_key )
                 else:
                     # --foo
                     args.append(action.option_strings[0])
-            elif value.lower() in ("false", "no", "0"):
+            elif value.lower() in ("false", "no", "off", "0"):
                 # don't append when set to "false" / "no"
                 if not is_boolean_optional_action(action):
                     pass
@@ -812,7 +819,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 args += [action.option_strings[0]] * int(value)
             else:
                 self.error("Unexpected value for %s: '%s'. Expecting 'true', "
-                           "'false', 'yes', 'no', '1' or '0'" % (key, value))
+                           "'false', 'yes', 'no', 'on', 'off', '1' or '0'" % (key, value))
         elif isinstance(value, list):
             accepts_list_and_has_nargs = action is not None and action.nargs is not None and (
                    isinstance(action, argparse._StoreAction) or isinstance(action, argparse._AppendAction)

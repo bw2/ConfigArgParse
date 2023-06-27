@@ -15,9 +15,8 @@ jobs:
 
     strategy:
       matrix:
-        # TODO: Fix 'windows-latest' tests, right now, a few tests yields error "PermissionError: [Errno 13] Permission denied"
-        os: [ubuntu-latest, macos-latest]
-        python-version: ['2.7','3.5','3.6','3.7','3.8','3.9','3.10']
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.6','3.7','3.8','3.9','3.10','3.11']
       fail-fast: false
 
     steps:
