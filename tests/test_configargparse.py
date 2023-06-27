@@ -170,7 +170,7 @@ class TestBasicUseCases(TestCase):
     def testBasicCase2(self, use_groups=False):
 
         ## Test command line, config file and env var values
-        default_config_file = tempfile.NamedTemporaryFile(mode="w", delete=True)
+        default_config_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
         default_config_file.flush()
 
         p = self.initParser(default_config_files=['/etc/settings.ini',
@@ -207,7 +207,7 @@ class TestBasicUseCases(TestCase):
         self.assertParseArgsRaises("Unable to open config file: file.txt. Error: No such file or director", args="-g file.txt")
 
         # check values after setting args on command line
-        config_file2 = tempfile.NamedTemporaryFile(mode="w", delete=True)
+        config_file2 = tempfile.NamedTemporaryFile(mode="w", delete=False)
         config_file2.flush()
 
         ns = self.parse(args="--genome hg19 -g %s bla.vcf " % config_file2.name)
@@ -347,7 +347,7 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.a, "positional_value")
 
     def testMutuallyExclusiveArgs(self):
-        config_file = tempfile.NamedTemporaryFile(mode="w", delete=True)
+        config_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
 
         p = self.parser
         g = p.add_argument_group(title="group1")
@@ -398,11 +398,11 @@ class TestBasicUseCases(TestCase):
         config_file.close()
 
     def testSubParsers(self):
-        config_file1 = tempfile.NamedTemporaryFile(mode="w", delete=True)
+        config_file1 = tempfile.NamedTemporaryFile(mode="w", delete=False)
         config_file1.write("--i = B")
         config_file1.flush()
 
-        config_file2 = tempfile.NamedTemporaryFile(mode="w", delete=True)
+        config_file2 = tempfile.NamedTemporaryFile(mode="w", delete=False)
         config_file2.write("p = 10")
         config_file2.flush()
 
@@ -835,7 +835,7 @@ class TestMisc(TestCase):
         self.add_arg("--x", required=True)
 
         # verify parsing from config file
-        config_file = tempfile.NamedTemporaryFile(mode="w", delete=True)
+        config_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
         config_file.write("x=bla")
         config_file.flush()
 
@@ -847,7 +847,7 @@ class TestMisc(TestCase):
         #   args_for_setting_config_path
         #   config_arg_is_required
         #   config_arg_help_message
-        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=True)
+        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=False)
         temp_cfg.write("genome=hg19")
         temp_cfg.flush()
 
@@ -861,7 +861,7 @@ class TestMisc(TestCase):
                                    "arguments are required: -c/--config",
                                    args="")
 
-        temp_cfg2 = tempfile.NamedTemporaryFile(mode="w", delete=True)
+        temp_cfg2 = tempfile.NamedTemporaryFile(mode="w", delete=False)
         ns = self.parse("-c " + temp_cfg2.name)
         self.assertEqual(ns.genome, "hg19")
 
@@ -902,7 +902,7 @@ class TestMisc(TestCase):
         """Tests that abbreviated values don't get pulled from config file.
 
         """
-        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=True)
+        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=False)
         temp_cfg.write("a2a = 0.5\n")
         temp_cfg.write("a3a = 0.5\n")
         temp_cfg.flush()
@@ -973,7 +973,7 @@ class TestMisc(TestCase):
         # Test constructor args:
         #   args_for_writing_out_config_file
         #   write_out_config_file_arg_help_message
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=True)
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
         self.initParser(args_for_writing_out_config_file=["-w"],
                         write_out_config_file_arg_help_message="write config")
 
@@ -1014,7 +1014,7 @@ class TestMisc(TestCase):
         # Test constructor args:
         #   args_for_writing_out_config_file
         #   write_out_config_file_arg_help_message
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=True)
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
         self.initParser(args_for_writing_out_config_file=["-w"],
                         write_out_config_file_arg_help_message="write config")
 
@@ -1065,7 +1065,7 @@ class TestMisc(TestCase):
         # Test constructor args:
         #   args_for_writing_out_config_file
         #   write_out_config_file_arg_help_message
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=True)
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
         self.initParser(args_for_writing_out_config_file=["--write-config"],
                         write_out_config_file_arg_help_message="write config")
 
