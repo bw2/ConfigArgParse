@@ -9,10 +9,6 @@ ConfigArgParse
     :alt: Supported Python versions
     :target: https://pypi.python.org/pypi/ConfigArgParse
 
-.. image:: https://travis-ci.org/bw2/ConfigArgParse.svg?branch=master
-    :alt: Travis CI build
-    :target: https://travis-ci.org/bw2/ConfigArgParse
-
 .. image:: https://img.shields.io/badge/-API_Documentation-blue
     :alt: API Documentation
     :target: https://bw2.github.io/ConfigArgParse/
@@ -30,8 +26,6 @@ extends argparse to add these features.
 
 Available on PyPI: http://pypi.python.org/pypi/ConfigArgParse
 
-.. image:: https://travis-ci.org/bw2/ConfigArgParse.svg?branch=master
-    :target: https://travis-ci.org/bw2/ConfigArgParse
 
 Features
 ~~~~~~~~
@@ -593,8 +587,6 @@ Relevant sites:
 -  http://tricksntweaks.blogspot.com/2013_05_01_archive.html
 -  http://www.youtube.com/watch?v=vvCwqHgZJc8#t=35
 
-
-.. |Travis CI Status for bw2/ConfigArgParse| image:: https://travis-ci.org/bw2/ConfigArgParse.svg?branch=master
 
 
 Versioning
