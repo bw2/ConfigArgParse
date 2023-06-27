@@ -573,9 +573,9 @@ Design choices:
       command-line settable, and so have a globally unique key anyway.
       Enforcing sections just makes things harder for the user and adds
       complexity to the implementation.
-   This design choice is preventing configargparse to fully integrate 
-   with common Python project config file like setup.cfg or pyproject.toml. 
-   This is why some additionnal parser classes are included that parses only 
+   This design choice was preventing configargparse from integrating 
+   with common Python project config files like setup.cfg or pyproject.toml. 
+   This is why some additional parser classes were added that parse only 
    a subset of the values defined in INI or TOML config files.
 6. if necessary, config-file-only args can be added later by
    implementing a separate add method and using the namespace arg as in
