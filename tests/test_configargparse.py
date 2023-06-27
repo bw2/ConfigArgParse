@@ -627,7 +627,7 @@ class TestBasicUseCases(TestCase):
         self.initParser()
         self.add_arg("-v", "--verbose", env_var="VERBOSE", action="store_true")
         self.assertParseArgsRaises("Unexpected value for VERBOSE: 'bla'. "
-                                   "Expecting 'true', 'false', 'yes', 'no', '1' or '0'",
+                                   "Expecting 'true', 'false', 'yes', 'no', 'on', 'off', '1' or '0'",
             args="",
             env_vars={"VERBOSE" : "bla"})
         ns = self.parse("",
