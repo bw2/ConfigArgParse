@@ -209,6 +209,10 @@ classes: :code:`DefaultConfigFileParser`, :code:`YAMLConfigFileParser`,
 
         fruit: [apple, orange, lemon]
         indexes: [1, 12, 35, 40]
+        colors:
+          - green
+          - red
+          - blue
 
 *ConfigparserConfigFileParser*  - allows a subset of python's configparser
 module syntax (https://docs.python.org/3.7/library/configparser.html). In
