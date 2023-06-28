@@ -1,0 +1,1261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>argparse.RawDescriptionHelpFormatter</title>
+    <meta name="generator" content="pydoctor 23.4.1"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default mainnavbar">
+      
+  
+  <div class="container-fluid">
+
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+        <span class="navbar-brand">
+          <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5.5</a> <a href="index.html">API Documentation</a>
+        </span>
+
+        <a href="moduleIndex.html">
+          Modules
+        </a>
+
+        <a href="classIndex.html">
+          Classes
+        </a>
+
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="search-help-button" title="Help" onclick="toggleSearchHelpText()"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
+          </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
+
+        <div class="hint" id="search-help-box">
+          <p class="rst-last">
+      
+            Search bar offers the following options:
+            <ul>   
+                <li>
+                  <strong>Term presence.</strong> The below example searches for documents that 
+                    must contain “foo”, might contain “bar” and must not contain “baz”: <code>+foo bar -baz</code>
+                </li> 
+
+                <li>
+                  <strong>Wildcards.</strong> The below example searches for documents with words beginning with “foo”: <code>foo*</code>
+                </li> 
+
+                <li>
+                  <strong>Search in specific fields.</strong> The following search matches all objects 
+                  in "twisted.mail" that matches “search”: <code>+qname:twisted.mail.* +search</code>
+
+                  <p>
+                    Possible fields: 'name', 'qname' (fully qualified name), 'docstring', and 'kind'.
+                    Last two fields are only applicable if "search in docstrings" is enabled.
+                  </p>
+                </li>
+
+                <li>
+                  <strong>Fuzzy matches.</strong> The following search matches all documents 
+                  that have a word within 1 edit distance of “foo”: <code>foo~1</code>
+                </li>
+            </ul>
+
+          </p>
+        </div>
+
+        <div id="search-status"> </div>
+
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
+
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 8px;">
+          <p>Results provided by <a href="https://lunrjs.com">Lunr.js</a></p>
+        </div>
+      </div>
+
+    </div>
+
+
+  </div>
+</nav>
+    
+    <div class="container-fluid">
+
+      <!-- Side navigation -->
+      <div class="sidebarcontainer" style="display: none;">
+        
+        <div class="sidebar"><nav class="sidebar">
+  
+
+  <div>
+
+      <div class="thingTitle">
+        <span>Class</span>
+        <code class="thisobject"><a href="argparse.RawDescriptionHelpFormatter.html" class="internal-link" title="This class"><wbr></wbr>Raw<wbr></wbr>Description<wbr></wbr>Help<wbr></wbr>Formatter</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        
+        
+
+        <div class="childrenKindTitle">Methods</div>
+        <ul>
+    
+    <li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_fill_text" class="internal-link" title="argparse.RawDescriptionHelpFormatter._fill_text">_fill<wbr></wbr>_text</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        <div class="childrenKindTitle">Inherited Methods</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#__init__" class="internal-link" title="argparse.HelpFormatter.__init__">__init__</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#add_argument" class="internal-link" title="argparse.HelpFormatter.add_argument">add<wbr></wbr>_argument</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#add_arguments" class="internal-link" title="argparse.HelpFormatter.add_arguments">add<wbr></wbr>_arguments</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#add_text" class="internal-link" title="argparse.HelpFormatter.add_text">add<wbr></wbr>_text</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#add_usage" class="internal-link" title="argparse.HelpFormatter.add_usage">add<wbr></wbr>_usage</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#end_section" class="internal-link" title="argparse.HelpFormatter.end_section">end<wbr></wbr>_section</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#format_help" class="internal-link" title="argparse.HelpFormatter.format_help">format<wbr></wbr>_help</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#start_section" class="internal-link" title="argparse.HelpFormatter.start_section">start<wbr></wbr>_section</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_add_item" class="internal-link" title="argparse.HelpFormatter._add_item">_add<wbr></wbr>_item</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_dedent" class="internal-link" title="argparse.HelpFormatter._dedent">_dedent</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_expand_help" class="internal-link" title="argparse.HelpFormatter._expand_help">_expand<wbr></wbr>_help</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_format_action" class="internal-link" title="argparse.HelpFormatter._format_action">_format<wbr></wbr>_action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_format_action_invocation" class="internal-link" title="argparse.HelpFormatter._format_action_invocation">_format<wbr></wbr>_action<wbr></wbr>_invocation</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_format_actions_usage" class="internal-link" title="argparse.HelpFormatter._format_actions_usage">_format<wbr></wbr>_actions<wbr></wbr>_usage</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_format_args" class="internal-link" title="argparse.HelpFormatter._format_args">_format<wbr></wbr>_args</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_format_text" class="internal-link" title="argparse.HelpFormatter._format_text">_format<wbr></wbr>_text</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_format_usage" class="internal-link" title="argparse.HelpFormatter._format_usage">_format<wbr></wbr>_usage</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_get_default_metavar_for_optional" class="internal-link" title="argparse.HelpFormatter._get_default_metavar_for_optional">_get<wbr></wbr>_default<wbr></wbr>_metavar<wbr></wbr>_for<wbr></wbr>_optional</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_get_default_metavar_for_positional" class="internal-link" title="argparse.HelpFormatter._get_default_metavar_for_positional">_get<wbr></wbr>_default<wbr></wbr>_metavar<wbr></wbr>_for<wbr></wbr>_positional</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_get_help_string" class="internal-link" title="argparse.HelpFormatter._get_help_string">_get<wbr></wbr>_help<wbr></wbr>_string</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_indent" class="internal-link" title="argparse.HelpFormatter._indent">_indent</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_iter_indented_subactions" class="internal-link" title="argparse.HelpFormatter._iter_indented_subactions">_iter<wbr></wbr>_indented<wbr></wbr>_subactions</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_join_parts" class="internal-link" title="argparse.HelpFormatter._join_parts">_join<wbr></wbr>_parts</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_metavar_formatter" class="internal-link" title="argparse.HelpFormatter._metavar_formatter">_metavar<wbr></wbr>_formatter</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_split_lines" class="internal-link" title="argparse.HelpFormatter._split_lines">_split<wbr></wbr>_lines</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+
+        <div class="childrenKindTitle">Inherited Attributes</div>
+        <ul>
+    
+    <li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_action_max_length" class="internal-link" title="argparse.HelpFormatter._action_max_length">_action<wbr></wbr>_max<wbr></wbr>_length</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_current_indent" class="internal-link" title="argparse.HelpFormatter._current_indent">_current<wbr></wbr>_indent</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_current_section" class="internal-link" title="argparse.HelpFormatter._current_section">_current<wbr></wbr>_section</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_indent_increment" class="internal-link" title="argparse.HelpFormatter._indent_increment">_indent<wbr></wbr>_increment</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_level" class="internal-link" title="argparse.HelpFormatter._level">_level</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_long_break_matcher" class="internal-link" title="argparse.HelpFormatter._long_break_matcher">_long<wbr></wbr>_break<wbr></wbr>_matcher</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_max_help_position" class="internal-link" title="argparse.HelpFormatter._max_help_position">_max<wbr></wbr>_help<wbr></wbr>_position</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_prog" class="internal-link" title="argparse.HelpFormatter._prog">_prog</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_root_section" class="internal-link" title="argparse.HelpFormatter._root_section">_root<wbr></wbr>_section</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_whitespace_matcher" class="internal-link" title="argparse.HelpFormatter._whitespace_matcher">_whitespace<wbr></wbr>_matcher</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html#_width" class="internal-link" title="argparse.HelpFormatter._width">_width</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+        
+      </div>
+  </div><div>
+
+      <div class="thingTitle">
+        <span>Module</span>
+        <code><a href="argparse.html" class="internal-link" title="The parent of this class">argparse</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.Action.html" class="internal-link" title="argparse.Action"><wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.ArgumentDefaultsHelpFormatter.html" class="internal-link" title="argparse.ArgumentDefaultsHelpFormatter"><wbr></wbr>Argument<wbr></wbr>Defaults<wbr></wbr>Help<wbr></wbr>Formatter</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.ArgumentParser.html" class="internal-link" title="argparse.ArgumentParser"><wbr></wbr>Argument<wbr></wbr>Parser</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.BooleanOptionalAction.html" class="internal-link" title="argparse.BooleanOptionalAction"><wbr></wbr>Boolean<wbr></wbr>Optional<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.FileType.html" class="internal-link" title="argparse.FileType"><wbr></wbr>File<wbr></wbr>Type</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html" class="internal-link" title="argparse.HelpFormatter"><wbr></wbr>Help<wbr></wbr>Formatter</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.MetavarTypeHelpFormatter.html" class="internal-link" title="argparse.MetavarTypeHelpFormatter"><wbr></wbr>Metavar<wbr></wbr>Type<wbr></wbr>Help<wbr></wbr>Formatter</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.Namespace.html" class="internal-link" title="argparse.Namespace"><wbr></wbr>Namespace</a></code>
+            </div>
+        
+
+    </li><li class=" thisobject">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.RawDescriptionHelpFormatter.html" class="internal-link" title="argparse.RawDescriptionHelpFormatter"><wbr></wbr>Raw<wbr></wbr>Description<wbr></wbr>Help<wbr></wbr>Formatter</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.RawTextHelpFormatter.html" class="internal-link" title="argparse.RawTextHelpFormatter"><wbr></wbr>Raw<wbr></wbr>Text<wbr></wbr>Help<wbr></wbr>Formatter</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.ArgumentError.html" class="internal-link" title="argparse.ArgumentError"><wbr></wbr>Argument<wbr></wbr>Error</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.ArgumentTypeError.html" class="internal-link" title="argparse.ArgumentTypeError"><wbr></wbr>Argument<wbr></wbr>Type<wbr></wbr>Error</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._ActionsContainer.html" class="internal-link" title="argparse._ActionsContainer">_<wbr></wbr>Actions<wbr></wbr>Container</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._AppendAction.html" class="internal-link" title="argparse._AppendAction">_<wbr></wbr>Append<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._AppendConstAction.html" class="internal-link" title="argparse._AppendConstAction">_<wbr></wbr>Append<wbr></wbr>Const<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._ArgumentGroup.html" class="internal-link" title="argparse._ArgumentGroup">_<wbr></wbr>Argument<wbr></wbr>Group</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._AttributeHolder.html" class="internal-link" title="argparse._AttributeHolder">_<wbr></wbr>Attribute<wbr></wbr>Holder</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._CountAction.html" class="internal-link" title="argparse._CountAction">_<wbr></wbr>Count<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._ExtendAction.html" class="internal-link" title="argparse._ExtendAction">_<wbr></wbr>Extend<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._HelpAction.html" class="internal-link" title="argparse._HelpAction">_<wbr></wbr>Help<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._MutuallyExclusiveGroup.html" class="internal-link" title="argparse._MutuallyExclusiveGroup">_<wbr></wbr>Mutually<wbr></wbr>Exclusive<wbr></wbr>Group</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._StoreAction.html" class="internal-link" title="argparse._StoreAction">_<wbr></wbr>Store<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._StoreConstAction.html" class="internal-link" title="argparse._StoreConstAction">_<wbr></wbr>Store<wbr></wbr>Const<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._StoreFalseAction.html" class="internal-link" title="argparse._StoreFalseAction">_<wbr></wbr>Store<wbr></wbr>False<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._StoreTrueAction.html" class="internal-link" title="argparse._StoreTrueAction">_<wbr></wbr>Store<wbr></wbr>True<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._SubParsersAction.html" class="internal-link" title="argparse._SubParsersAction">_<wbr></wbr>Sub<wbr></wbr>Parsers<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._VersionAction.html" class="internal-link" title="argparse._VersionAction">_<wbr></wbr>Version<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li>
+</ul>
+
+        <div class="childrenKindTitle">Functions</div>
+        <ul>
+    
+    <li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.html#_copy_items" class="internal-link" title="argparse._copy_items">_copy<wbr></wbr>_items</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.html#_get_action_name" class="internal-link" title="argparse._get_action_name">_get<wbr></wbr>_action<wbr></wbr>_name</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+
+        <div class="childrenKindTitle">Variables</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.html#ONE_OR_MORE" class="internal-link" title="argparse.ONE_OR_MORE">ONE<wbr></wbr>_OR<wbr></wbr>_MORE</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.html#OPTIONAL" class="internal-link" title="argparse.OPTIONAL">OPTIONAL</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.html#PARSER" class="internal-link" title="argparse.PARSER">PARSER</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.html#REMAINDER" class="internal-link" title="argparse.REMAINDER">REMAINDER</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.html#SUPPRESS" class="internal-link" title="argparse.SUPPRESS">SUPPRESS</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.html#ZERO_OR_MORE" class="internal-link" title="argparse.ZERO_OR_MORE">ZERO<wbr></wbr>_OR<wbr></wbr>_MORE</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.html#__version__" class="internal-link" title="argparse.__version__">__version__</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.html#_UNRECOGNIZED_ARGS_ATTR" class="internal-link" title="argparse._UNRECOGNIZED_ARGS_ATTR">_UNRECOGNIZED<wbr></wbr>_ARGS<wbr></wbr>_ATTR</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div>
+
+</nav>
+        </div>
+        <div id="collapseSideBar">
+          <a class="btn btn-link" onclick="toggleSideBarCollapse()" title="Toggle Sidebar Collapse">
+          </a>
+        </div> 
+        <script src="sidebartoggle.js" type="text/javascript"></script>
+       
+      </div>
+
+      <div id="main" class="">
+        
+
+        
+
+        <div class="page-header">
+          <h1 class="class"><code><code><a href="argparse.html" class="internal-link">argparse</a></code><wbr></wbr>.<code><a href="argparse.RawDescriptionHelpFormatter.html" class="internal-link" title="argparse.RawDescriptionHelpFormatter">RawDescriptionHelpFormatter</a></code></code></h1>
+          <div id="showPrivate">
+            <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+          </div>
+        </div>
+
+        <div class="categoryHeader">
+          class documentation
+        </div>
+
+        <div class="extrasDocstring">
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">RawDescriptionHelpFormatter</span>(<a href="argparse.HelpFormatter.html" class="internal-link" title="argparse.HelpFormatter">HelpFormatter</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/64637827bbcb70b341c3a79fe0828dbd76f71b1c/argparse.py#L666" class="sourceLink">(source)</a></code></p><p>Known subclasses: <code><a href="argparse.RawTextHelpFormatter.html" class="internal-link">argparse.RawTextHelpFormatter</a></code>, <code><a href="configargparse.ArgumentDefaultsRawHelpFormatter.html" class="internal-link">configargparse.ArgumentDefaultsRawHelpFormatter</a></code></p><p>Constructor: <code><a href="argparse.HelpFormatter.html#__init__" class="internal-link" title="argparse.HelpFormatter.__init__">RawDescriptionHelpFormatter(prog, indent_increment, max_help_position, width)</a></code></p>
+          <p><a href="classIndex.html#argparse.RawDescriptionHelpFormatter">View In Hierarchy</a></p>
+        </div>
+
+        <div class="moduleDocstring">
+          <div><p>Help message formatter which retains any formatting in descriptions.</p>
+<p>Only the name of this class is considered a public API. All the methods
+provided by the class are considered an implementation detail.</p>
+</div>
+        </div>
+
+        <div id="splitTables">
+          <table class="children sortable" id="id5">
+  
+  
+  <tr class="method private">
+    
+    <td>Method</td>
+    <td><code><a href="#_fill_text" class="internal-link" title="argparse.RawDescriptionHelpFormatter._fill_text">_fill<wbr></wbr>_text</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr>
+</table>
+          
+            <p class="inheritedFrom">
+              Inherited from <code><a href="argparse.HelpFormatter.html" class="internal-link" title="argparse.HelpFormatter">HelpFormatter</a></code>:
+            </p>
+            <table class="children sortable" id="id6">
+  
+  
+  <tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#__init__" class="internal-link" title="argparse.HelpFormatter.__init__">__init__</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#add_argument" class="internal-link" title="argparse.HelpFormatter.add_argument">add<wbr></wbr>_argument</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#add_arguments" class="internal-link" title="argparse.HelpFormatter.add_arguments">add<wbr></wbr>_arguments</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#add_text" class="internal-link" title="argparse.HelpFormatter.add_text">add<wbr></wbr>_text</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#add_usage" class="internal-link" title="argparse.HelpFormatter.add_usage">add<wbr></wbr>_usage</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#end_section" class="internal-link" title="argparse.HelpFormatter.end_section">end<wbr></wbr>_section</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#format_help" class="internal-link" title="argparse.HelpFormatter.format_help">format<wbr></wbr>_help</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#start_section" class="internal-link" title="argparse.HelpFormatter.start_section">start<wbr></wbr>_section</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseclass private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.HelpFormatter._Section.html" class="internal-link" title="argparse.HelpFormatter._Section">_<wbr></wbr>Section</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_add_item" class="internal-link" title="argparse.HelpFormatter._add_item">_add<wbr></wbr>_item</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_dedent" class="internal-link" title="argparse.HelpFormatter._dedent">_dedent</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_expand_help" class="internal-link" title="argparse.HelpFormatter._expand_help">_expand<wbr></wbr>_help</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_format_action" class="internal-link" title="argparse.HelpFormatter._format_action">_format<wbr></wbr>_action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_format_action_invocation" class="internal-link" title="argparse.HelpFormatter._format_action_invocation">_format<wbr></wbr>_action<wbr></wbr>_invocation</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_format_actions_usage" class="internal-link" title="argparse.HelpFormatter._format_actions_usage">_format<wbr></wbr>_actions<wbr></wbr>_usage</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_format_args" class="internal-link" title="argparse.HelpFormatter._format_args">_format<wbr></wbr>_args</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_format_text" class="internal-link" title="argparse.HelpFormatter._format_text">_format<wbr></wbr>_text</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_format_usage" class="internal-link" title="argparse.HelpFormatter._format_usage">_format<wbr></wbr>_usage</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_get_default_metavar_for_optional" class="internal-link" title="argparse.HelpFormatter._get_default_metavar_for_optional">_get<wbr></wbr>_default<wbr></wbr>_metavar<wbr></wbr>_for<wbr></wbr>_optional</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_get_default_metavar_for_positional" class="internal-link" title="argparse.HelpFormatter._get_default_metavar_for_positional">_get<wbr></wbr>_default<wbr></wbr>_metavar<wbr></wbr>_for<wbr></wbr>_positional</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_get_help_string" class="internal-link" title="argparse.HelpFormatter._get_help_string">_get<wbr></wbr>_help<wbr></wbr>_string</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_indent" class="internal-link" title="argparse.HelpFormatter._indent">_indent</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_iter_indented_subactions" class="internal-link" title="argparse.HelpFormatter._iter_indented_subactions">_iter<wbr></wbr>_indented<wbr></wbr>_subactions</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_join_parts" class="internal-link" title="argparse.HelpFormatter._join_parts">_join<wbr></wbr>_parts</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_metavar_formatter" class="internal-link" title="argparse.HelpFormatter._metavar_formatter">_metavar<wbr></wbr>_formatter</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="basemethod private">
+    
+    <td>Method</td>
+    <td><code><a href="argparse.HelpFormatter.html#_split_lines" class="internal-link" title="argparse.HelpFormatter._split_lines">_split<wbr></wbr>_lines</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse.HelpFormatter.html#_action_max_length" class="internal-link" title="argparse.HelpFormatter._action_max_length">_action<wbr></wbr>_max<wbr></wbr>_length</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse.HelpFormatter.html#_current_indent" class="internal-link" title="argparse.HelpFormatter._current_indent">_current<wbr></wbr>_indent</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse.HelpFormatter.html#_current_section" class="internal-link" title="argparse.HelpFormatter._current_section">_current<wbr></wbr>_section</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse.HelpFormatter.html#_indent_increment" class="internal-link" title="argparse.HelpFormatter._indent_increment">_indent<wbr></wbr>_increment</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse.HelpFormatter.html#_level" class="internal-link" title="argparse.HelpFormatter._level">_level</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse.HelpFormatter.html#_long_break_matcher" class="internal-link" title="argparse.HelpFormatter._long_break_matcher">_long<wbr></wbr>_break<wbr></wbr>_matcher</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse.HelpFormatter.html#_max_help_position" class="internal-link" title="argparse.HelpFormatter._max_help_position">_max<wbr></wbr>_help<wbr></wbr>_position</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse.HelpFormatter.html#_prog" class="internal-link" title="argparse.HelpFormatter._prog">_prog</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse.HelpFormatter.html#_root_section" class="internal-link" title="argparse.HelpFormatter._root_section">_root<wbr></wbr>_section</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse.HelpFormatter.html#_whitespace_matcher" class="internal-link" title="argparse.HelpFormatter._whitespace_matcher">_whitespace<wbr></wbr>_matcher</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="baseinstancevariable private">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="argparse.HelpFormatter.html#_width" class="internal-link" title="argparse.HelpFormatter._width">_width</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr>
+</table>
+            
+
+            
+        </div>
+
+        <div id="childList">
+          <div class="basemethod private">
+  
+  
+  <a name="argparse.RawDescriptionHelpFormatter._fill_text">
+    
+  </a>
+  <a name="_fill_text">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span> <span class="py-defname">_fill_text</span><span class="function-signature">(self, text, width, indent)</span>:
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/64637827bbcb70b341c3a79fe0828dbd76f71b1c/argparse.py#L673">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_fill_text" title="argparse.RawDescriptionHelpFormatter._fill_text">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="argparse.HelpFormatter.html#_fill_text" class="internal-link">argparse.HelpFormatter._fill_text</a></code></div>
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div>
+        </div>
+      
+      </div>
+    </div>
+
+    <footer class="navbar navbar-default">
+
+  
+  <div class="container">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5.5</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    23.4.1 at 2023-06-28 01:35:17.
+  </div>
+
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+  <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
+</footer>
+  
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>

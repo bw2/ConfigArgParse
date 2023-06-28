@@ -1,0 +1,1152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>argparse</title>
+    <meta name="generator" content="pydoctor 23.4.1"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default mainnavbar">
+      
+  
+  <div class="container-fluid">
+
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+        <span class="navbar-brand">
+          <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5.5</a> <a href="index.html">API Documentation</a>
+        </span>
+
+        <a href="moduleIndex.html">
+          Modules
+        </a>
+
+        <a href="classIndex.html">
+          Classes
+        </a>
+
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="search-help-button" title="Help" onclick="toggleSearchHelpText()"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
+          </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
+
+        <div class="hint" id="search-help-box">
+          <p class="rst-last">
+      
+            Search bar offers the following options:
+            <ul>   
+                <li>
+                  <strong>Term presence.</strong> The below example searches for documents that 
+                    must contain “foo”, might contain “bar” and must not contain “baz”: <code>+foo bar -baz</code>
+                </li> 
+
+                <li>
+                  <strong>Wildcards.</strong> The below example searches for documents with words beginning with “foo”: <code>foo*</code>
+                </li> 
+
+                <li>
+                  <strong>Search in specific fields.</strong> The following search matches all objects 
+                  in "twisted.mail" that matches “search”: <code>+qname:twisted.mail.* +search</code>
+
+                  <p>
+                    Possible fields: 'name', 'qname' (fully qualified name), 'docstring', and 'kind'.
+                    Last two fields are only applicable if "search in docstrings" is enabled.
+                  </p>
+                </li>
+
+                <li>
+                  <strong>Fuzzy matches.</strong> The following search matches all documents 
+                  that have a word within 1 edit distance of “foo”: <code>foo~1</code>
+                </li>
+            </ul>
+
+          </p>
+        </div>
+
+        <div id="search-status"> </div>
+
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
+
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 8px;">
+          <p>Results provided by <a href="https://lunrjs.com">Lunr.js</a></p>
+        </div>
+      </div>
+
+    </div>
+
+
+  </div>
+</nav>
+    
+    <div class="container-fluid">
+
+      <!-- Side navigation -->
+      <div class="sidebarcontainer" style="display: none;">
+        
+        <div class="sidebar"><nav class="sidebar">
+  
+
+  <div>
+
+      <div class="thingTitle">
+        <span>Module</span>
+        <code class="thisobject"><a href="argparse.html" class="internal-link" title="This module">argparse</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.Action.html" class="internal-link" title="argparse.Action"><wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.ArgumentDefaultsHelpFormatter.html" class="internal-link" title="argparse.ArgumentDefaultsHelpFormatter"><wbr></wbr>Argument<wbr></wbr>Defaults<wbr></wbr>Help<wbr></wbr>Formatter</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.ArgumentParser.html" class="internal-link" title="argparse.ArgumentParser"><wbr></wbr>Argument<wbr></wbr>Parser</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.BooleanOptionalAction.html" class="internal-link" title="argparse.BooleanOptionalAction"><wbr></wbr>Boolean<wbr></wbr>Optional<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.FileType.html" class="internal-link" title="argparse.FileType"><wbr></wbr>File<wbr></wbr>Type</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.HelpFormatter.html" class="internal-link" title="argparse.HelpFormatter"><wbr></wbr>Help<wbr></wbr>Formatter</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.MetavarTypeHelpFormatter.html" class="internal-link" title="argparse.MetavarTypeHelpFormatter"><wbr></wbr>Metavar<wbr></wbr>Type<wbr></wbr>Help<wbr></wbr>Formatter</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.Namespace.html" class="internal-link" title="argparse.Namespace"><wbr></wbr>Namespace</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.RawDescriptionHelpFormatter.html" class="internal-link" title="argparse.RawDescriptionHelpFormatter"><wbr></wbr>Raw<wbr></wbr>Description<wbr></wbr>Help<wbr></wbr>Formatter</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.RawTextHelpFormatter.html" class="internal-link" title="argparse.RawTextHelpFormatter"><wbr></wbr>Raw<wbr></wbr>Text<wbr></wbr>Help<wbr></wbr>Formatter</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.ArgumentError.html" class="internal-link" title="argparse.ArgumentError"><wbr></wbr>Argument<wbr></wbr>Error</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse.ArgumentTypeError.html" class="internal-link" title="argparse.ArgumentTypeError"><wbr></wbr>Argument<wbr></wbr>Type<wbr></wbr>Error</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._ActionsContainer.html" class="internal-link" title="argparse._ActionsContainer">_<wbr></wbr>Actions<wbr></wbr>Container</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._AppendAction.html" class="internal-link" title="argparse._AppendAction">_<wbr></wbr>Append<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._AppendConstAction.html" class="internal-link" title="argparse._AppendConstAction">_<wbr></wbr>Append<wbr></wbr>Const<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._ArgumentGroup.html" class="internal-link" title="argparse._ArgumentGroup">_<wbr></wbr>Argument<wbr></wbr>Group</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._AttributeHolder.html" class="internal-link" title="argparse._AttributeHolder">_<wbr></wbr>Attribute<wbr></wbr>Holder</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._CountAction.html" class="internal-link" title="argparse._CountAction">_<wbr></wbr>Count<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._ExtendAction.html" class="internal-link" title="argparse._ExtendAction">_<wbr></wbr>Extend<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._HelpAction.html" class="internal-link" title="argparse._HelpAction">_<wbr></wbr>Help<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._MutuallyExclusiveGroup.html" class="internal-link" title="argparse._MutuallyExclusiveGroup">_<wbr></wbr>Mutually<wbr></wbr>Exclusive<wbr></wbr>Group</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._StoreAction.html" class="internal-link" title="argparse._StoreAction">_<wbr></wbr>Store<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._StoreConstAction.html" class="internal-link" title="argparse._StoreConstAction">_<wbr></wbr>Store<wbr></wbr>Const<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._StoreFalseAction.html" class="internal-link" title="argparse._StoreFalseAction">_<wbr></wbr>Store<wbr></wbr>False<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._StoreTrueAction.html" class="internal-link" title="argparse._StoreTrueAction">_<wbr></wbr>Store<wbr></wbr>True<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._SubParsersAction.html" class="internal-link" title="argparse._SubParsersAction">_<wbr></wbr>Sub<wbr></wbr>Parsers<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="argparse._VersionAction.html" class="internal-link" title="argparse._VersionAction">_<wbr></wbr>Version<wbr></wbr>Action</a></code>
+            </div>
+        
+
+    </li>
+</ul>
+
+        <div class="childrenKindTitle">Functions</div>
+        <ul>
+    
+    <li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_copy_items" class="internal-link" title="argparse._copy_items">_copy<wbr></wbr>_items</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_get_action_name" class="internal-link" title="argparse._get_action_name">_get<wbr></wbr>_action<wbr></wbr>_name</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+
+        <div class="childrenKindTitle">Variables</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#ONE_OR_MORE" class="internal-link" title="argparse.ONE_OR_MORE">ONE<wbr></wbr>_OR<wbr></wbr>_MORE</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#OPTIONAL" class="internal-link" title="argparse.OPTIONAL">OPTIONAL</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#PARSER" class="internal-link" title="argparse.PARSER">PARSER</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#REMAINDER" class="internal-link" title="argparse.REMAINDER">REMAINDER</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#SUPPRESS" class="internal-link" title="argparse.SUPPRESS">SUPPRESS</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#ZERO_OR_MORE" class="internal-link" title="argparse.ZERO_OR_MORE">ZERO<wbr></wbr>_OR<wbr></wbr>_MORE</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__version__" class="internal-link" title="argparse.__version__">__version__</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_UNRECOGNIZED_ARGS_ATTR" class="internal-link" title="argparse._UNRECOGNIZED_ARGS_ATTR">_UNRECOGNIZED<wbr></wbr>_ARGS<wbr></wbr>_ATTR</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div>
+
+</nav>
+        </div>
+        <div id="collapseSideBar">
+          <a class="btn btn-link" onclick="toggleSideBarCollapse()" title="Toggle Sidebar Collapse">
+          </a>
+        </div> 
+        <script src="sidebartoggle.js" type="text/javascript"></script>
+       
+      </div>
+
+      <div id="main" class="">
+        
+
+        
+
+        <div class="page-header">
+          <h1 class="module"><code><code><a href="argparse.html" class="internal-link">argparse</a></code></code></h1>
+          <div id="showPrivate">
+            <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+          </div>
+        </div>
+
+        <div class="categoryHeader">
+          module documentation
+        </div>
+
+        <div class="extrasDocstring">
+          <a href="https://github.com/bw2/ConfigArgParse/tree/64637827bbcb70b341c3a79fe0828dbd76f71b1c/argparse.py" class="sourceLink">(source)</a>
+          <p></p>
+        </div>
+
+        <div class="moduleDocstring">
+          <div><p>Command-line parsing library</p>
+<p>This module is an optparse-inspired command-line parsing library that:</p>
+<blockquote>
+<ul class="rst-simple">
+<li>handles both optional and positional arguments</li>
+<li>produces highly informative usage messages</li>
+<li>supports parsers that dispatch to sub-parsers</li>
+</ul>
+</blockquote>
+<p>The following is a simple usage example that sums integers from the
+command-line and writes the result to a file:</p>
+<pre class="rst-literal-block">
+parser = argparse.ArgumentParser(
+    description='sum the integers at the command line')
+parser.add_argument(
+    'integers', metavar='int', nargs='+', type=int,
+    help='an integer to be summed')
+parser.add_argument(
+    '--log', default=sys.stdout, type=argparse.FileType('w'),
+    help='the file where the sum should be written')
+args = parser.parse_args()
+args.log.write('%s' % sum(args.integers))
+args.log.close()
+</pre>
+<p>The module contains the following public classes:</p>
+<blockquote>
+<ul class="rst-simple">
+<li><dl class="rst-first rst-docutils">
+<dt>ArgumentParser -- The main entry point for command-line parsing. As the</dt>
+<dd>example above shows, the add_argument() method is used to populate
+the parser with actions for optional and positional arguments. Then
+the parse_args() method is invoked to convert the args at the
+command-line into an object with attributes.</dd>
+</dl>
+</li>
+<li><dl class="rst-first rst-docutils">
+<dt>ArgumentError -- The exception raised by ArgumentParser objects when</dt>
+<dd>there are errors with the parser's actions. Errors raised while
+parsing the command-line are caught by ArgumentParser and emitted
+as command-line messages.</dd>
+</dl>
+</li>
+<li><dl class="rst-first rst-docutils">
+<dt>FileType -- A factory for defining types of files to be created. As the</dt>
+<dd>example above shows, instances of FileType are typically passed as
+the type= argument of add_argument() calls.</dd>
+</dl>
+</li>
+<li><dl class="rst-first rst-docutils">
+<dt>Action -- The base class for parser actions. Typically actions are</dt>
+<dd>selected by passing strings like 'store_true' or 'append_const' to
+the action= argument of add_argument(). However, for greater
+customization of ArgumentParser actions, subclasses of Action may
+be defined and passed as the action= argument.</dd>
+</dl>
+</li>
+<li><dl class="rst-first rst-docutils">
+<dt>HelpFormatter, RawDescriptionHelpFormatter, RawTextHelpFormatter,</dt>
+<dd>ArgumentDefaultsHelpFormatter -- Formatter classes which
+may be passed as the formatter_class= argument to the
+ArgumentParser constructor. HelpFormatter is the default,
+RawDescriptionHelpFormatter and RawTextHelpFormatter tell the parser
+not to change the formatting for help text, and
+ArgumentDefaultsHelpFormatter adds information about argument defaults
+to the help.</dd>
+</dl>
+</li>
+</ul>
+</blockquote>
+<p>All other classes in this module are considered implementation details.
+(Also note that HelpFormatter and RawDescriptionHelpFormatter are only
+considered public as object names -- the API of the formatter objects is
+still considered an implementation detail.)</p>
+</div>
+        </div>
+
+        <div id="splitTables">
+          <table class="children sortable" id="id1">
+  
+  
+  <tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.Action.html" class="internal-link" title="argparse.Action"><wbr></wbr>Action</a></code></td>
+    <td>Information about how to convert command line strings to Python objects.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.ArgumentDefaultsHelpFormatter.html" class="internal-link" title="argparse.ArgumentDefaultsHelpFormatter"><wbr></wbr>Argument<wbr></wbr>Defaults<wbr></wbr>Help<wbr></wbr>Formatter</a></code></td>
+    <td>Help message formatter which adds default values to argument help.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.ArgumentParser.html" class="internal-link" title="argparse.ArgumentParser"><wbr></wbr>Argument<wbr></wbr>Parser</a></code></td>
+    <td>Object for parsing command line strings into Python objects.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.BooleanOptionalAction.html" class="internal-link" title="argparse.BooleanOptionalAction"><wbr></wbr>Boolean<wbr></wbr>Optional<wbr></wbr>Action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.FileType.html" class="internal-link" title="argparse.FileType"><wbr></wbr>File<wbr></wbr>Type</a></code></td>
+    <td>Factory for creating file object types</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.HelpFormatter.html" class="internal-link" title="argparse.HelpFormatter"><wbr></wbr>Help<wbr></wbr>Formatter</a></code></td>
+    <td>Formatter for generating usage messages and argument help strings.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.MetavarTypeHelpFormatter.html" class="internal-link" title="argparse.MetavarTypeHelpFormatter"><wbr></wbr>Metavar<wbr></wbr>Type<wbr></wbr>Help<wbr></wbr>Formatter</a></code></td>
+    <td>Help message formatter which uses the argument 'type' as the default metavar value (instead of the argument 'dest')</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.Namespace.html" class="internal-link" title="argparse.Namespace"><wbr></wbr>Namespace</a></code></td>
+    <td>Simple object for storing attributes.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.RawDescriptionHelpFormatter.html" class="internal-link" title="argparse.RawDescriptionHelpFormatter"><wbr></wbr>Raw<wbr></wbr>Description<wbr></wbr>Help<wbr></wbr>Formatter</a></code></td>
+    <td>Help message formatter which retains any formatting in descriptions.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="argparse.RawTextHelpFormatter.html" class="internal-link" title="argparse.RawTextHelpFormatter"><wbr></wbr>Raw<wbr></wbr>Text<wbr></wbr>Help<wbr></wbr>Formatter</a></code></td>
+    <td>Help message formatter which retains formatting of all help text.</td>
+  </tr><tr class="exception">
+    
+    <td>Exception</td>
+    <td><code><a href="argparse.ArgumentError.html" class="internal-link" title="argparse.ArgumentError"><wbr></wbr>Argument<wbr></wbr>Error</a></code></td>
+    <td>An error from creating or using an argument (optional or positional).</td>
+  </tr><tr class="exception">
+    
+    <td>Exception</td>
+    <td><code><a href="argparse.ArgumentTypeError.html" class="internal-link" title="argparse.ArgumentTypeError"><wbr></wbr>Argument<wbr></wbr>Type<wbr></wbr>Error</a></code></td>
+    <td>An error from trying to convert a command line string to a type.</td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#ONE_OR_MORE" class="internal-link" title="argparse.ONE_OR_MORE">ONE<wbr></wbr>_OR<wbr></wbr>_MORE</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#OPTIONAL" class="internal-link" title="argparse.OPTIONAL">OPTIONAL</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#PARSER" class="internal-link" title="argparse.PARSER">PARSER</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#REMAINDER" class="internal-link" title="argparse.REMAINDER">REMAINDER</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#SUPPRESS" class="internal-link" title="argparse.SUPPRESS">SUPPRESS</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#ZERO_OR_MORE" class="internal-link" title="argparse.ZERO_OR_MORE">ZERO<wbr></wbr>_OR<wbr></wbr>_MORE</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="variable">
+    
+    <td>Variable</td>
+    <td><code><a href="#__version__" class="internal-link" title="argparse.__version__">__version__</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._ActionsContainer.html" class="internal-link" title="argparse._ActionsContainer">_<wbr></wbr>Actions<wbr></wbr>Container</a></code></td>
+    <td><span class="undocumented">No class docstring; 0/12 instance variable, 1/18 method documented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._AppendAction.html" class="internal-link" title="argparse._AppendAction">_<wbr></wbr>Append<wbr></wbr>Action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._AppendConstAction.html" class="internal-link" title="argparse._AppendConstAction">_<wbr></wbr>Append<wbr></wbr>Const<wbr></wbr>Action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._ArgumentGroup.html" class="internal-link" title="argparse._ArgumentGroup">_<wbr></wbr>Argument<wbr></wbr>Group</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._AttributeHolder.html" class="internal-link" title="argparse._AttributeHolder">_<wbr></wbr>Attribute<wbr></wbr>Holder</a></code></td>
+    <td>Abstract base class that provides __repr__.</td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._CountAction.html" class="internal-link" title="argparse._CountAction">_<wbr></wbr>Count<wbr></wbr>Action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._ExtendAction.html" class="internal-link" title="argparse._ExtendAction">_<wbr></wbr>Extend<wbr></wbr>Action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._HelpAction.html" class="internal-link" title="argparse._HelpAction">_<wbr></wbr>Help<wbr></wbr>Action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._MutuallyExclusiveGroup.html" class="internal-link" title="argparse._MutuallyExclusiveGroup">_<wbr></wbr>Mutually<wbr></wbr>Exclusive<wbr></wbr>Group</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._StoreAction.html" class="internal-link" title="argparse._StoreAction">_<wbr></wbr>Store<wbr></wbr>Action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._StoreConstAction.html" class="internal-link" title="argparse._StoreConstAction">_<wbr></wbr>Store<wbr></wbr>Const<wbr></wbr>Action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._StoreFalseAction.html" class="internal-link" title="argparse._StoreFalseAction">_<wbr></wbr>Store<wbr></wbr>False<wbr></wbr>Action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._StoreTrueAction.html" class="internal-link" title="argparse._StoreTrueAction">_<wbr></wbr>Store<wbr></wbr>True<wbr></wbr>Action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._SubParsersAction.html" class="internal-link" title="argparse._SubParsersAction">_<wbr></wbr>Sub<wbr></wbr>Parsers<wbr></wbr>Action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="argparse._VersionAction.html" class="internal-link" title="argparse._VersionAction">_<wbr></wbr>Version<wbr></wbr>Action</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="function private">
+    
+    <td>Function</td>
+    <td><code><a href="#_copy_items" class="internal-link" title="argparse._copy_items">_copy<wbr></wbr>_items</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="function private">
+    
+    <td>Function</td>
+    <td><code><a href="#_get_action_name" class="internal-link" title="argparse._get_action_name">_get<wbr></wbr>_action<wbr></wbr>_name</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="constant private">
+    
+    <td>Constant</td>
+    <td><code><a href="#_UNRECOGNIZED_ARGS_ATTR" class="internal-link" title="argparse._UNRECOGNIZED_ARGS_ATTR">_UNRECOGNIZED<wbr></wbr>_ARGS<wbr></wbr>_ATTR</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr>
+</table>
+          
+
+            
+        </div>
+
+        <div id="childList">
+          <div class="baseconstant">
+  
+  
+  <a name="argparse.ONE_OR_MORE">
+    
+  </a>
+  <a name="ONE_OR_MORE">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">ONE_OR_MORE</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/64637827bbcb70b341c3a79fe0828dbd76f71b1c/argparse.py#L98">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#ONE_OR_MORE" title="argparse.ONE_OR_MORE">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">+</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="argparse.OPTIONAL">
+    
+  </a>
+  <a name="OPTIONAL">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">OPTIONAL</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/64637827bbcb70b341c3a79fe0828dbd76f71b1c/argparse.py#L96">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#OPTIONAL" title="argparse.OPTIONAL">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">?</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="argparse.PARSER">
+    
+  </a>
+  <a name="PARSER">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">PARSER</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/64637827bbcb70b341c3a79fe0828dbd76f71b1c/argparse.py#L99">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#PARSER" title="argparse.PARSER">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">A...</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="argparse.REMAINDER">
+    
+  </a>
+  <a name="REMAINDER">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">REMAINDER</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/64637827bbcb70b341c3a79fe0828dbd76f71b1c/argparse.py#L100">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#REMAINDER" title="argparse.REMAINDER">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">...</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="argparse.SUPPRESS">
+    
+  </a>
+  <a name="SUPPRESS">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">SUPPRESS</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/64637827bbcb70b341c3a79fe0828dbd76f71b1c/argparse.py#L94">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#SUPPRESS" title="argparse.SUPPRESS">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">==SUPPRESS==</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="argparse.ZERO_OR_MORE">
+    
+  </a>
+  <a name="ZERO_OR_MORE">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">ZERO_OR_MORE</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/64637827bbcb70b341c3a79fe0828dbd76f71b1c/argparse.py#L97">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#ZERO_OR_MORE" title="argparse.ZERO_OR_MORE">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">*</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div><div class="basevariable">
+  
+  
+  <a name="argparse.__version__">
+    
+  </a>
+  <a name="__version__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">__version__</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/64637827bbcb70b341c3a79fe0828dbd76f71b1c/argparse.py#L65">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#__version__" title="argparse.__version__">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
+  </div>
+</div><div class="basefunction private">
+  
+  
+  <a name="argparse._copy_items">
+    
+  </a>
+  <a name="_copy_items">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span> <span class="py-defname">_copy_items</span><span class="function-signature">(items)</span>:
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/64637827bbcb70b341c3a79fe0828dbd76f71b1c/argparse.py#L138">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_copy_items" title="argparse._copy_items">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basefunction private">
+  
+  
+  <a name="argparse._get_action_name">
+    
+  </a>
+  <a name="_get_action_name">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span> <span class="py-defname">_get_action_name</span><span class="function-signature">(argument)</span>:
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/64637827bbcb70b341c3a79fe0828dbd76f71b1c/argparse.py#L725">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_get_action_name" title="argparse._get_action_name">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="baseconstant private">
+  
+  
+  <a name="argparse._UNRECOGNIZED_ARGS_ATTR">
+    
+  </a>
+  <a name="_UNRECOGNIZED_ARGS_ATTR">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_UNRECOGNIZED_ARGS_ATTR</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/64637827bbcb70b341c3a79fe0828dbd76f71b1c/argparse.py#L101">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_UNRECOGNIZED_ARGS_ATTR" title="argparse._UNRECOGNIZED_ARGS_ATTR">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><span class="rst-variable-quote">'</span><span class="rst-variable-string">_unrecognized_args</span><span class="rst-variable-quote">'</span></code></pre></td></tr></table>
+  </div>
+</div>
+        </div>
+      
+      </div>
+    </div>
+
+    <footer class="navbar navbar-default">
+
+  
+  <div class="container">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.5.5</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    23.4.1 at 2023-06-28 01:35:17.
+  </div>
+
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+  <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
+</footer>
+  
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>
