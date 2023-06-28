@@ -21,7 +21,7 @@ jobs:
         run: python -m pip install --upgrade pip setuptools wheel tox
 
       - name: Generate API documentation with pydoctor
-        run: bash -c ./apidocs.sh
+        run: tox -e apidocs
 
       - name: Push API documentation to Github Pages
         uses: peaceiris/actions-gh-pages@v3
