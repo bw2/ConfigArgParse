@@ -573,7 +573,7 @@ Design choices:
    file (eg. short args like -x would be excluded). Also, that way
    config keys are automatically documented whenever the command line
    args are documented in the help message.
-5. > don't force users to put config file settings in the right .ini [sections].
+5. don't force users to put config file settings in the right .ini [sections].
    This doesn't have a clear benefit since all options are command-line settable,
    and so have a globally unique key anyway.
    Enforcing sections just makes things harder for the user and adds complexity to the implementation.
