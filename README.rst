@@ -13,6 +13,11 @@ ConfigArgParse
     :alt: API Documentation
     :target: https://bw2.github.io/ConfigArgParse/
 
+.. image:: https://static.pepy.tech/badge/configargparse/week
+    :alt: Downloads per week
+    :target: https://pepy.tech/project/configargparse
+
+	     
 Overview
 ~~~~~~~~
 
