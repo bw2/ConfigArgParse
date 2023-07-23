@@ -1447,20 +1447,23 @@ argparse._ActionsContainer.add_argument = add_argument
 
 # add all public classes and constants from argparse module's namespace to this
 # module's namespace so that the 2 modules are truly interchangeable
-HelpFormatter = argparse.HelpFormatter
-RawDescriptionHelpFormatter = argparse.RawDescriptionHelpFormatter
-RawTextHelpFormatter = argparse.RawTextHelpFormatter
+Action = argparse.Action
 ArgumentDefaultsHelpFormatter = argparse.ArgumentDefaultsHelpFormatter
 ArgumentError = argparse.ArgumentError
 ArgumentTypeError = argparse.ArgumentTypeError
-Action = argparse.Action
 FileType = argparse.FileType
+HelpFormatter = argparse.HelpFormatter
+MetavarTypeHelpFormatter = argparse.MetavarTypeHelpFormatter
 Namespace = argparse.Namespace
+RawDescriptionHelpFormatter = argparse.RawDescriptionHelpFormatter
+RawTextHelpFormatter = argparse.RawTextHelpFormatter
 ONE_OR_MORE = argparse.ONE_OR_MORE
 OPTIONAL = argparse.OPTIONAL
+PARSER = argparse.PARSER
 REMAINDER = argparse.REMAINDER
 SUPPRESS = argparse.SUPPRESS
 ZERO_OR_MORE = argparse.ZERO_OR_MORE
+
 
 # deprecated PEP-8 incompatible API names.
 initArgumentParser = init_argument_parser
