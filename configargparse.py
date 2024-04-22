@@ -1669,7 +1669,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 if default_config_files or config_arg_string:
                     msg += " ({}).".format(
                         " or ".join(
-                            tuple(default_config_files)
+                            tuple(map(str, default_config_files))
                             + tuple(filter(None, [config_arg_string]))
                         )
                     )
