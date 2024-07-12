@@ -51,6 +51,7 @@ if test_argparse_source_code:
         )
         .replace("TestHelpFormattingMetaclass", "_TestHelpFormattingMetaclass")
         .replace("test_main", "_test_main")
+        .replace("test_exit_on_error", "_test_exit_on_error")
     )
 
     # pytest tries to collect tests from TestHelpFormattingMetaclass, and
