@@ -1533,7 +1533,8 @@ else:
     test_argparse_source_code = test_argparse_source_code.replace(
         'argparse.ArgumentParser', 'configargparse.ArgumentParser').replace(
         'TestHelpFormattingMetaclass', '_TestHelpFormattingMetaclass').replace(
-        'test_main', '_test_main')
+        'test_main', '_test_main').replace(
+        'test_exit_on_error', '_test_exit_on_error')
 
     # pytest tries to collect tests from TestHelpFormattingMetaclass, and
     # test_main, and raises a warning when it finds it's not a test class
