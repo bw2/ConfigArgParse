@@ -95,7 +95,7 @@ class TestMisc(TestCase):
                 "usage: .* \\[-h\\] -c CONFIG_FILE --genome GENOME\n\n"
                 "%s:\n"
                 "  -h, --help\\s+ show this help message and exit\n"
-                "  -c CONFIG_FILE, --config CONFIG_FILE\\s+ my config file\n"
+                "  -c( CONFIG_FILE)?, --config CONFIG_FILE\\s+ my config file\n"
                 "  --genome GENOME\\s+ Path to genome file\n\n"
                 % (self.OPTIONAL_ARGS_STRING)
                 + 5 * r"(.+\s*)",
@@ -166,8 +166,8 @@ class TestMisc(TestCase):
             r"\[-w CONFIG_OUTPUT_PATH\]\s* --arg1\s+ARG1\s*\[--flag\]\s*"
             "%s:\\s*"
             "-h, --help \\s* show this help message and exit "
-            r"-c CONFIG_FILE, --config CONFIG_FILE\s+my config file "
-            r"-w CONFIG_OUTPUT_PATH, --write-config CONFIG_OUTPUT_PATH takes "
+            r"-c( CONFIG_FILE)?, --config CONFIG_FILE\s+my config file "
+            r"-w( CONFIG_OUTPUT_PATH)?, --write-config CONFIG_OUTPUT_PATH takes "
             r"the current command line args and writes them "
             r"out to a config file at the given path, then exits "
             r"--arg1 ARG1 Arg1 help text "

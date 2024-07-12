@@ -234,9 +234,9 @@ class TestBasicUseCases(TestCase):
                     "  -h, --help \\s+ show this help message and exit\n"
                     "  --genome GENOME \\s+ Path to genome file\n"
                     "  -v\n"
-                    "  -g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE\n"
-                    "  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n"
-                    "  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n"
+                    "  -g( MY_CFG_FILE)?, --my-cfg-file MY_CFG_FILE\n"
+                    "  -d( DBSNP)?, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n"
+                    "  -f( FRMT)?, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n"
                     % (self.OPTIONAL_ARGS_STRING)
                     + 7 * r"(.+\s*)",
                 )
@@ -252,10 +252,10 @@ class TestBasicUseCases(TestCase):
                     "g1:\n"
                     "  --genome GENOME \\s+ Path to genome file\n"
                     "  -v\n"
-                    "  -g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE\n\n"
+                    "  -g( MY_CFG_FILE)?, --my-cfg-file MY_CFG_FILE\n\n"
                     "g2:\n"
-                    "  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n"
-                    "  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n"
+                    "  -d( DBSNP)?, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n"
+                    "  -f( FRMT)?, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n"
                     % (self.OPTIONAL_ARGS_STRING)
                     + 7 * r"(.+\s*)",
                 )
@@ -385,9 +385,9 @@ class TestBasicUseCases(TestCase):
             " \\s*-f2 TYPE2_CFG_FILE\\)\\s+\\(-f FRMT \\| -b\\)\n\n"
             "%s:\n"
             "  -h, --help            show this help message and exit\n"
-            "  -f1 TYPE1_CFG_FILE, --type1-cfg-file TYPE1_CFG_FILE\n"
-            "  -f2 TYPE2_CFG_FILE, --type2-cfg-file TYPE2_CFG_FILE\n"
-            "  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n"
+            "  -f1( TYPE1_CFG_FILE)?, --type1-cfg-file TYPE1_CFG_FILE\n"
+            "  -f2( TYPE2_CFG_FILE)?, --type2-cfg-file TYPE2_CFG_FILE\n"
+            "  -f( FRMT)?, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n"
             "  -b, --bam\\s+\\[env var: BAM_FORMAT\\]\n\n"
             "group1:\n"
             "  --genome GENOME       Path to genome file\n"
