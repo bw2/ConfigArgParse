@@ -17,7 +17,7 @@ ConfigArgParse
     :alt: API Documentation
     :target: https://bw2.github.io/ConfigArgParse/
 
-	     
+
 Overview
 ~~~~~~~~
 
@@ -55,7 +55,7 @@ Features
 -  extensible (:code:`ConfigFileParser` can be subclassed to define a new
    config file format)
 -  unittested by running the unittests that came with argparse but on
-   configargparse, and using tox to test with Python 3.5+
+   configargparse, and using tox to test with CPython 3.6+ and PyPy.
 
 Example
 ~~~~~~~
@@ -115,17 +115,17 @@ Here is the result:
     ----------
     usage: config_test.py [-h] -c MY_CONFIG --genome GENOME [-v] [-d DBSNP]
                           vcf [vcf ...]
-    
+
     Args that start with '--' (eg. --genome) can also be set in a config file
     (/etc/app/conf.d/*.conf or ~/.my_settings or specified via -c). Config file
     syntax allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
     https://goo.gl/R74nmi). If an arg is specified in more than one place, then
     commandline values override environment variables which override config file
     values which override defaults.
-    
+
     positional arguments:
       vcf                   variant file(s)
-    
+
     optional arguments:
       -h, --help            show this help message and exit
       -c MY_CONFIG, --my-config MY_CONFIG
@@ -134,7 +134,7 @@ Here is the result:
       -v                    verbose
       -d DBSNP, --dbsnp DBSNP
                             known variants .vcf [env var: DBSNP_PATH]
-    
+
     ----------
     Command Line Args:   --my-config config.txt f1.vcf f2.vcf
     Environment Variables:
@@ -261,20 +261,20 @@ given below:
             config_file_parser_class=configargparse.ConfigparserConfigFileParser
         )
         parser.add_argument('--system1_settings', type=yaml.safe_load)
-        
+
         args = parser.parse_args() # now args.system1 is a valid python dict
 
 *IniConfigParser*  - INI parser with support for sections.
 
-This parser somewhat ressembles ``ConfigparserConfigFileParser``. It uses configparser and apply the same kind of processing to 
-values written with python list syntax. 
+This parser somewhat ressembles ``ConfigparserConfigFileParser``. It uses configparser and apply
+the same kind of processing to values written with python list syntax.
 
-With the following additions: 
+With the following additions:
    - Must be created with argument to bind the parser to a list of sections.
    - Does not convert multiline strings to single line.
-   - Optional support for converting multiline strings to list (if ``split_ml_text_to_list=True``). 
-   - Optional support for quoting strings in config file 
-      (useful when text must not be converted to list or when text 
+   - Optional support for converting multiline strings to list (if ``split_ml_text_to_list=True``).
+   - Optional support for quoting strings in config file
+      (useful when text must not be converted to list or when text
       should contain trailing whitespaces).
 
 This config parser can be used to integrate with ``setup.cfg`` files.
@@ -285,9 +285,9 @@ Example::
       ; also a comment
       [my_super_tool]
       # how to specify a key-value pair
-      format-string: restructuredtext 
+      format-string: restructuredtext
       # white space are ignored, so name = value same as name=value
-      # this is why you can quote strings 
+      # this is why you can quote strings
       quoted-string = '\thello\tmom...  '
       # how to set an arg which has action="store_true"
       warnings-as-errors = true
@@ -297,10 +297,10 @@ Example::
       repeatable-option = ["https://docs.python.org/3/objects.inv",
                      "https://twistedmatrix.com/documents/current/api/objects.inv"]
       # how to specify a multiline text:
-      multi-line-text = 
-         Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-         Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
-         Maecenas quis dapibus leo, a pellentesque leo. 
+      multi-line-text =
+         Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+         Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc.
+         Maecenas quis dapibus leo, a pellentesque leo.
 
 If you use ``IniConfigParser(sections, split_ml_text_to_list=True)``::
 
@@ -312,9 +312,9 @@ If you use ``IniConfigParser(sections, split_ml_text_to_list=True)``::
          https://twistedmatrix.com/documents/current/api/objects.inv
       # how to specify a multiline text (you have to quote it):
       multi-line-text = '''
-         Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-         Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
-         Maecenas quis dapibus leo, a pellentesque leo. 
+         Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+         Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc.
+         Maecenas quis dapibus leo, a pellentesque leo.
          '''
 
 Usage:
@@ -347,9 +347,9 @@ Example::
                   "https://twistedmatrix.com/documents/current/api/objects.inv"]
    # how to specify a multiline text:
    multi-line-text = '''
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-      Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc. 
-      Maecenas quis dapibus leo, a pellentesque leo. 
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+      Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc.
+      Maecenas quis dapibus leo, a pellentesque leo.
       '''
 
 Usage:
@@ -365,10 +365,10 @@ Usage:
 
 *CompositeConfigParser*  - Create a config parser to understand multiple formats.
 
-This parser will successively try to parse the file with each parser, until it succeeds, 
+This parser will successively try to parse the file with each parser, until it succeeds,
 else fail showing all encountered error messages.
 
-The following code will make configargparse understand both TOML and INI formats. 
+The following code will make configargparse understand both TOML and INI formats.
 Making it easy to integrate in both ``pyproject.toml`` and ``setup.cfg``.
 
 .. code:: py
@@ -379,13 +379,14 @@ Making it easy to integrate in both ``pyproject.toml`` and ``setup.cfg``.
    parser = configargparse.ArgParser(
             default_config_files=['setup.cfg', 'my_super_tool.ini'],
             config_file_parser_class=configargparse.CompositeConfigParser(
-               [configargparse.TomlConfigParser(my_tool_sections), 
+               [configargparse.TomlConfigParser(my_tool_sections),
                 configargparse.IniConfigParser(my_tool_sections, split_ml_text_to_list=True)]
                ),
         )
    ...
 
-Note that it's required to put the TOML parser first because the INI syntax basically would accept anything whereas TOML. 
+Note that it's required to put the TOML parser first because the INI syntax basically would accept
+anything, whereas TOML is more strict.
 
 ArgParser Singletons
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -469,7 +470,7 @@ argparse in all usecases.
 
 Previously existing modules (PyPI search keywords: config argparse):
 
--  argparse (built-in module Python v2.7+)
+-  argparse (built-in Python module)
 
    -  Good:
 
