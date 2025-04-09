@@ -882,6 +882,30 @@ class ArgumentParser(argparse.ArgumentParser):
             self.error("unrecognized arguments: %s" % " ".join(argv))
         return args
 
+    def insert_args(self, args, extra_args, actions=()):
+        """Given an existing list of args, insert extra_args in a robust way
+        by putting them before the first entry that starts with '-',
+        and return the new list.
+        """
+        if any(isinstance(x, argparse._SubParsersAction) for x in actions):
+            # There's no way to handle this robustly. Best effort...
+            return extra_args + args
+
+        res = []
+        extras_added = False
+
+        for a in args:
+            if (not extras_added) and a.startswith("-"):
+                res.extend(extra_args)
+                extras_added = True
+            res.append(a)
+
+        if not extras_added:
+            # No hyphens in the original args list
+            res.extend(extra_args)
+
+        return res
+
     def parse_known_args(
         self,
         args=None,
@@ -948,7 +972,6 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # add env var settings to the commandline that aren't there already
         env_var_args = []
-        nargs = False
         actions_with_env_var_values = [
             a
             for a in self._actions
@@ -962,7 +985,6 @@ class ArgumentParser(argparse.ArgumentParser):
             value = env_vars[key]
             # Make list-string into list.
             if action.nargs or isinstance(action, argparse._AppendAction):
-                nargs = True
                 if value.startswith("[") and value.endswith("]"):
                     # handle special case of k=[1,2,3] or other json-like syntax
                     try:
@@ -972,10 +994,7 @@ class ArgumentParser(argparse.ArgumentParser):
                         value = [elem.strip() for elem in value[1:-1].split(",")]
             env_var_args += self.convert_item_to_command_line_arg(action, key, value)
 
-        if nargs:
-            args = args + env_var_args
-        else:
-            args = env_var_args + args
+        args = self.insert_args(args, env_var_args, self._actions)
 
         if env_var_args:
             self._source_to_settings[_ENV_VAR_SOURCE_KEY] = OrderedDict(
@@ -1021,7 +1040,6 @@ class ArgumentParser(argparse.ArgumentParser):
 
             # add each config item to the commandline unless it's there already
             config_args = []
-            nargs = False
             for key, value in config_items.items():
                 if key in known_config_keys:
                     action = known_config_keys[key]
@@ -1051,17 +1069,8 @@ class ArgumentParser(argparse.ArgumentParser):
                     if source_key not in self._source_to_settings:
                         self._source_to_settings[source_key] = OrderedDict()
                     self._source_to_settings[source_key][key] = (action, value)
-                    if (
-                        action
-                        and action.nargs
-                        or isinstance(action, argparse._AppendAction)
-                    ):
-                        nargs = True
 
-            if nargs:
-                args = args + config_args
-            else:
-                args = config_args + args
+            args = self.insert_args(args, config_args, self._actions)
 
         # save default settings for use by print_values()
         default_settings = OrderedDict()
