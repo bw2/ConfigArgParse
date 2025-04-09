@@ -1,5 +1,7 @@
+import os, sys
 import logging
 import inspect
+import configargparse
 from textwrap import dedent as dd
 
 ################################################################################
@@ -7,26 +9,42 @@ from textwrap import dedent as dd
 # in all situations, run argparse unittests on configargparse by modifying
 # their source code to use configargparse.ArgumentParser
 
+test_argparse_source_code = None
 try:
     import test.test_argparse
 
-    # Sig = test.test_argparse.Sig
-    # NS = test.test_argparse.NS
-except ImportError:
-    logging.warning(
-        dd(
-            """\
-
-        ============================
-        WARNING: Many tests couldn't be run because 'import test.test_argparse'
-        failed. Try building/installing python from source rather than through
-        a package manager.
-        ============================
-        """
-        )
-    )
-else:
     test_argparse_source_code = inspect.getsource(test.test_argparse)
+except ImportError:
+    # Try loading it from a local copy, since it's just one file we can get from
+    # the CPython source repo.
+    py_version = sys.version.split()[0]
+
+    try:
+        with open(
+            os.path.join(
+                os.path.dirname(__file__), "..", f"local_test_argparse_{py_version}.py"
+            )
+        ) as fh:
+            test_argparse_source_code = fh.read()
+    except FileNotFoundError:
+        link = f"https://github.com/python/cpython/raw/refs/tags/v{py_version}/Lib/test/test_argparse.py"
+
+        logging.warning(
+            dd(
+                f"""\
+
+            ============================
+            WARNING: Many tests couldn't be run because 'import test.test_argparse'
+            failed. Try building/installing python from source rather than through
+            a package manager, or else just fetch the file:
+
+            $ wget -O local_test_argparse_{py_version}.py {link}
+            ============================
+            """
+            )
+        )
+
+if test_argparse_source_code:
     test_argparse_source_code = (
         test_argparse_source_code.replace(
             "argparse.ArgumentParser", "configargparse.ArgumentParser"
