@@ -7,6 +7,7 @@ import sys
 import types
 import unittest
 from io import StringIO
+from tempfile import NamedTemporaryFile
 
 # enable logging to simplify debugging
 logger = logging.getLogger()
@@ -67,14 +68,17 @@ class TestCase(unittest.TestCase):
         self.format_values = self.parser.format_values
         self.format_help = self.parser.format_help
 
-        # TODO - do we really need this??
-        if not hasattr(self, "assertRegex"):
-            self.assertRegex = self.assertRegexpMatches
-        if not hasattr(self, "assertRaisesRegex"):
-            self.assertRaisesRegex = self.assertRaisesRegexp
-
         return self.parser
 
     def assertParseArgsRaises(self, regex, args, **kwargs):
         self.assertRaisesRegex(argparse.ArgumentError, regex, self.parse,
                                args=args, **kwargs)
+
+    def tmpFile(self, **kwargs):
+        """Make a new NamedTemporaryFile and ensure it gets deleted but only after the test
+        """
+        tf = NamedTemporaryFile(mode='w+', delete=False, **kwargs)
+
+        self.addCleanup(os.unlink, os.path.abspath(tf.name))
+
+        return tf

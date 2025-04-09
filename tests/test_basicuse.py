@@ -2,7 +2,6 @@ import sys
 import argparse
 import configargparse
 from unittest import mock
-from tempfile import NamedTemporaryFile
 from io import StringIO
 
 from tests.test_base import TestCase, captured_output
@@ -99,10 +98,8 @@ class TestBasicUseCases(TestCase):
     def testBasicCase2(self, use_groups=False):
 
         ## Test command line, config file and env var values
-        with NamedTemporaryFile(
-            mode="w", delete=True
-        ) as default_config_file, NamedTemporaryFile(
-            mode="w", delete=True
+        with self.tmpFile(suffix="_conf1") as default_config_file, self.tmpFile(
+            suffix="_conf2"
         ) as config_file2:
             default_config_file.flush()
 
@@ -286,7 +283,7 @@ class TestBasicUseCases(TestCase):
         self.add_arg("--config", is_config_file=True)
         self.add_arg("--arg1", default=1, type=int)
 
-        with NamedTemporaryFile(mode="w", delete=False) as config_file:
+        with self.tmpFile() as config_file:
             config_file.write("arg1 2")
             config_file_path = config_file.name
 
@@ -331,7 +328,7 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.a, "positional_value")
 
     def testMutuallyExclusiveArgs(self):
-        with NamedTemporaryFile(mode="w", delete=True) as config_file:
+        with self.tmpFile() as config_file:
 
             p = self.parser
             g = p.add_argument_group(title="group1")
@@ -398,9 +395,9 @@ class TestBasicUseCases(TestCase):
         )
 
     def testSubParsers(self):
-        with NamedTemporaryFile(
-            mode="w", delete=True
-        ) as config_file1, NamedTemporaryFile(mode="w", delete=True) as config_file2:
+        with self.tmpFile(suffix="_conf1") as config_file1, self.tmpFile(
+            suffix="_conf2"
+        ) as config_file2:
             config_file1.write("--i = B")
             config_file1.flush()
 

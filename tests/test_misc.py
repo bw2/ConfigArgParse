@@ -1,7 +1,6 @@
 import argparse
 import configargparse
 from unittest import mock
-from tempfile import NamedTemporaryFile
 from io import StringIO
 
 from tests.test_base import TestCase
@@ -56,7 +55,7 @@ class TestMisc(TestCase):
         self.add_arg("--x", required=True)
 
         # verify parsing from config file
-        with NamedTemporaryFile(mode="w", delete=True) as config_file:
+        with self.tmpFile() as config_file:
             config_file.write("x=bla")
             config_file.flush()
 
@@ -68,7 +67,7 @@ class TestMisc(TestCase):
         #   args_for_setting_config_path
         #   config_arg_is_required
         #   config_arg_help_message
-        with NamedTemporaryFile(mode="w", delete=True) as temp_cfg:
+        with self.tmpFile() as temp_cfg:
             temp_cfg.write("genome=hg19")
             temp_cfg.flush()
 
@@ -81,7 +80,7 @@ class TestMisc(TestCase):
             self.add_arg("--genome", help="Path to genome file", required=True)
             self.assertParseArgsRaises("arguments are required: -c/--config", args="")
 
-            with NamedTemporaryFile(mode="w", delete=True) as temp_cfg2:
+            with self.tmpFile() as temp_cfg2:
                 ns = self.parse("-c " + temp_cfg2.name)
                 self.assertEqual(ns.genome, "hg19")
 
@@ -127,7 +126,7 @@ class TestMisc(TestCase):
 
     def test_AbbrevConfigFileArgs(self):
         """Tests that abbreviated values don't get pulled from config file."""
-        with NamedTemporaryFile(mode="w", delete=True) as temp_cfg:
+        with self.tmpFile() as temp_cfg:
             temp_cfg.write("a2a = 0.5\n")
             temp_cfg.write("a3a = 0.5\n")
             temp_cfg.flush()
@@ -207,7 +206,7 @@ class TestMisc(TestCase):
         # Test constructor args:
         #   args_for_writing_out_config_file
         #   write_out_config_file_arg_help_message
-        with NamedTemporaryFile(mode="w+", delete=True) as cfg_f:
+        with self.tmpFile() as cfg_f:
             self.initParser(
                 args_for_writing_out_config_file=["-w"],
                 write_out_config_file_arg_help_message="write config",
@@ -257,7 +256,7 @@ class TestMisc(TestCase):
         # Test constructor args:
         #   args_for_writing_out_config_file
         #   write_out_config_file_arg_help_message
-        with NamedTemporaryFile(mode="w+", delete=True) as cfg_f:
+        with self.tmpFile() as cfg_f:
             self.initParser(
                 args_for_writing_out_config_file=["-w"],
                 write_out_config_file_arg_help_message="write config",
@@ -315,7 +314,7 @@ class TestMisc(TestCase):
         # Test constructor args:
         #   args_for_writing_out_config_file
         #   write_out_config_file_arg_help_message
-        with NamedTemporaryFile(mode="w+", delete=True) as cfg_f:
+        with self.tmpFile() as cfg_f:
             self.initParser(
                 args_for_writing_out_config_file=["--write-config"],
                 write_out_config_file_arg_help_message="write config",
@@ -328,7 +327,7 @@ class TestMisc(TestCase):
             self.add_arg("-l", "--config-file-settable-list", action="append")
 
             # write out a config file
-            command_line_args = "--write-config %s " % cfg_f.name
+            command_line_args = f"--write-config {cfg_f.name} "
             command_line_args += "--config-file-settable-arg 1 "
             command_line_args += "--config-file-settable-flag "
             command_line_args += "-l a -l b -l c -l d "

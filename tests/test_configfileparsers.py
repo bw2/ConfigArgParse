@@ -1,8 +1,13 @@
 import argparse
-import tempfile
 import configargparse
+import unittest
 from io import StringIO
 import logging
+
+try:
+    import yaml
+except ModuleNotFoundError:
+    logging.warning("PyYAML not installed. Cannot test YAMLConfigFileParser")
 
 from tests.test_base import TestCase
 
@@ -337,14 +342,8 @@ class TestConfigFileParsers(TestCase):
             expected = {test["expected"][0]: test["expected"][1]}
             self.assertDictEqual(parsed_obj, expected, msg="Line %r" % (test["line"]))
 
+    @unittest.skipUnless("yaml" in globals(), "PyYAML not installed")
     def testYAMLConfigFileParser_Basic(self):
-        try:
-            import yaml
-        except:
-            logging.warning(
-                "WARNING: PyYAML not installed. " "Couldn't test YAMLConfigFileParser"
-            )
-            return
 
         p = configargparse.YAMLConfigFileParser()
         self.assertGreater(len(p.get_syntax_description()), 0)
@@ -357,14 +356,8 @@ class TestConfigFileParsers(TestCase):
 
         self.assertDictEqual(parsed_obj, {"a": "3"})
 
+    @unittest.skipUnless("yaml" in globals(), "PyYAML not installed")
     def testYAMLConfigFileParser_All(self):
-        try:
-            import yaml
-        except:
-            logging.warning(
-                "WARNING: PyYAML not installed. " "Couldn't test YAMLConfigFileParser"
-            )
-            return
 
         p = configargparse.YAMLConfigFileParser()
 
@@ -387,14 +380,8 @@ class TestConfigFileParsers(TestCase):
 
         self.assertDictEqual(parsed_obj, {"a": "3", "list_arg": [1, 2, 3]})
 
+    @unittest.skipUnless("yaml" in globals(), "PyYAML not installed")
     def testYAMLConfigFileParser_w_ArgumentParser_parsed_values(self):
-        try:
-            import yaml
-        except:
-            raise AssertionError(
-                "WARNING: PyYAML not installed. " "Couldn't test YAMLConfigFileParser"
-            )
-            return
 
         parser = configargparse.ArgumentParser(
             config_file_parser_class=configargparse.YAMLConfigFileParser
@@ -405,11 +392,11 @@ class TestConfigFileParsers(TestCase):
         parser.add_argument("--level", type=int)
 
         config_lines = ["verbosity: 3", "verbose: true", "level: 35"]
-        config_str = "\n".join(config_lines) + "\n"
-        config_file = tempfile.gettempdir() + "/temp_YAMLConfigFileParser.cfg"
-        with open(config_file, "w") as f:
-            f.write(config_str)
-        args = parser.parse_args(["--config=%s" % config_file])
-        assert args.verbosity == 3
-        assert args.verbose == True
-        assert args.level == 35
+        with self.tmpFile(suffix="YAMLConfigFileParser.cfg") as f:
+            config_file = f.name
+            for aline in config_lines:
+                print(aline, file=f)
+        args = parser.parse_args([f"--config={config_file}"])
+        self.assertEqual(args.verbosity, 3)
+        self.assertIs(args.verbose, True)
+        self.assertEqual(args.level, 35)
