@@ -32,4 +32,4 @@ jobs:
           python -m pip install '.[test]'
 
       - name: Run tests
-        run: pytest
+        run: python -munittest -v
