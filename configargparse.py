@@ -4,18 +4,17 @@ A drop-in replacement for `argparse` that allows options to also be set via conf
 :see: `configargparse.ArgumentParser`, `configargparse.add_argument`
 """
 
+import os, sys, re
 import argparse
 import ast
 import csv
 import functools
 import json
 import glob
-import os
-import re
-import sys
 import types
 from collections import OrderedDict
 import textwrap
+from contextlib import suppress
 
 if sys.version_info >= (3, 0):
     from io import StringIO
@@ -203,8 +202,9 @@ class DefaultConfigFileParser(ConfigFileParser):
                     # handle special case of k=[1,2,3] or other json-like syntax
                     try:
                         value = json.loads(value)
-                    except Exception as e:
-                        # for backward compatibility with legacy format (eg. where config value is [a, b, c] instead of proper json ["a", "b", "c"]
+                    except json.decoder.JSONDecodeError as e:
+                        # for backward compatibility with legacy format
+                        # (eg. where config value is [a, b, c] instead of proper json ["a", "b", "c"]
                         value = [elem.strip() for elem in value[1:-1].split(",")]
                 if comment:
                     comment = comment.strip()[1:].strip()
@@ -378,7 +378,7 @@ class YAMLConfigFileParser(ConfigFileParser):
 Provides `configargparse.ConfigFileParser` classes to parse ``TOML`` and ``INI`` files with **mandatory** support for sections.
 Useful to integrate configuration into project files like ``pyproject.toml`` or ``setup.cfg``.
 
-`TomlConfigParser` usage: 
+`TomlConfigParser` usage:
 
 >>> TomlParser = TomlConfigParser(['tool.my_super_tool']) # Simple TOML parser.
 >>> parser = ArgumentParser(..., default_config_files=['./pyproject.toml'], config_file_parser_class=TomlParser)
@@ -506,8 +506,10 @@ class TomlConfigParser(ConfigFileParser):
             Maecenas quis dapibus leo, a pellentesque leo.
             '''
 
-    Note that the config file fragment above is also valid for the `IniConfigParser` class and would be parsed the same manner.
-    Thought, any valid TOML config file will not be necessarly parsable with `IniConfigParser` (INI files must be rigorously indented whereas TOML files).
+    Note that the config file fragment above is also valid for the `IniConfigParser` class and
+    would be parsed the same manner.
+    Thought, any valid TOML config file will not be necessarly parsable with `IniConfigParser`
+    (INI files must be rigorously indented, unlike TOML files).
 
     See the `TOML specification <>`_ for details.
     """
@@ -672,7 +674,8 @@ class IniConfigParser(ConfigFileParser):
         msg = (
             "Uses configparser module to parse an INI file which allows multi-line values. "
             "See https://docs.python.org/3/library/configparser.html for details. "
-            "This parser includes support for quoting strings literal as well as python list syntax evaluation. "
+            "This parser includes support for quoting strings literal as well as python "
+            "list syntax evaluation. "
         )
         if self.split_ml_text_to_list:
             msg += (
@@ -683,8 +686,7 @@ class IniConfigParser(ConfigFileParser):
 
 
 class CompositeConfigParser(ConfigFileParser):
-    """
-    Createa a config parser composed by others `ConfigFileParser`s.
+    """Create a config parser composed by others `ConfigFileParser`s.
 
     The composite parser will successively try to parse the file with each parser,
     until it succeeds, else raise execption with all encountered errors.
@@ -1014,7 +1016,7 @@ class ArgumentParser(argparse.ArgumentParser):
             except ConfigFileParserException as e:
                 self.error(str(e))
             finally:
-                if hasattr(stream, "close"):
+                with suppress(AttributeError):
                     stream.close()
 
             # add each config item to the commandline unless it's there already
@@ -1601,8 +1603,8 @@ def already_on_command_line(
     )
 
 
-# TODO: Update to latest version of pydoctor when https://github.com/twisted/pydoctor/pull/414 has been merged
-# such that the alises can be documented automatically.
+# TODO: Update to latest version of pydoctor when https://github.com/twisted/pydoctor/pull/414
+# has been merged such that the alises can be documented automatically.
 
 # wrap ArgumentParser's add_argument(..) method with the one above
 argparse._ActionsContainer.original_add_argument_method = (
