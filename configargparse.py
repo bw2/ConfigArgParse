@@ -15,31 +15,34 @@ import types
 from collections import OrderedDict
 import textwrap
 from contextlib import suppress
+from io import StringIO
 
-if sys.version_info >= (3, 0):
-    from io import StringIO
-else:
-    from StringIO import StringIO
+import logging
 
+logger = logging.getLogger(__name__)
 
-ACTION_TYPES_THAT_DONT_NEED_A_VALUE = [
+ACTION_TYPES_THAT_DONT_NEED_A_VALUE = (
     argparse._StoreTrueAction,
     argparse._StoreFalseAction,
     argparse._CountAction,
     argparse._StoreConstAction,
     argparse._AppendConstAction,
-]
+)
 
 if sys.version_info >= (3, 9):
-    ACTION_TYPES_THAT_DONT_NEED_A_VALUE.append(argparse.BooleanOptionalAction)
-    is_boolean_optional_action = lambda action: isinstance(
-        action, argparse.BooleanOptionalAction
-    )
+    ACTION_TYPES_THAT_DONT_NEED_A_VALUE += (argparse.BooleanOptionalAction,)
+
+    def is_boolean_optional_action(action):
+        return isinstance(action, argparse.BooleanOptionalAction)
+
 else:
-    is_boolean_optional_action = lambda action: False
 
-ACTION_TYPES_THAT_DONT_NEED_A_VALUE = tuple(ACTION_TYPES_THAT_DONT_NEED_A_VALUE)
+    def is_boolean_optional_action(action):
+        return False
 
+
+STRINGS_THAT_MEAN_YES = "true yes on 1".split()
+STRINGS_THAT_MEAN_NO = "false no off 0".split()
 
 # global ArgumentParser instances
 _parsers = {}
@@ -105,7 +108,8 @@ class ConfigFileParser(object):
 
         NOTE: For keys that were specified to configargparse as
         action="store_true" or "store_false", the config file value must be
-        one of: "yes", "no", "on", "off", "true", "false". Otherwise an error will be raised.
+        one of: "yes", "no", "on", "off", "true", "false", "1", "0".
+        Otherwise an error will be raised.
 
         Args:
             stream (IO): A config file input stream (such as an open file object).
@@ -375,7 +379,8 @@ class YAMLConfigFileParser(ConfigFileParser):
 
 
 """
-Provides `configargparse.ConfigFileParser` classes to parse ``TOML`` and ``INI`` files with **mandatory** support for sections.
+Provides `configargparse.ConfigFileParser` classes to parse ``TOML`` and ``INI`` files with
+**mandatory** support for sections.
 Useful to integrate configuration into project files like ``pyproject.toml`` or ``setup.cfg``.
 
 `TomlConfigParser` usage:
@@ -383,7 +388,8 @@ Useful to integrate configuration into project files like ``pyproject.toml`` or 
 >>> TomlParser = TomlConfigParser(['tool.my_super_tool']) # Simple TOML parser.
 >>> parser = ArgumentParser(..., default_config_files=['./pyproject.toml'], config_file_parser_class=TomlParser)
 
-`IniConfigParser` works the same way (also it optionaly convert multiline strings to list with argument ``split_ml_text_to_list``).
+`IniConfigParser` works the same way (also it optionaly convert multiline strings to list with
+argument ``split_ml_text_to_list``).
 
 `CompositeConfigParser` usage:
 
@@ -645,9 +651,8 @@ class IniConfigParser(ConfigFileParser):
                     except ValueError as e:
                         # error evaluating object
                         raise ConfigFileParserException(
-                            "Error evaluating list: "
-                            + str(e)
-                            + ". Put quotes around your text if it's meant to be a string."
+                            f"Error evaluating list: {e}. "
+                            "Put quotes around your text if it's meant to be a string."
                         ) from e
                 else:
                     if is_quoted(strip_v):
@@ -921,8 +926,9 @@ class ArgumentParser(argparse.ArgumentParser):
             args: a list of args as in argparse, or a string (eg. "-x -y bla")
             config_file_contents (str). Used for testing.
             env_vars (dict). Used for testing.
-            ignore_help_args (bool): This flag determines behavior when user specifies ``--help`` or ``-h``. If False,
-                it will have the default behavior - printing help and exiting. If True, it won't do either.
+            ignore_help_args (bool): This flag determines behavior when user specifies ``--help``
+                or ``-h``. If False, it will have the default behavior - printing help and exiting.
+                If True, it won't do either.
 
         Returns:
             tuple[argparse.Namespace, list[str]]: tuple namescpace, unknown_args
@@ -990,7 +996,8 @@ class ArgumentParser(argparse.ArgumentParser):
                     try:
                         value = json.loads(value)
                     except Exception:
-                        # for backward compatibility with legacy format (eg. where config value is [a, b, c] instead of proper json ["a", "b", "c"]
+                        # for backward compatibility with legacy format
+                        # (eg. where config value is [a, b, c] instead of proper json ["a", "b", "c"]
                         value = [elem.strip() for elem in value[1:-1].split(",")]
             env_var_args += self.convert_item_to_command_line_arg(action, key, value)
 
@@ -1113,14 +1120,15 @@ class ArgumentParser(argparse.ArgumentParser):
 
     def get_source_to_settings_dict(self):
         """
-        If called after `parse_args()` or `parse_known_args()`, returns a dict that contains up to 4 keys corresponding
-        to where a given option's value is coming from:
+        If called after `parse_args()` or `parse_known_args()`, returns a dict that contains up to
+        4 keys corresponding to where a given option's value is coming from:
         - "command_line"
         - "environment_variables"
         - "config_file"
         - "defaults"
-        Each such key, will be mapped to another dictionary containing the options set via that method. Here the key
-        will be the option name, and the value will be a 2-tuple of the form (`argparse.Action` obj, `str` value).
+        Each such key, will be mapped to another dictionary containing the options set via that
+        method. Here the key will be the option name, and the value will be a 2-tuple of the form
+        (`argparse.Action` obj, `str` value).
 
         Returns:
             dict[str, dict[str, tuple[argparse.Action, str]]]: source to settings dict
@@ -1142,9 +1150,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 with self._config_file_open_func(output_file_path, "w") as output_file:
                     pass
             except IOError as e:
-                raise ValueError(
-                    "Couldn't open {} for writing: {}".format(output_file_path, e)
-                )
+                raise ValueError(f"Couldn't open {output_file_path} for writing: {e}")
         if output_file_paths:
             # generate the config file contents
             config_items = self.get_items_for_config_file_output(
@@ -1155,7 +1161,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 with self._config_file_open_func(output_file_path, "w") as output_file:
                     output_file.write(file_contents)
 
-            print("Wrote config file to " + ", ".join(output_file_paths))
+            logger.debug(f"Wrote config file to {', '.join(output_file_paths)}")
             if exit_after:
                 self.exit(0)
 
@@ -1257,13 +1263,13 @@ class ArgumentParser(argparse.ArgumentParser):
             assert isinstance(
                 value, str
             ), "config parser should convert anything that is not a list to string."
-            if value.lower() in ("true", "yes", "on", "1"):
+            if value.lower() in STRINGS_THAT_MEAN_YES:
                 if not is_boolean_optional_action(action):
                     args.append(command_line_key)
                 else:
                     # --foo
                     args.append(action.option_strings[0])
-            elif value.lower() in ("false", "no", "off", "0"):
+            elif value.lower() in STRINGS_THAT_MEAN_NO:
                 # don't append when set to "false" / "no"
                 if not is_boolean_optional_action(action):
                     pass
@@ -1276,9 +1282,15 @@ class ArgumentParser(argparse.ArgumentParser):
                         value = 0
                 args += [action.option_strings[0]] * int(value)
             else:
+                poss_values = [
+                    s
+                    for t in zip(STRINGS_THAT_MEAN_YES, STRINGS_THAT_MEAN_NO)
+                    for s in t
+                ]
+                # Strip the list representation just to get a display-able value
+                poss_values = str(poss_values).lstrip("[").rstrip("]")
                 self.error(
-                    "Unexpected value for {}: {!r}. Expecting 'true', "
-                    "'false', 'yes', 'no', 'on', 'off', '1' or '0'".format(key, value)
+                    f"Unexpected value for {key}: {value!r}. Expecting {poss_values}"
                 )
         elif isinstance(value, list):
             accepts_list_and_has_nargs = (
@@ -1314,7 +1326,7 @@ class ArgumentParser(argparse.ArgumentParser):
                     ).format(key, value)
                 )
         elif isinstance(value, str):
-            args.append(f"{command_line_key,}={value}")
+            args.append(f"{command_line_key}={value}")
         else:
             raise ValueError(
                 "Unexpected value type {} for value: {}".format(type(value), value)

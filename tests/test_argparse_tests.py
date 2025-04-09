@@ -11,10 +11,10 @@ try:
     #Sig = test.test_argparse.Sig
     #NS = test.test_argparse.NS
 except ImportError:
-    logging.error(dd("""\
+    logging.warning(dd("""\
 
         ============================
-        ERROR: Many tests couldn't be run because 'import test.test_argparse'
+        WARNING: Many tests couldn't be run because 'import test.test_argparse'
         failed. Try building/installing python from source rather than through
         a package manager.
         ============================

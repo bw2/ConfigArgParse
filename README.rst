@@ -454,7 +454,8 @@ HelpFormatters:
 API Documentation
 ~~~~~~~~~~~~~~~~~
 
-You can review the generated API Documentation for the ``configargparse`` module: `HERE <https://bw2.github.io/ConfigArgParse/>`_
+You can review the generated API Documentation for the ``configargparse``
+module: `HERE <https://bw2.github.io/ConfigArgParse/>`_
 
 Design Notes
 ~~~~~~~~~~~~

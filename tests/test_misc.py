@@ -390,7 +390,7 @@ class TestMisc(TestCase):
         self.initParser(config_file_open_func=error_func)
         self.parser.add_argument("-g", is_config_file=True)
         self.assertParseArgsRaises(
-            "Unable to open config file: file.txt. Error: some error",
+            "Unable to open config file: 'file.txt'. Error: some error",
             args="-g file.txt",
         )
 
@@ -401,6 +401,6 @@ class TestMisc(TestCase):
         self.initParser(config_file_open_func=error_func)
         self.parser.add_argument("-g", is_config_file=True)
         self.assertParseArgsRaises(
-            "Unable to open config file: file.txt. Error: custom error",
+            "Unable to open config file: 'file.txt'. Error: custom error",
             args="-g file.txt",
         )
