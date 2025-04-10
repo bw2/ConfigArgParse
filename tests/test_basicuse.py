@@ -381,17 +381,17 @@ class TestBasicUseCases(TestCase):
 
         self.assertRegex(
             self.format_help(),
-            r"usage: .* \[-h\] --genome GENOME \[-v\]\s+ \(-f1 TYPE1_CFG_FILE \|"
-            " \\s*-f2 TYPE2_CFG_FILE\\)\\s+\\(-f FRMT \\| -b\\)\n\n"
-            "%s:\n"
-            "  -h, --help            show this help message and exit\n"
-            "  -f1( TYPE1_CFG_FILE)?, --type1-cfg-file TYPE1_CFG_FILE\n"
-            "  -f2( TYPE2_CFG_FILE)?, --type2-cfg-file TYPE2_CFG_FILE\n"
-            "  -f( FRMT)?, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n"
-            "  -b, --bam\\s+\\[env var: BAM_FORMAT\\]\n\n"
-            "group1:\n"
-            "  --genome GENOME       Path to genome file\n"
-            "  -v\n\n" % (self.OPTIONAL_ARGS_STRING) + 5 * r"(.+\s*)",
+            r"usage: .* \[-h\] --genome GENOME \[-v\]\s+\(-f1 TYPE1_CFG_FILE \|"
+            r"\s+-f2 TYPE2_CFG_FILE\)\s+\(-f FRMT \| -b\)\n\n"
+            f"{self.OPTIONAL_ARGS_STRING}:\\n"
+            r"  -h, --help            show this help message and exit\n"
+            r"  -f1( TYPE1_CFG_FILE)?, --type1-cfg-file TYPE1_CFG_FILE\n"
+            r"  -f2( TYPE2_CFG_FILE)?, --type2-cfg-file TYPE2_CFG_FILE\n"
+            r"  -f( FRMT)?, --format FRMT\s+\[env var: OUTPUT_FORMAT\]\n"
+            r"  -b, --bam\s+\[env var: BAM_FORMAT\]\n\n"
+            r"group1:\n"
+            r"  --genome GENOME       Path to genome file\n"
+            r"  -v\n\n" + 5 * r"(.+\s*)",
         )
 
     def testSubParsers(self):

@@ -177,7 +177,7 @@ class TestMisc(TestCase):
             r"Config file syntax allows: key=value, flag=true, stuff=\[a,b,c\] "
             r"\(for details, see syntax at https://goo.gl/R74nmi\). "
             r"In general, command-line values override config file values "
-            r"which override defaults. ".replace(" ", "\s*")
+            r"which override defaults. ".replace(" ", r"\s*")
             % (self.OPTIONAL_ARGS_STRING),
         )
 
