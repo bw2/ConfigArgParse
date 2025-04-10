@@ -14,7 +14,7 @@ import configargparse
 from tests.test_base import TestCase
 
 
-class TestMisc(TestCase):
+class TestIssues(TestCase):
 
     def test_issue_275_a(self):
         """With a subparser the env vars are tacked on the end,
