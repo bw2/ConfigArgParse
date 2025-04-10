@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, re
 import logging
 import inspect
 import configargparse
@@ -10,6 +10,7 @@ from textwrap import dedent as dd
 # their source code to use configargparse.ArgumentParser
 
 test_argparse_source_code = None
+remove_i18n_helper = False
 try:
     import test.test_argparse
 
@@ -26,6 +27,7 @@ except ImportError:
             )
         ) as fh:
             test_argparse_source_code = fh.read()
+            remove_i18n_helper = True  # See below
     except FileNotFoundError:
         link = f"https://github.com/python/cpython/raw/refs/tags/v{py_version}/Lib/test/test_argparse.py"
 
@@ -45,29 +47,45 @@ except ImportError:
         )
 
 if test_argparse_source_code:
-    test_argparse_source_code = (
-        test_argparse_source_code.replace(
-            "argparse.ArgumentParser", "configargparse.ArgumentParser"
-        )
-        .replace("TestHelpFormattingMetaclass", "_TestHelpFormattingMetaclass")
-        .replace("test_main", "_test_main")
-        .replace("test_exit_on_error", "_test_exit_on_error")
-    )
 
     # pytest tries to collect tests from TestHelpFormattingMetaclass, and
     # test_main, and raises a warning when it finds it's not a test class
     # nor test function. Renaming TestHelpFormattingMetaclass and test_main
     # prevents pytest from trying.
 
-    # run or debug a subset of the argparse tests
-    # test_argparse_source_code = test_argparse_source_code.replace(
-    #   "(TestCase)", "").replace(
-    #   "(ParserTestCase)", "").replace(
-    #   "(HelpTestCase)", "").replace(
-    #   ", TestCase", "").replace(
-    #   ", ParserTestCase", "")
-    # test_argparse_source_code = test_argparse_source_code.replace(
-    #   "class TestMessageContentError", "class TestMessageContentError(TestCase)")
+    replacements = {
+        "argparse.ArgumentParser": "configargparse.ArgumentParser",
+        "TestHelpFormattingMetaclass": "_TestHelpFormattingMetaclass",
+        "test_main": "_test_main",
+    }
+
+    # This is stuff that should actually be implemented, then these replacements can be removed.
+    replacements.update(
+        {
+            r"^((\s*)def test_exit_on_error)": r"\2@unittest.expectedFailure\n\1",
+            r"^((\s*)def test_unrecognized_args)": r"\2@unittest.expectedFailure\n\1",
+            r"^((\s*)def test_unrecognized_intermixed_args)": r"\2@unittest.expectedFailure\n\1",
+            r"^((\s*)class TestIntermixedArgs)": r"\2@unittest.skip\n\1",
+            r"^((\s*)class TestIntermixedMessageContentError)": r"\2@unittest.expectedFailure\n\1",
+        }
+    )
+
+    if remove_i18n_helper:
+        # If we have just downloaded the single source file for the test then we also need
+        # to remove an indirect dependency on test.test_tools and skip the i18n tests.
+        replacements.update(
+            {
+                r"from test.support.i18n_helper import .*": "",
+                r"TestTranslationsBase": "unittest.TestCase",
+                r"^((\s*)def test_translations)": r"\2@unittest.skip\n\1",
+            }
+        )
+
+    for search, replace in replacements.items():
+        search = f"(?:\\b|^){search}(?:\\b|$)"
+        test_argparse_source_code = re.sub(
+            search, replace, test_argparse_source_code, flags=re.MULTILINE
+        )
 
     exec(test_argparse_source_code)
 

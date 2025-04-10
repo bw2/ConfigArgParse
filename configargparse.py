@@ -887,6 +887,12 @@ class ArgumentParser(argparse.ArgumentParser):
             self.error(f"unrecognized arguments: {' '.join(argv)}")
         return args
 
+    def parse_intermixed_args(
+        self, args=None, namespace=None, config_file_contents=None, env_vars=os.environ
+    ):
+        # TODO - implement this, if possible
+        raise NotImplementedError()
+
     def insert_args(self, args, extra_args, actions=()):
         """Given an existing list of args, insert extra_args in a robust way
         by putting them before the first entry that starts with '-',
