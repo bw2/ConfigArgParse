@@ -33,6 +33,14 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.rest, [1, 2, 3])
         self.assertEqual(args, [])
 
+        # Note that "2 3" are listed as unrecognised arguments by the regular ArgumentParser
+        self.assertParseArgsRaises(
+            "unrecognized arguments: --xxx xxxval 2 3",
+            args="doit 1 --xxx xxxval --foo bar 2 3",
+            intermixed=True,
+        )
+
+        # Add in some config
         self.add_arg("--baz")
         ns, args = self.parser.parse_known_intermixed_args(
             "doit 1 --foo bar 2 3".split(), config_file_contents="baz: 'bazval'"
@@ -41,8 +49,10 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.rest, [1, 2, 3])
         self.assertEqual(args, [])
 
-        ns = self.parser.parse_intermixed_args(
-            "doit 1 --foo bar 2 3".split(), config_file_contents="xxx: 'xxxval'"
+        # As above, but now "--xxx xxxval" is in the config.
+        self.assertParseArgsRaises(
+            "unrecognized arguments: --xxx=xxxval 2 3",
+            args="doit 1 --foo bar 2 3",
+            config_file_contents="xxx: 'xxxval'",
+            intermixed=True,
         )
-        self.assertEqual(ns.baz, None)
-        self.assertEqual(ns.rest, [1, 2, 3])
