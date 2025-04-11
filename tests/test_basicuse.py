@@ -1,7 +1,7 @@
 import sys
 import argparse
 import configargparse
-from unittest import mock
+from unittest import mock, expectedFailure
 from io import StringIO
 
 from tests.test_base import TestCase, captured_output
@@ -881,6 +881,14 @@ class TestBasicUseCases(TestCase):
         # This is failing in 1.7 - we see ns.verbose == 5
         ns = self.parse(args="-vvv", env_vars={"VERBOSITY": "2"})
         self.assertEqual(ns.verbose, 3)
+
+    @expectedFailure
+    def testCounterEnviron2(self):
+        self.add_arg("-1", dest="oneness", action="count", default=0, env_var="ONENESS")
+
+        # This is failing in 1.7 - we see ns.verbose == 5
+        ns = self.parse(args="-111", env_vars={"ONENESS": "2"})
+        self.assertEqual(ns.oneness, 3)
 
     def testEnvWithCombinedShortArgs(self):
         # This is not a serious bug, but it does show an inconsistency in the internal logic.

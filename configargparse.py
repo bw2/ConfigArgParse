@@ -1730,12 +1730,13 @@ def already_on_command_line(
         if arg_string[0] in prefix_chars and "=" in arg_string:
             option_string, explicit_arg = arg_string.split("=", 1)
             arg_names.append(option_string)
-        elif (
-            arg_string[0] in prefix_chars
-            and len(arg_string) > 2
-            and arg_string[1] not in prefix_chars
+        elif arg_string[0] in prefix_chars and re.fullmatch(
+            r"[a-zA-Z]+", arg_string[1:]
         ):
             # Special case for combined single letter args like '-tvaf' or '-vvv'
+            # This is hacky and can fail - eg. see
+            #    tests.test_basicuse.TestBasicUseCases.testCounterEnviron2
+            # But a robust fix will mean considering all the other potential_command_line_args
             arg_names.extend(f"{arg_string[0]}{letter}" for letter in arg_string[1:])
         else:
             arg_names.append(arg_string)
