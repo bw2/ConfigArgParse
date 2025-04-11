@@ -11,15 +11,19 @@ class TestMisc(TestCase):
 
     """Test edge cases"""
 
+    @mock.patch("argparse.ArgumentParser.__repr__")
     @mock.patch("argparse.ArgumentParser.__init__")
-    def testKwrgsArePassedToArgParse(self, argparse_init):
+    def testKwrgsArePassedToArgParse(self, argparse_init, argparse_repr):
         kwargs_for_argparse = {"allow_abbrev": False, "whatever_other_arg": "something"}
 
         parser = configargparse.ArgumentParser(
             add_config_file_help=False, **kwargs_for_argparse
         )
 
-        argparse_init.assert_called_with(parser, **kwargs_for_argparse)
+        # Avoid exception while trying to represent the incorrectly initialized object.
+        parser.__repr__.return_value = "<parser>"
+
+        argparse_init.assert_called_with(**kwargs_for_argparse)
 
     def testGlobalInstances(self, name=None):
         p = configargparse.getArgumentParser(name, prog="prog", usage="test")
