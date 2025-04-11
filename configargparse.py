@@ -1651,7 +1651,13 @@ class ArgumentParser(argparse.ArgumentParser):
         errors will be processed. Note that some error situations still
         want to call self.error() directly.
         """
-        if self.exit_on_error:
+        try:
+            # This try/except is needed for Py3.8 where the flag is not implemented
+            exit_on_error = self.exit_on_error
+        except AttributeError:
+            exit_on_error = True
+
+        if exit_on_error:
             self.error(msg)
         else:
             raise argparse.ArgumentError(None, msg)
