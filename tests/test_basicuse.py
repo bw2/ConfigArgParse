@@ -873,7 +873,6 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.verbose, 3)
 
     def testCounterEnviron(self):
-        self.initParser()
         self.add_arg("--verbose", "-v", action="count", default=0, env_var="VERBOSITY")
 
         ns = self.parse(args="-v -v -v", env_vars={"VERBOSITY": "2"})
@@ -886,8 +885,6 @@ class TestBasicUseCases(TestCase):
     def testEnvWithCombinedShortArgs(self):
         # This is not a serious bug, but it does show an inconsistency in the internal logic.
         # See testCounterEnviron for a more serious manifestation.
-        self.initParser()
-
         self.add_arg(
             "-x", "--arg_x", action="store_true", default=False, env_var="ARG_X"
         )
