@@ -314,6 +314,17 @@ class TestBasicUseCases(TestCase):
 
             self.assertTrue(mock_stdout.getvalue().startswith("usage"))
 
+    def testIgnoreHelpArgs2(self):
+        """In the case of calling 'cmd foo -- --help' the --help should just be regarded as a
+        regular positional argument because the '--' disables further option detection.
+        """
+        self.initParser()
+        self.add_arg("arg1")
+        self.add_arg("arg2")
+        args, _ = self.parse_known("foo -- --help", ignore_help_args=True)
+        self.assertEqual(args.arg1, "foo")
+        self.assertEqual(args.arg2, "--help")
+
     def testPositionalAndConfigVarLists(self):
         self.initParser()
         self.add_arg("a")

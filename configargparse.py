@@ -950,6 +950,7 @@ class ArgumentParser(argparse.ArgumentParser):
             a.is_positional_arg = not a.option_strings
 
         if ignore_help_args:
+            # FIXME - should stop scanning at '--'
             args = [arg for arg in args if arg not in ("-h", "--help")]
 
         # maps a string describing the source (eg. env var) to a settings dict
