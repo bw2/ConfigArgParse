@@ -2,7 +2,7 @@ name: unit tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, py313 ]
     tags:
       - '*'
   pull_request:
