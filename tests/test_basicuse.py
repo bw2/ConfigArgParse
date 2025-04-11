@@ -871,3 +871,44 @@ class TestBasicUseCases(TestCase):
         verbose=3""",
         )
         self.assertEqual(ns.verbose, 3)
+
+    def testCounterEnviron(self):
+        self.initParser()
+        self.add_arg("--verbose", "-v", action="count", default=0, env_var="VERBOSITY")
+
+        ns = self.parse(args="-v -v -v", env_vars={"VERBOSITY": "2"})
+        self.assertEqual(ns.verbose, 3)
+
+        # This is failing in 1.7 - we see ns.verbose == 5
+        ns = self.parse(args="-vvv", env_vars={"VERBOSITY": "2"})
+        self.assertEqual(ns.verbose, 3)
+
+    def testEnvWithCombinedShortArgs(self):
+        # This is not a serious bug, but it does show an inconsistency in the internal logic.
+        # See testCounterEnviron for a more serious manifestation.
+        self.initParser()
+
+        self.add_arg(
+            "-x", "--arg_x", action="store_true", default=False, env_var="ARG_X"
+        )
+        self.add_arg(
+            "-y", "--arg_y", action="store_true", default=False, env_var="ARG_Y"
+        )
+
+        env_vars = {"ARG_Y": "true", "ARG_X": "true"}
+
+        ns = self.parse(args="", env_vars=env_vars)
+        self.assertEqual((ns.arg_x, ns.arg_y), (True, True))
+        k1 = set(self.parser.get_source_to_settings_dict())
+        self.assertEqual(k1, {"environment_variables"})
+
+        ns = self.parse(args="-x -y", env_vars=env_vars)
+        self.assertEqual((ns.arg_x, ns.arg_y), (True, True))
+        k1 = set(self.parser.get_source_to_settings_dict())
+        self.assertEqual(k1, {"command_line"})
+
+        # This should be identical to the previous
+        ns = self.parse(args="-xy", env_vars=env_vars)
+        self.assertEqual((ns.arg_x, ns.arg_y), (True, True))
+        k1 = set(self.parser.get_source_to_settings_dict())
+        self.assertEqual(k1, {"command_line"})
