@@ -59,17 +59,6 @@ if test_argparse_source_code:
         "test_main": "_test_main",
     }
 
-    # This is stuff that should actually be implemented, then these replacements can be removed.
-    replacements.update(
-        {
-            r"^((\s*)def test_exit_on_error)": r"\2@unittest.expectedFailure\n\1",
-            r"^((\s*)def test_unrecognized_args)": r"\2@unittest.expectedFailure\n\1",
-            r"^((\s*)def test_unrecognized_intermixed_args)": r"\2@unittest.expectedFailure\n\1",
-            r"^((\s*)class TestIntermixedArgs)": r"\2@unittest.skip\n\1",
-            r"^((\s*)class TestIntermixedMessageContentError)": r"\2@unittest.expectedFailure\n\1",
-        }
-    )
-
     if remove_i18n_helper:
         # If we have just downloaded the single source file for the test then we also need
         # to remove an indirect dependency on test.test_tools and skip the i18n tests.

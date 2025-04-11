@@ -33,10 +33,11 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.rest, [1, 2, 3])
         self.assertEqual(args, [])
 
-        # Note that "2 3" are listed as unrecognised arguments by the regular ArgumentParser
+        # This is what the regular argument parser makes of unexpected arguments,
+        # when 'xval' cannot be interpreted as an int.
         self.assertParseArgsRaises(
-            "unrecognized arguments: --xxx xxxval 2 3",
-            args="doit 1 --xxx xxxval --foo bar 2 3",
+            "argument rest: invalid int value: 'xval'",
+            args="doit 1 --xxx xval --foo bar 2 3",
             intermixed=True,
         )
 
@@ -49,9 +50,9 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.rest, [1, 2, 3])
         self.assertEqual(args, [])
 
-        # As above, but now "--xxx xxxval" is in the config.
+        # As above, but now "--xxx 4" is in the config so we get a slightly different message
         self.assertParseArgsRaises(
-            "unrecognized arguments: --xxx=xxxval 2 3",
+            "unrecognized arguments: --xxx=xxxval",
             args="doit 1 --foo bar 2 3",
             config_file_contents="xxx: 'xxxval'",
             intermixed=True,
