@@ -100,3 +100,18 @@ class TestIssues(TestCase):
         )
 
         self.assertEqual(vars(options), dict(foo="environ_value", bar=["arg1", "arg2"]))
+
+    # This currently seems to run into a bug within argparse itself,
+    # or else I don't understand the expected behaviour
+    @unittest.expectedFailure
+    def test_issue_275_c_custom_char(self):
+        """Including ++ should also work if prefix_chars is set to '+'"""
+        p = configargparse.ArgParser(prefix_chars="+")
+        p.add("++foo", "+f", nargs="?", env_var="FOO", required=False)
+        p.add("bar", nargs="*")
+
+        options = p.parse_args(
+            args=["++", "arg1", "arg2"], env_vars=dict(FOO="environ_value")
+        )
+
+        self.assertEqual(vars(options), dict(foo="environ_value", bar=["arg1", "arg2"]))
