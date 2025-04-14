@@ -7,8 +7,10 @@ on:
       - '*'
 
 jobs:
-  deploy:
+  build_deploy_docs:
     runs-on: macos-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@master
