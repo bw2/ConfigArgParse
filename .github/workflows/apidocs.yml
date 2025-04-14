@@ -12,6 +12,9 @@ jobs:
     permissions:
       contents: write
 
+    env:
+      PROJECT_URL: ${{ github.workspace }}
+
     steps:
       - name: Checkout with tags
         uses: actions/checkout@master

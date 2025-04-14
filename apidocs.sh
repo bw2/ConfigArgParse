@@ -30,21 +30,21 @@ mkdir -vp "${docs_folder}"
 # the methods inherited from argparse.ArgumentParser, not only the methods that configargparse overrides.
 # And it help to have a better vision of the whole thing also.
 if [ ! -e argparse.py ] ; then
-    delete_argparse_py=1
     curl https://raw.githubusercontent.com/python/cpython/3.13/Lib/argparse.py > ./argparse.py
     echo "__docformat__ = 'restructuredtext'" >> ./argparse.py
-fi
 
-# Delete the file when the script exits
-if [ "${delete_argparse_py:-0}" = 1 ] ; then
+    # Delete the file when the script exits
     trap "rm -f argparse.py" EXIT
 fi
+
+# Allow the PROJECT_URL to be overridden by the caller
+PROJECT_URL="${PROJECT_URL:-https://github.com/bw2/ConfigArgParse}"
 
 set +e
 pydoctor \
     --project-name="ConfigArgParse ${project_version}" \
-    --project-url="https://github.com/bw2/ConfigArgParse" \
-    --html-viewsource-base="https://github.com/bw2/ConfigArgParse/tree/${git_sha}" \
+    --project-url="${PROJECT_URL}" \
+    --html-viewsource-base="${PROJECT_URL}/tree/${git_sha}" \
     --intersphinx=https://docs.python.org/3/objects.inv \
     --make-html \
     --quiet \
