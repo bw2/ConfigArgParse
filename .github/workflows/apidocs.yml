@@ -13,7 +13,7 @@ jobs:
       contents: write
 
     env:
-      PROJECT_URL: ${{ github.workspace }}
+      PROJECT_URL: ${{ github.server_url }}/${{ github.repository }}
 
     steps:
       - name: Checkout with tags
