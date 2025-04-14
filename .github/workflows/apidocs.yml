@@ -2,7 +2,7 @@ name: apidocs
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, apidocs_test ]
     tags:
       - '*'
 
@@ -12,19 +12,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@master
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.13
 
       - name: Install requirements for documentation generation
-        run: python -m pip install --upgrade pip setuptools wheel tox
+        run: python -m pip install --upgrade pip setuptools wheel pydoctor setuptools-git-versioning
 
       - name: Generate API documentation with pydoctor
-        run: tox -e apidocs
+        run: bash ./apidocs.sh
 
       - name: Push API documentation to Github Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./apidocs
