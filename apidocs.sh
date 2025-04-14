@@ -10,6 +10,7 @@ IFS=$'\n\t,'
 
 # Figure the project version
 project_version="$(setuptools-git-versioning)"
+printf 'Project version is %s, according to setuptools-git-versioning\n' "$project_version"
 
 # Figure commit ref or tag
 git_sha="$(git rev-parse HEAD)"

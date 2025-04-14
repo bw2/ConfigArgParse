@@ -13,7 +13,12 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@master
+      - name: Checkout with tags
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
