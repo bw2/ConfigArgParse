@@ -19,7 +19,7 @@ from io import StringIO
 
 import logging
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 ACTION_TYPES_THAT_DONT_NEED_A_VALUE = (
     argparse._StoreTrueAction,
@@ -32,12 +32,12 @@ ACTION_TYPES_THAT_DONT_NEED_A_VALUE = (
 if sys.version_info >= (3, 9):
     ACTION_TYPES_THAT_DONT_NEED_A_VALUE += (argparse.BooleanOptionalAction,)
 
-    def is_boolean_optional_action(action):
+    def _is_boolean_optional_action(action):
         return isinstance(action, argparse.BooleanOptionalAction)
 
 else:
 
-    def is_boolean_optional_action(action):
+    def _is_boolean_optional_action(action):
         return False
 
 
@@ -1285,7 +1285,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 with self._config_file_open_func(output_file_path, "w") as output_file:
                     output_file.write(file_contents)
 
-            logger.debug(f"Wrote config file to {', '.join(output_file_paths)}")
+            _logger.debug(f"Wrote config file to {', '.join(output_file_paths)}")
             if exit_after:
                 self.exit(0)
 
@@ -1375,7 +1375,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 self.get_command_line_key_for_unknown_config_file_setting(key)
             )
         else:
-            if not is_boolean_optional_action(action):
+            if not _is_boolean_optional_action(action):
                 command_line_key = action.option_strings[-1]
 
         # handle boolean value
@@ -1386,14 +1386,14 @@ class ArgumentParser(argparse.ArgumentParser):
                 value, str
             ), "config parser should convert anything that is not a list to string."
             if value.lower() in STRINGS_THAT_MEAN_YES:
-                if not is_boolean_optional_action(action):
+                if not _is_boolean_optional_action(action):
                     args.append(command_line_key)
                 else:
                     # --foo
                     args.append(action.option_strings[0])
             elif value.lower() in STRINGS_THAT_MEAN_NO:
                 # don't append when set to "false" / "no"
-                if not is_boolean_optional_action(action):
+                if not _is_boolean_optional_action(action):
                     pass
                 else:
                     # --no-foo
