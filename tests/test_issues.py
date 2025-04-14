@@ -8,6 +8,7 @@ import os, sys, re
 from textwrap import dedent
 import unittest
 from unittest.mock import patch
+from io import StringIO
 
 import configargparse
 
@@ -115,3 +116,16 @@ class TestIssues(TestCase):
         )
 
         self.assertEqual(vars(options), dict(foo="environ_value", bar=["arg1", "arg2"]))
+
+    def test_issue_pr_293(self):
+        """Handle pathlib Path used as default_config_files"""
+        from pathlib import Path
+
+        self.initParser(default_config_files=[Path("~/.my_settings.ini")])
+        self.add_arg("foo")
+        self.add_arg("--flag", help="Flag that can be set in the config file")
+
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            self.assertRaisesRegex(TypeError, "exit", self.parse_known, "--help")
+
+            self.assertRegex(mock_stdout.getvalue(), r"usage:")
