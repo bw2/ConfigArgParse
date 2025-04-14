@@ -106,10 +106,10 @@ class ConfigFileParser(object):
     def parse(self, stream):
         """Parses the keys and values from a config file.
 
-        NOTE: For keys that were specified to configargparse as
-        action="store_true" or "store_false", the config file value must be
-        one of: "yes", "no", "on", "off", "true", "false", "1", "0".
-        Otherwise an error will be raised.
+        .. note:: For keys that were specified to configargparse as
+          ``action="store_true"`` or ``"store_false"``, the config file value must be
+          one of: ``"yes", "no", "on", "off", "true", "false", "1", "0"``.
+          Otherwise an error will be raised.
 
         Args:
             stream (IO): A config file input stream (such as an open file object).
@@ -435,9 +435,12 @@ def unquote_str(text, triple=True):
     If the string is not detected as being a quoted representation, it returns the same string as passed.
     It supports all kinds of python quotes: ``\"\"\"``, ``'''``, ``"`` and ``'``.
 
-    :param triple: Also unquote tripple quoted strings.
-    @raises ValueError: If the string is detected as beeing quoted but literal_eval() fails to evaluate it as string.
-        This would be a bug in the regex.
+    :param text: The maybe-quoted text to unquote.
+    :param triple: Also unquote triple quoted strings.
+
+    :raises ValueError: If the string is detected as being quoted but ``literal_eval()`` fails to \
+    evaluate it as string. *This would be a bug in the regex.*
+
     """
     if is_quoted(text, triple=triple):
         try:
@@ -473,7 +476,7 @@ def parse_toml_section_name(section_name):
 
 def get_toml_section(data, section):
     """
-    Given some TOML data (as loaded with `toml.load()`), returns the requested section of the data.
+    Given some TOML data (as loaded with ``toml.load()``), returns the requested section of the data.
     Returns ``None`` if the section is not found.
     """
     sections = parse_toml_section_name(section) if isinstance(section, str) else section
@@ -494,6 +497,7 @@ class TomlConfigParser(ConfigFileParser):
     Create a TOML parser bounded to the list of provided sections.
 
     Example::
+
         # this is a comment
         [tool.my-software] # TOML section table.
         # how to specify a key-value pair
@@ -517,7 +521,7 @@ class TomlConfigParser(ConfigFileParser):
     Thought, any valid TOML config file will not be necessarly parsable with `IniConfigParser`
     (INI files must be rigorously indented, unlike TOML files).
 
-    See the `TOML specification <>`_ for details.
+    See the `TOML specification <https://toml.io/en/v1.0.0>`_ for details.
     """
 
     def __init__(self, sections):
@@ -613,8 +617,8 @@ class IniConfigParser(ConfigFileParser):
 
     def __init__(self, sections, split_ml_text_to_list):
         """
-        :param sections: The section names bounded to the new parser.
-        :split_ml_text_to_list: Wether to convert multiline strings to list
+        :param sections: The section names bound to the new parser.
+        :param split_ml_text_to_list: Whether to convert multiline strings to list
         """
         super().__init__()
         self.sections = sections
@@ -691,7 +695,8 @@ class IniConfigParser(ConfigFileParser):
 
 
 class CompositeConfigParser(ConfigFileParser):
-    """Create a config parser composed by others `ConfigFileParser`s.
+    """
+    Create a config parser composed by other `ConfigFileParser` types.
 
     The composite parser will successively try to parse the file with each parser,
     until it succeeds, else raise execption with all encountered errors.
@@ -749,7 +754,7 @@ class ArgumentParser(argparse.ArgumentParser):
         r"""Supports args of the `argparse.ArgumentParser` constructor
         as \*\*kwargs, as well as the following additional args.
 
-        Arguments:
+        Keyword Arguments:
             add_config_file_help: Whether to add a description of config file
                 syntax to the help message.
             add_env_var_help: Whether to add something to the help message for
@@ -1722,7 +1727,7 @@ def add_argument(self, *args, **kwargs):
     This method supports the same args as ArgumentParser.add_argument(..)
     as well as the additional args below.
 
-    Arguments:
+    Keyword Arguments:
         env_var: If set, the value of this environment variable will override
             any config file or default values for this arg (but can itself
             be overridden on the commandline). Also, if auto_env_var_prefix is

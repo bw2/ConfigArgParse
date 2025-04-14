@@ -28,8 +28,9 @@ pip-log.txt
 .tox
 htmlcov
 
-# Local copies of test_argparse.py for unit testing
-local_test_*.py
+# Local copies of test_argparse.py for unit testing and argparse.py for doc building
+/local_test_*.py
+/argparse.py
 
 # Translations
 *.mo

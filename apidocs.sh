@@ -29,10 +29,16 @@ mkdir -vp "${docs_folder}"
 # We generate the docs for the argparse module too, such that we can document
 # the methods inherited from argparse.ArgumentParser, not only the methods that configargparse overrides.
 # And it help to have a better vision of the whole thing also.
-curl https://raw.githubusercontent.com/python/cpython/3.13/Lib/argparse.py > ./argparse.py
-echo "__docformat__ = 'restructuredtext'" >> ./argparse.py
+if [ ! -e argparse.py ] ; then
+    delete_argparse_py=1
+    curl https://raw.githubusercontent.com/python/cpython/3.13/Lib/argparse.py > ./argparse.py
+    echo "__docformat__ = 'restructuredtext'" >> ./argparse.py
+fi
+
 # Delete the file when the script exits
-trap "rm -f ./argparse.py" EXIT
+if [ "${delete_argparse_py:-0}" = 1 ] ; then
+    trap "rm -f argparse.py" EXIT
+fi
 
 set +e
 pydoctor \
