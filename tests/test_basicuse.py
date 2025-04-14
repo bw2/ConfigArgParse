@@ -882,8 +882,9 @@ class TestBasicUseCases(TestCase):
         ns = self.parse(args="-vvv", env_vars={"VERBOSITY": "2"})
         self.assertEqual(ns.verbose, 3)
 
-    @expectedFailure
     def testCounterEnviron2(self):
+        # As above but with a numeral not a letter. Initial fix did
+        # not work in this case.
         self.add_arg("-1", dest="oneness", action="count", default=0, env_var="ONENESS")
 
         # This is failing in 1.7 - we see ns.verbose == 5

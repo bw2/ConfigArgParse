@@ -1488,16 +1488,23 @@ class ArgumentParser(argparse.ArgumentParser):
             if arg_string[0] in prefix_chars and "=" in arg_string:
                 option_string, explicit_arg = arg_string.split("=", 1)
                 arg_names.append(option_string)
-            elif arg_string[0] in prefix_chars and re.fullmatch(
-                r"[a-zA-Z]+", arg_string[1:]
+            elif arg_string[0] in prefix_chars and not any(
+                c in prefix_chars for c in arg_string[1:]
             ):
                 # Special case for combined single letter args like '-tvaf' or '-vvv'
-                # FIXME: This is hacky and can fail - eg. see
-                #    tests.test_basicuse.TestBasicUseCases.testCounterEnviron2
-                # But a robust fix will mean considering all the other potential_command_line_args
-                arg_names.extend(
-                    f"{arg_string[0]}{letter}" for letter in arg_string[1:]
-                )
+                # But we have to be sure that this arg string does not match *any* possible
+                # option_strings for any other actions before splitting it out.
+                if any(
+                    arg_string in a.option_strings
+                    for a in self._actions
+                    if not a.is_positional_arg
+                ):
+                    arg_names.append(arg_string)
+                else:
+                    # Split out
+                    arg_names.extend(
+                        f"{arg_string[0]}{letter}" for letter in arg_string[1:]
+                    )
             else:
                 arg_names.append(arg_string)
 
