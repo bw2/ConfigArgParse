@@ -22,13 +22,21 @@ example_configs = Path(__file__).parent.absolute() / "example_configs"
 """
 Scenario 1 - Making it so that a specific argument cannot be set within the config file.
 
-For this we'll use the DefaultConfigFileParser class. We can subclass this and %%%%.
+For this we'll use the DefaultConfigFileParser class. We can subclass this and define a
+tweak_value() method.
 """
 
 
 class CustomConfigFileParser1(configargparse.DefaultConfigFileParser):
 
-    pass
+    def tweak_value(self, key, value):
+        if key == "setting2":
+            # Return None, to completely ignore this setting
+            return None
+
+        # For other cases, make sure you return the original value or else all the values
+        # will be ignored.
+        return value
 
 
 def demo_forbidden_arg():
@@ -47,7 +55,8 @@ def demo_forbidden_arg():
 
     # We should only be able to set setting1 on the command line; any config value will be
     # ignored.
-    # So here, res1.setting1 will be "foo", but res1.setting2 will be None
+    # So here, res1.setting1 will be "foo", but res1.setting2 will be None even though it
+    # is in the config file.
     res1 = ap.parse_args([])
 
     # Here, res2.setting1 will be "foofoo" and res2.setting2 will be "barbar"

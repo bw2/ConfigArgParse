@@ -70,12 +70,12 @@ class TestConfigFileParsers(TestCase):
                 "_b": "c",
                 "_list_arg1": ["a", "b", "c"],
                 "_str_arg": "true",
-                "_list_arg2": [1, 2, 3],
+                "_list_arg2": ["1", "2", "3"],
             },
         )
 
         self.assertListEqual(parsed_obj["_list_arg1"], ["a", "b", "c"])
-        self.assertListEqual(parsed_obj["_list_arg2"], [1, 2, 3])
+        self.assertListEqual(parsed_obj["_list_arg2"], ["1", "2", "3"])
 
     def testDefaultConfigFileParser_BasicValues(self):
         p = configargparse.DefaultConfigFileParser()
@@ -365,9 +365,9 @@ class TestConfigFileParsers(TestCase):
         config_lines = [
             "a: '3'",
             "list_arg:",
-            "- 1",
-            "- 2",
-            "- 3",
+            "- '1'",
+            "- '2'",
+            "- '3'",
         ]
 
         # test parse
@@ -378,7 +378,7 @@ class TestConfigFileParsers(TestCase):
         output_config_str = p.serialize(parsed_obj)
         self.assertEqual(input_config_str.getvalue(), output_config_str)
 
-        self.assertDictEqual(parsed_obj, {"a": "3", "list_arg": [1, 2, 3]})
+        self.assertDictEqual(parsed_obj, {"a": "3", "list_arg": ["1", "2", "3"]})
 
     @unittest.skipUnless("yaml" in globals(), "PyYAML not installed")
     def testYAMLConfigFileParser_w_ArgumentParser_parsed_values(self):

@@ -135,6 +135,38 @@ class ConfigFileParser(object):
         """
         raise NotImplementedError("serialize(..) not implemented")
 
+    def _tweak_value(self, key, value):
+        """Ensure that all tweaked values really are strings, or list of strings,
+        or none, in order to update the collection of values.
+        """
+        value = self.tweak_value(key, value)
+
+        # Seems a little weird, but anything that is not a list is converted to string,
+        # It will be converted back to boolean, int or whatever after.
+        # Because config values are still passed to argparser for computation.
+        if value is None:
+            return {}
+        elif isinstance(value, list):
+            # We allow lists of strings, or, for compatibility with action="append",
+            # lists of lists of strings.
+            if all(isinstance(v, list) for v in value):
+                return {key: [[str(v) for v in sublist] for sublist in value]}
+            else:
+                return {key: [str(v) for v in value]}
+        else:
+            return {key: str(value)}
+
+    def tweak_value(self, key, value):
+        """This function may be overridden in custom ConfigFileParser subclasses
+        to allow for modification or values or other side effects when a value is
+        found in a config file.
+
+        Function may return a list, or None to skip the item, or anything else will be
+        turned into a string.
+        """
+        # Default version simply returns the value unmodified
+        return value
+
 
 class ConfigFileParserException(Exception):
     """Raised when config file parsing failed."""
@@ -196,7 +228,7 @@ class DefaultConfigFileParser(ConfigFileParser):
                 key = match.group("key")
                 equal = match.group("equal")
                 value = match.group("value")
-                comment = match.group("comment")
+                comment = match.group("comment")  # not currently used
                 if value is None and equal is not None and equal != " ":
                     value = ""
                 elif value is None:
@@ -209,9 +241,9 @@ class DefaultConfigFileParser(ConfigFileParser):
                         # for backward compatibility with legacy format
                         # (eg. where config value is [a, b, c] instead of proper json ["a", "b", "c"]
                         value = [elem.strip() for elem in value[1:-1].split(",")]
-                if comment:
-                    comment = comment.strip()[1:].strip()
-                items[key] = value
+
+                # Allow for post-modification of values by subclass
+                items.update(self._tweak_value(key, value))
             else:
                 raise ConfigFileParserException(
                     "Unexpected line {} in {}: {}".format(
@@ -280,11 +312,8 @@ class ConfigparserConfigFileParser(ConfigFileParser):
                     # ensure not a dict with a list value
                     prelist_string = multiLine2SingleLine.split("[")[0]
                     if "{" not in prelist_string:
-                        result[k] = literal_eval(multiLine2SingleLine)
-                    else:
-                        result[k] = multiLine2SingleLine
-                else:
-                    result[k] = multiLine2SingleLine
+                        multiLine2SingleLine = literal_eval(multiLine2SingleLine)
+                result.update(self._tweak_value(key, multiLine2SingleLine))
         return result
 
     def serialize(self, items):
@@ -358,12 +387,9 @@ class YAMLConfigFileParser(ConfigFileParser):
 
         result = OrderedDict()
         for key, value in parsed_obj.items():
-            if isinstance(value, list):
-                result[key] = value
-            elif value is None:
-                pass
-            else:
-                result[key] = str(value)
+
+            # Allow for subclasses to tweak the values
+            result.update(self._tweak_value(key, value))
 
         return result
 
@@ -550,16 +576,10 @@ class TomlConfigParser(ConfigFileParser):
         for section in self.sections:
             data = get_toml_section(config, section)
             if data:
-                # Seems a little weird, but anything that is not a list is converted to string,
-                # It will be converted back to boolean, int or whatever after.
-                # Because config values are still passed to argparser for computation.
                 for key, value in data.items():
-                    if isinstance(value, list):
-                        result[key] = value
-                    elif value is None:
-                        pass
-                    else:
-                        result[key] = str(value)
+                    result.update(self._tweak_value(key, value))
+
+                # once we found the data, no need to look further
                 break
 
         return result
