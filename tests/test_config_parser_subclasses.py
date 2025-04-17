@@ -170,6 +170,65 @@ This was inspired by https://github.com/bw2/ConfigArgParse/pull/261
 """
 
 
+class RecursiveConfigFileParser(configargparse.DefaultConfigFileParser):
+    """
+    A custom parser that recognises the special parameter name 'config' and
+    loads the corresponding config file recursively.
+    """
+
+    def __init__(self, config_key, already_seen_files=None):
+        # What is the name of the special config item that loads a new file? eg. "config"
+        self.config_key = config_key
+
+        # We'll keep a list of files already processed, to allow detection of recursive
+        # includes and prevent an infinite loop.
+        self.already_seen_files = set()
+
+        if already_seen_files:
+            self.already_seen_files.update(already_seen_files)
+
+        super().__init__()
+
+    def tweak_value(self, key, value, filepath):
+        if key == self.config_key:
+            # Create a new parser and parse the included file(s)
+            if isinstance(value, str):
+                value = [value]
+            for conf_file in value:
+                if conf_file in self.already_seen_files:
+                    # Do not visit the same file again
+                    continue
+
+                self.already_seen_files.add(conf_file)
+
+                new_parser = RecursiveConfigFileParser(self.already_seen_files)
+                new_values = new_parser.parse(conf_file)
+
+        else:
+
+            return value
+
+
+def demo_recursive_config():
+    """
+    Loading tests/example_configs/multiconf_0.ini should get values from all the linked
+    config files.
+    """
+    ap = configargparse.ArgumentParser(
+        config_file_parser_class=RecursiveConfigFileParser("config")
+    )
+
+    ap.add_argument("--config", type=Path, is_config_file=True)
+    ap.add_argument("--arg_0", type=str)
+    ap.add_argument("--arg_1", type=str)
+    ap.add_argument("--arg_2", type=str)
+
+    # Here, res should be: NameSpace(arg_0="conf_0", arg_1="conf_1", arg_2="conf_3")
+    res = ap.parse_args(["--config", str(example_configs / "multiconf_0.ini")])
+
+    return res
+
+
 ### Unit tests below this line for use with "python -munittest"
 
 from tests.test_base import TestCase
@@ -196,3 +255,12 @@ class TestConfigParserSubclasses(TestCase):
 
         self.assertEqual(res1.mydict, dict(foo="A", bar="B", baz="C"))
         self.assertEqual(res2.mydict, dict(beep="X", meep="Y"))
+
+    def test_recursive_parse(self):
+
+        res = demo_recursive_config()
+
+        self.assertEqual(list(vars(res)), ["arg_0", "arg_1", "arg_2"])
+        self.assertEqual(
+            vars(res), dict(arg_0="conf_0", arg_1="conf_1", arg_2="conf_3")
+        )

@@ -95,7 +95,7 @@ class ArgumentDefaultsRawHelpFormatter(
     pass
 
 
-class ConfigFileParser(object):
+class ConfigFileParser:
     """This abstract class can be extended to add support for new config file
     formats"""
 
@@ -840,9 +840,7 @@ class ArgumentParser(argparse.ArgumentParser):
         ignore_unknown_config_file_keys = kwargs.pop(
             "ignore_unknown_config_file_keys", False
         )
-        config_file_parser_class = kwargs.pop(
-            "config_file_parser_class", DefaultConfigFileParser
-        )
+        config_file_parser_class = kwargs.pop("config_file_parser_class", None)
         args_for_setting_config_path = kwargs.pop("args_for_setting_config_path", [])
         config_arg_is_required = kwargs.pop("config_arg_is_required", False)
         config_arg_help_message = kwargs.pop(
@@ -866,9 +864,12 @@ class ArgumentParser(argparse.ArgumentParser):
 
         super().__init__(*args, **kwargs)
 
-        # parse the additional args
+        # set up the ConfigFileParser instance
         if config_file_parser_class is None:
             self._config_file_parser = DefaultConfigFileParser()
+        elif isinstance(config_file_parser_class, ConfigFileParser):
+            # So this is not a class - it's already an instance of a parser. Just use it.
+            self._config_file_parser = config_file_parser_class
         else:
             self._config_file_parser = config_file_parser_class()
 
