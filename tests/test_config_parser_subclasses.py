@@ -23,7 +23,9 @@ example_configs = Path(__file__).parent.absolute() / "example_configs"
 Scenario 1 - Making it so that a specific argument cannot be set within the config file.
 
 For this we'll use the DefaultConfigFileParser class. We can subclass this and define a
-tweak_value() method.
+tweak_value() method.a
+
+This was inspired by https://github.com/bw2/ConfigArgParse/issues/301
 """
 
 
@@ -73,17 +75,19 @@ def demo_forbidden_arg():
 Scenario 2 - Allowing for dictionaries to be put into an argument via the config file
 
 There is no direct support for dict-type args within the regular Python argparse module, but it
-can be achieved by using a custom action class. For example:
+can be achieved by using a custom action class. For example, running:
 
 $ mycmd.py --mydict foo=A bar=B baz=C
 
-And we expect args.mydict to then be set to {'foo': "A", 'bar': "B", 'baz': "C"}
+We would like args.mydict to then be set to {'foo': "A", 'bar': "B", 'baz': "C"}
 
 This is demonstrated with the custom DictAction class below.
 
 To extend this idea to work with ConfigArgParse, we add a corresponding custom ConfigFileParser
-to correctly handle these dicts. This makes most sense with the YAMLConfigFileParser, because YAML
-allows for structures like nested dicts.
+to correctly back-translate these dicts to lists of strings. This makes most sense with the
+YAMLConfigFileParser, because YAML allows for structures like nested dicts.
+
+This was inspired by https://github.com/bw2/ConfigArgParse/issues/258
 """
 import argparse
 
@@ -157,6 +161,13 @@ def demo_dict_config():
     res2 = ap.parse_args("--mydict beep=X meep=Y".split())
 
     return res1, res2
+
+
+"""
+Scenario 3 - Allowing a config file to include other config files.
+
+This was inspired by https://github.com/bw2/ConfigArgParse/pull/261
+"""
 
 
 ### Unit tests below this line for use with "python -munittest"
