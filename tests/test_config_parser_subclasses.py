@@ -1,10 +1,10 @@
 """
-This code serves as a demonstration of how to implement custom behaviour by subclassing the
+This file serves as a demonstration of how to implement custom behaviour by subclassing the
 ConfigFileParser classes provided in the main module.
 
 We'll demonstrate three scenarios, in increasing order of complexity.
 
- 1) Making it so that an argument cannot be set within the config file.
+ 1) Making it so that a specific argument cannot be set within the config file.
  2) Allowing dictionaries to be used as item values in the config file.
  3) Allowing a config file to include other config files.
 
@@ -12,9 +12,10 @@ Note: This demo code is kept within the unit tests of ConfigArgParse so that it 
 tested and guaranteed to work.
 """
 
+import os
 import configargparse
 
-# This finds the correct path to the directory where the sample config files are kept
+# This gets us the correct path to the directory where the sample config files are kept
 from pathlib import Path
 
 example_configs = Path(__file__).parent.absolute() / "example_configs"
@@ -22,8 +23,8 @@ example_configs = Path(__file__).parent.absolute() / "example_configs"
 """
 Scenario 1 - Making it so that a specific argument cannot be set within the config file.
 
-For this we'll use the DefaultConfigFileParser class. We can subclass this and define a
-tweak_value() method.a
+For this we'll use the DefaultConfigFileParser class. We can subclass this and define our own
+tweak_value() method.
 
 This was inspired by https://github.com/bw2/ConfigArgParse/issues/301
 """
@@ -35,18 +36,17 @@ class ForbiddenArgConfigFileParser(configargparse.DefaultConfigFileParser):
     # catch both.
     forbidden_args = ["setting2", "--setting2"]
 
-    def tweak_value(self, key, value):
+    def tweak_value(self, key, value, filename):
         if key in self.forbidden_args:
-            # Return None, to completely ignore this setting
-            return None
+            # Set value to None, to completely ignore this setting
+            value = None
 
-        # For other cases, make sure you return the original value or else all the values
-        # will be ignored.
-        return value
+        # tweak_value() should always return {key: value}
+        return {key: value}
 
 
 def demo_forbidden_arg():
-    """This function demonstrates how to use the CustomConfigFileParser1 class"""
+    """This function demonstrates how to use the ForbiddenArgConfigFileParser class"""
 
     # We can create an ArgumentParser using the custom parser subclass
     # The file 'example_configs/example1.ini' contains these lines:
@@ -59,10 +59,10 @@ def demo_forbidden_arg():
     ap.add_argument("--setting1")
     ap.add_argument("--setting2")
 
-    # We should only be able to set setting1 on the command line; any config value will be
-    # ignored.
+    # We should only be able to set setting1 on the command line; any config file value
+    # will be ignored.
     # So here, res1.setting1 will be "foo", but res1.setting2 will be None even though it
-    # is in the config file.
+    # appears in the config file.
     res1 = ap.parse_args([])
 
     # Here, res2.setting1 will be "foofoo" and res2.setting2 will be "barbar"
@@ -100,10 +100,12 @@ class DictAction(argparse.Action):
 
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         if nargs not in ["*", "+"]:
-            # Any arg using this action may allow the dict to be empty or not
+            # Any arg using this action may allow the dict to be empty or not, but those
+            # are the only possibilities.
             raise ValueError("nargs must be set to either '*' or '+'")
         super().__init__(option_strings, dest, nargs=nargs, **kwargs)
 
+    # Whan making a custom argparse.Action we override the __call__() method
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, dict(arg.split("=", 1) for arg in values))
 
@@ -120,19 +122,23 @@ def demo_dict_arg():
     return res
 
 
+# Now to make this work with configargparse...
+
+
 class DictYAMLConfigFileParser(configargparse.YAMLConfigFileParser):
     """
     A custom parser to match with the custom action above
     """
 
-    def tweak_value(self, key, value):
+    def tweak_value(self, key, value, filename):
         if isinstance(value, dict):
-            # Check than no keys contain "="
+            # Check that no keys contain "="
             if any("=" in k for k in value):
                 raise ValueError("dict keys containing '=' cannot be encoded")
-            return [f"{k}={v}" for k, v in value.items()]
-        else:
-            return value
+            value = [f"{k}={v}" for k, v in value.items()]
+
+        # We always need to return {key: value}
+        return {key: value}
 
 
 def demo_dict_config():
@@ -166,6 +172,11 @@ def demo_dict_config():
 """
 Scenario 3 - Allowing a config file to include other config files.
 
+The regular configargparse module does not allow you to set arguments that are flagged
+is "is_config_file=True" in the config files themselves. That is, you can't specify a
+second config file within the main config file. However, we can add this behaviour to a
+custom subclass.
+
 This was inspired by https://github.com/bw2/ConfigArgParse/pull/261
 """
 
@@ -187,32 +198,42 @@ class RecursiveConfigFileParser(configargparse.DefaultConfigFileParser):
         if already_seen_files:
             self.already_seen_files.update(already_seen_files)
 
+        # Must call the suporclass constructor - DefaultConfigFileParser takes no args
         super().__init__()
 
-    def tweak_value(self, key, value, filepath):
+    def tweak_value(self, key, value, filename):
         if key == self.config_key:
-            # Create a new parser and parse the included file(s)
+            # Found the config key. Create a new parser and parse the included file(s)
+            newdict = dict()
+            # Allow for lists of files or single names
             if isinstance(value, str):
                 value = [value]
             for conf_file in value:
+                # Get the path of this config file relative to the parent file
+                conf_file = os.path.join(os.path.dirname(filename), conf_file)
+
                 if conf_file in self.already_seen_files:
                     # Do not visit the same file again
                     continue
 
                 self.already_seen_files.add(conf_file)
 
-                new_parser = RecursiveConfigFileParser(self.already_seen_files)
-                new_values = new_parser.parse(conf_file)
+                new_parser = RecursiveConfigFileParser(
+                    self.config_key, self.already_seen_files
+                )
+                with open(conf_file) as stream:
+                    newdict.update(new_parser.parse(stream))
 
+            # We now return all the values
+            return newdict
         else:
-
-            return value
+            return {key: value}
 
 
 def demo_recursive_config():
     """
     Loading tests/example_configs/multiconf_0.ini should get values from all the linked
-    config files.
+    config files, and avoid an infinite recursion.
     """
     ap = configargparse.ArgumentParser(
         config_file_parser_class=RecursiveConfigFileParser("config")
@@ -247,7 +268,7 @@ class TestConfigParserSubclasses(TestCase):
 
         res = demo_dict_arg()
 
-        self.assertEqual(list(vars(res)), ["mydict"])
+        self.assertCountEqual(vars(res), ["mydict"])
         self.assertEqual(res.mydict, dict(foo="A", bar="B", baz="C"))
 
         # And with the config file
@@ -260,7 +281,13 @@ class TestConfigParserSubclasses(TestCase):
 
         res = demo_recursive_config()
 
-        self.assertEqual(list(vars(res)), ["arg_0", "arg_1", "arg_2"])
+        self.assertCountEqual(vars(res), ["config", "arg_0", "arg_1", "arg_2"])
         self.assertEqual(
-            vars(res), dict(arg_0="conf_0", arg_1="conf_1", arg_2="conf_3")
+            vars(res),
+            dict(
+                config=res.config,  # This path will vary
+                arg_0="conf_0",
+                arg_1="conf_1",
+                arg_2="conf_3",
+            ),
         )

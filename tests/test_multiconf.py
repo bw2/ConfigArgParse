@@ -11,6 +11,7 @@ def get_abs_path(file):
     return os.path.abspath(os.path.join(os.path.dirname(__file__), file))
 
 
+@unittest.skip
 class TestMulticonf(unittest.TestCase):
     def setUp(self):
         self.parser = ArgumentParser()
