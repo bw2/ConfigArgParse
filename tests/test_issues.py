@@ -132,19 +132,41 @@ class TestIssues(TestCase):
 
     def test_issue_265(self):
 
-        # This can't be tested by using config_file_contents, so use a mock_open
-        mo = mock_open(read_data="option=foo")
+        # This can't be tested by using config_file_contents, so use a tmpFile
+        with self.tmpFile() as tf:
+            conf_filename = tf.name
+            print("option=foo", file=tf)
 
-        p = configargparse.ArgumentParser(config_file_open_func=mo)
+        p = configargparse.ArgumentParser()
         p.add_argument("first_arg")
         p.add_argument("config", is_config_file=True)
         p.add_argument("--option")
 
-        ns, rest = p.parse_known_args(["first", "config.ini"])
-
-        mo.assert_called_once_with("config.ini")
+        ns, rest = p.parse_known_args(["first", conf_filename])
 
         self.assertEqual(rest, [])
         self.assertEqual(
-            vars(ns), dict(first_arg="first", config="config.ini", option="foo")
+            vars(ns), dict(first_arg="first", config=conf_filename, option="foo")
+        )
+
+    def test_issue_292(self):
+        # Now we should be able to get at the command line by inspecting
+        # parser.last_parsed_args
+        with self.tmpFile() as tf:
+            conf_filename = tf.name
+            print("option=[foo]", file=tf)
+
+        p = configargparse.ArgumentParser()
+        p.add_argument("first_arg")
+        p.add_argument("--option", nargs="*")
+        p.add_argument("--config", is_config_file=True)
+        p.add_argument("--another", env_var="ANOTHER")
+
+        ns, rest = p.parse_known_args(
+            ["first", "--config", conf_filename], env_vars=dict(ANOTHER="aaa")
+        )
+
+        self.assertEqual(
+            p.last_parsed_args,
+            ["first", "--option", "foo", "--another=aaa", "--config", conf_filename],
         )

@@ -867,6 +867,10 @@ class ArgumentParser(argparse.ArgumentParser):
 
         super().__init__(*args, **kwargs)
 
+        # Once parse_args() is called, you can retrieve the effective list of args,
+        # including all items from config files and env vars, here
+        self.last_parsed_args = None
+
         # set up the ConfigFileParser instance
         if config_file_parser_class is None:
             self._config_file_parser = DefaultConfigFileParser()
@@ -953,8 +957,8 @@ class ArgumentParser(argparse.ArgumentParser):
     def _parse_args_cap(
         self, intermixed, args, namespace, config_file_contents, env_vars
     ):
-        """This is the actual implementation of parse_known_args (with intermixed=False) or
-        parse_known_intermixed_args (with intermixed=True).
+        """This is the actual implementation of parse_args (with intermixed=False) or
+        parse_intermixed_args (with intermixed=True).
         """
         args, argv = self._parse_known_args_cap(
             intermixed=intermixed,
@@ -1264,6 +1268,9 @@ class ArgumentParser(argparse.ArgumentParser):
             namespace, unknown_args = super().parse_known_args(
                 args=args, namespace=namespace
             )
+
+        # Save the args in case the user wishes to look at them
+        self.last_parsed_args = args
 
         # handle any args that have is_write_out_config_file_arg set to true
         # check if the user specified this arg on the commandline
