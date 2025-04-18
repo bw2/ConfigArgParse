@@ -2,11 +2,12 @@
 This file serves as a demonstration of how to implement custom behaviour by subclassing the
 ConfigFileParser classes provided in the main module.
 
-We'll demonstrate three scenarios, in increasing order of complexity.
+We'll demonstrate four scenarios, in increasing order of complexity.
 
  1) Making it so that a specific argument cannot be set within the config file.
- 2) Allowing dictionaries to be used as item values in the config file.
- 3) Allowing a config file to include other config files.
+ 2) Detecting when a value is set both on the command line and in a config file.
+ 3) Allowing dictionaries to be used as item values in the config file.
+ 4) Allowing a config file to include other config files.
 
 Note: This demo code is kept within the unit tests of ConfigArgParse so that it will always be
 tested and guaranteed to work.
@@ -64,15 +65,79 @@ def demo_forbidden_arg():
     # So here, res1.setting1 will be "foo", but res1.setting2 will be None even though it
     # appears in the config file.
     res1 = ap.parse_args([])
+    assert res1.setting1 == "foo" and res1.setting2 == None
 
     # Here, res2.setting1 will be "foofoo" and res2.setting2 will be "barbar"
     res2 = ap.parse_args(["--setting1", "foofoo", "--setting2", "barbar"])
+    assert res2.setting1 == "foofoo" and res2.setting2 == "barbar"
 
     return res1, res2
 
 
 """
-Scenario 2 - Allowing for dictionaries to be put into an argument via the config file
+Scenario 2 - Detecting when a value in a config file is overridden on the command line
+
+We can ask configargparse to show the source of all the parsed arguments using format_values(),
+but this does not reveal if any given argument was in two places. To get around this, we can
+subclass the DefaultConfigFileParser to make a version that remembers all the items it sees in
+the config file, whether they are on the command line or not.
+"""
+
+
+class LoggingConfigFileParser(configargparse.DefaultConfigFileParser):
+
+    def __init__(self):
+        # Make a list to store the values wee see
+        self.all_values_seen = []
+        super().__init__()
+
+    def tweak_value(self, key, value, filename):
+        # Remember everything that we see
+        stripped_key = key.lstrip("-")  # Remove any optional -- prefix
+        self.all_values_seen.append((stripped_key, value, filename))
+
+        # tweak_value() should always return {key: value}
+        return {key: value}
+
+
+def demo_logging_parser():
+
+    myparser = LoggingConfigFileParser()
+    ap = configargparse.ArgumentParser(config_file_parser_class=myparser)
+
+    # The file 'example_configs/example1.ini' contains these lines:
+    #     setting1: foo
+    #     setting2: bar
+    ap.add_argument("--config", type=Path, nargs="+", is_config_file=True)
+    ap.add_argument("--setting1")
+    ap.add_argument("--setting2")
+    ap.add_argument("--setting3")
+
+    # If we parse the following, all three items will be set
+    #  res.setting2 will be "wibble", not "bar", as the command line overrides the config.
+    res = ap.parse_args(
+        [
+            "--config",
+            str(example_configs / "example1.ini"),
+            "--setting2",
+            "wibble",
+            "--setting3",
+            "bibble",
+        ]
+    )
+
+    # We can now see if any values were overridden. Note that this is only going to work for
+    # simple string values as it relies on a string comparison.
+    for key, value, file in myparser.all_values_seen:
+        val_as_str = str(getattr(res, key))
+        if val_as_str != value:
+            print(
+                f"--{key} was set to {val_as_str}, overriding {value} in config file {file}"
+            )
+
+
+"""
+Scenario 3 - Allowing for dictionaries to be put into an argument via the config file
 
 There is no direct support for dict-type args within the regular Python argparse module, but it
 can be achieved by using a custom action class. For example, running:
@@ -170,7 +235,7 @@ def demo_dict_config():
 
 
 """
-Scenario 3 - Allowing a config file to include other config files.
+Scenario 4 - Allowing a config file to include other config files.
 
 The regular configargparse module does not allow you to set arguments that are flagged
 is "is_config_file=True" in the config files themselves. That is, you can't specify a
@@ -254,6 +319,7 @@ def demo_recursive_config():
 
 from tests.test_base import TestCase
 import unittest
+from unittest.mock import patch
 import logging
 
 try:
@@ -270,6 +336,19 @@ class TestConfigParserSubclasses(TestCase):
 
         self.assertEqual(vars(res1), dict(setting1="foo", setting2=None))
         self.assertEqual(vars(res2), dict(setting1="foofoo", setting2="barbar"))
+
+    def test_arg_logging(self):
+
+        with patch("builtins.print") as patched_print:
+            res = demo_logging_parser()
+
+            pp_calls = patched_print.mock_calls
+
+        self.assertEqual(len(pp_calls), 1)
+        self.assertRegex(
+            " ".join(pp_calls[0].args),
+            r"--setting2 was set to wibble, overriding bar in config file .*example1\.ini",
+        )
 
     @unittest.skipUnless("yaml" in globals(), "PyYAML not installed")
     def test_dict_arg(self):
