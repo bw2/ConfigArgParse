@@ -1,22 +1,24 @@
 ConfigArgParse
 --------------
 
-.. image:: https://img.shields.io/pypi/v/ConfigArgParse.svg?style=flat
-    :alt: PyPI version
-    :target: https://pypi.python.org/pypi/ConfigArgParse
+..
+    .. image:: https://img.shields.io/pypi/v/ConfigArgParse.svg?style=flat
+        :alt: PyPI version
+        :target: https://pypi.python.org/pypi/ConfigArgParse
 
-.. image:: https://img.shields.io/pypi/pyversions/ConfigArgParse.svg
-    :alt: Supported Python versions
-    :target: https://pypi.python.org/pypi/ConfigArgParse
+    .. image:: https://img.shields.io/pypi/pyversions/ConfigArgParse.svg
+        :alt: Supported Python versions
+        :target: https://pypi.python.org/pypi/ConfigArgParse
 
-.. image:: https://static.pepy.tech/badge/configargparse/week
-    :alt: Downloads per week
-    :target: https://pepy.tech/project/configargparse
+    .. image:: https://static.pepy.tech/badge/configargparse/week
+        :alt: Downloads per week
+        :target: https://pepy.tech/project/configargparse
 
-.. image:: https://img.shields.io/badge/-API_Documentation-blue
-    :alt: API Documentation
-    :target: https://bw2.github.io/ConfigArgParse/
+    .. image:: https://img.shields.io/badge/-API_Documentation-blue
+        :alt: API Documentation
+        :target: https://bw2.github.io/ConfigArgParse/
 
+This is a development fork of https://github.com/bw2/ConfigArgParse.
 
 Overview
 ~~~~~~~~
