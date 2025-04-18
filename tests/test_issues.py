@@ -7,7 +7,7 @@ No fixes without a test case!
 import os, sys, re
 from textwrap import dedent
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
 from io import StringIO
 
 import configargparse
@@ -129,3 +129,22 @@ class TestIssues(TestCase):
             self.assertRaisesRegex(TypeError, "exit", self.parse_known, "--help")
 
             self.assertRegex(mock_stdout.getvalue(), r"usage:")
+
+    def test_issue_265(self):
+
+        # This can't be tested by using config_file_contents, so use a mock_open
+        mo = mock_open(read_data="option=foo")
+
+        p = configargparse.ArgumentParser(config_file_open_func=mo)
+        p.add_argument("first_arg")
+        p.add_argument("config", is_config_file=True)
+        p.add_argument("--option")
+
+        ns, rest = p.parse_known_args(["first", "config.ini"])
+
+        mo.assert_called_once_with("config.ini")
+
+        self.assertEqual(rest, [])
+        self.assertEqual(
+            vars(ns), dict(first_arg="first", config="config.ini", option="foo")
+        )

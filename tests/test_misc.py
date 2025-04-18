@@ -55,6 +55,9 @@ class TestMisc(TestCase):
             ValueError, self.add_arg, "c", action="store_false", is_config_file=True
         )
 
+        # Given that ValueError was raised, the arg should not have been added
+        self.assertEqual([a for a in self.parser._actions if a.dest == "c"], [])
+
         self.add_arg("-c", "--config", is_config_file=True)
         self.add_arg("--x", required=True)
 
@@ -67,11 +70,16 @@ class TestMisc(TestCase):
             self.assertEqual(ns.x, "bla")
 
     def testConstructor_ConfigFileArgs(self):
+        # We had some issues with unclosed files
+        import tracemalloc
+
+        tracemalloc.start()
+
         # Test constructor args:
         #   args_for_setting_config_path
         #   config_arg_is_required
         #   config_arg_help_message
-        with self.tmpFile() as temp_cfg:
+        with self.tmpFile() as temp_cfg, self.tmpFile() as temp_cfg2:
             temp_cfg.write("genome=hg19")
             temp_cfg.flush()
 
@@ -84,15 +92,14 @@ class TestMisc(TestCase):
             self.add_arg("--genome", help="Path to genome file", required=True)
             self.assertParseArgsRaises("arguments are required: -c/--config", args="")
 
-            with self.tmpFile() as temp_cfg2:
-                ns = self.parse("-c " + temp_cfg2.name)
-                self.assertEqual(ns.genome, "hg19")
+            ns = self.parse("-c " + temp_cfg2.name)
+            self.assertEqual(ns.genome, "hg19")
 
-                # temp_cfg2 config file should override default config file values
-                temp_cfg2.write("genome=hg20")
-                temp_cfg2.flush()
-                ns = self.parse("-c " + temp_cfg2.name)
-                self.assertEqual(ns.genome, "hg20")
+            # temp_cfg2 config file should override default config file values
+            temp_cfg2.write("genome=hg20")
+            temp_cfg2.flush()
+            ns = self.parse("-c " + temp_cfg2.name)
+            self.assertEqual(ns.genome, "hg20")
 
             self.assertRegex(
                 self.format_help(),

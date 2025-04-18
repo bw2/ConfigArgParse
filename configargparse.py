@@ -1180,20 +1180,24 @@ class ArgumentParser(argparse.ArgumentParser):
         if config_file_contents is not None:
             stream = StringIO(config_file_contents)
             stream.name = "method arg"
-            config_streams = [stream]
+            config_streams.append(stream)
         elif not skip_config_file_parsing:
-            config_streams = self._open_config_files(args)
+            config_streams.extend(self._open_config_files(args))
 
         # parse each config file
-        for stream in reversed(config_streams):
-            try:
-                config_items = self._config_file_parser.parse(stream)
-            except ConfigFileParserException as e:
-                self._error_may_exit(str(e))
-            finally:
-                with suppress(AttributeError):
+        all_config_items = []
+        try:
+            for stream in reversed(config_streams):
+                try:
+                    all_config_items.append(self._config_file_parser.parse(stream))
+                except ConfigFileParserException as e:
+                    self._error_may_exit(str(e))
+        finally:
+            with suppress(AttributeError):
+                for stream in config_streams:
                     stream.close()
 
+        for config_items in all_config_items:
             # add each config item to the commandline unless it's there already
             config_args = []
             for key, value in config_items.items():
@@ -1555,6 +1559,43 @@ class ArgumentParser(argparse.ArgumentParser):
         Returns:
             list[IO]: open config files
         """
+        # try to parse out the config file path by using a clean new
+        # ArgumentParser that only knows the config actions and positional args
+        mini_arg_parser = argparse.ArgumentParser(
+            prefix_chars=self.prefix_chars, add_help=False
+        )
+
+        # We don't want to see misleading errors from mini_arg_parser, or have it exit.
+        # TODO - once Python 3.8 is unsupported, we can set exit_on_error=False and avoid
+        # such monkey patching.
+        def error_method(_, msg):
+            raise argparse.ArgumentError(None, msg)
+
+        mini_arg_parser.error = types.MethodType(error_method, mini_arg_parser)
+
+        config_actions = []
+        for action in self._actions:
+            try:
+                if action.is_config_file_arg:
+                    config_actions.append(action)
+                    mini_arg_parser._add_action(action)
+                elif action.is_positional_arg:
+                    # Add the arg, but make it optional
+                    mini_arg_parser.add(action.dest, nargs="?")
+            except AttributeError:
+                # We ignore these
+                pass
+
+        if config_actions:
+            try:
+                ns, _ = mini_arg_parser.parse_known_args(args=command_line_args)
+            except argparse.ArgumentError:
+                # Allow the main ArgumentParser to generate the full error
+                return []
+        else:
+            # No reason to call the mini_arg_parser
+            ns = None
+
         # open any default config files
         config_files = []
         for files in map(
@@ -1563,44 +1604,21 @@ class ArgumentParser(argparse.ArgumentParser):
             for f in files:
                 config_files.append(self._config_file_open_func(f))
 
-        # list actions with is_config_file_arg=True. Its possible there is more
-        # than one such arg.
-        user_config_file_arg_actions = [
-            a for a in self._actions if getattr(a, "is_config_file_arg", False)
-        ]
+        # check whether the user provided any config files, disregrading any other
+        # positional args added to mini_arg_parser
+        user_config_files = []
+        for config_action in config_actions:
+            # Could be a list
+            config_val = getattr(ns, config_action.dest)
+            if isinstance(config_val, list):
+                user_config_files.extend(config_val)
+            elif config_val:
+                user_config_files.append(config_val)
 
-        if not user_config_file_arg_actions:
-            return config_files
-
-        for action in user_config_file_arg_actions:
-            # try to parse out the config file path by using a clean new
-            # ArgumentParser that only knows this one arg/action.
-            arg_parser = argparse.ArgumentParser(
-                prefix_chars=self.prefix_chars, add_help=False
-            )
-
-            arg_parser._add_action(action)
-
-            # make parser not exit on error by replacing its error method.
-            # Otherwise it sys.exits(..) if, for example, config file
-            # is_required=True and user doesn't provide it.
-            def error_method(self, message):
-                pass
-
-            arg_parser.error = types.MethodType(error_method, arg_parser)
-
-            # check whether the user provided a value
-            parsed_arg = arg_parser.parse_known_args(args=command_line_args)
-            if not parsed_arg:
-                continue
-            namespace, _ = parsed_arg
-            user_config_file = getattr(namespace, action.dest, None)
-
-            if not user_config_file:
-                continue
-
+        for user_config_file in user_config_files:
             # open user-provided config file
             user_config_file = os.path.expanduser(user_config_file)
+
             try:
                 stream = self._config_file_open_func(user_config_file)
             except Exception as e:
@@ -1610,16 +1628,14 @@ class ArgumentParser(argparse.ArgumentParser):
                     msg = str(e)
                 # close previously opened config files
                 for config_file in config_files:
-                    try:
+                    with suppress(Exception):
                         config_file.close()
-                    except Exception:
-                        pass
                 self._error_may_exit(
                     f"Unable to open config file: {user_config_file!r}. "
                     f"Error: {msg}"
                 )
 
-            config_files += [stream]
+            config_files.append(stream)
 
         return config_files
 
@@ -1788,18 +1804,24 @@ def add_argument(self, *args, **kwargs):
     action.is_config_file_arg = is_config_file_arg
     action.is_write_out_config_file_arg = is_write_out_config_file_arg
 
-    if action.is_positional_arg and env_var:
-        raise ValueError("env_var can't be set for a positional arg.")
-    if action.is_config_file_arg and not isinstance(action, argparse._StoreAction):
-        raise ValueError("arg with is_config_file_arg=True must have " "action='store'")
-    if action.is_write_out_config_file_arg:
-        error_prefix = "arg with is_write_out_config_file_arg=True "
-        if not isinstance(action, argparse._StoreAction):
-            raise ValueError(error_prefix + "must have action='store'")
-        if is_config_file_arg:
+    try:
+        if action.is_positional_arg and env_var:
+            raise ValueError("env_var can't be set for a positional arg.")
+        if action.is_config_file_arg and not isinstance(action, argparse._StoreAction):
             raise ValueError(
-                error_prefix + "can't also have " "is_config_file_arg=True"
+                "arg with is_config_file_arg=True must have " "action='store'"
             )
+        if action.is_write_out_config_file_arg:
+            error_prefix = "arg with is_write_out_config_file_arg=True "
+            if not isinstance(action, argparse._StoreAction):
+                raise ValueError(error_prefix + "must have action='store'")
+            if is_config_file_arg:
+                raise ValueError(
+                    error_prefix + "can't also have " "is_config_file_arg=True"
+                )
+    except Exception as e:
+        self._remove_action(action)
+        raise e from None
 
     return action
 
