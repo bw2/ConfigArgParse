@@ -317,15 +317,10 @@ def demo_recursive_config():
 
 ### Unit tests below this line for use with "python -munittest"
 
-from tests.test_base import TestCase
+from tests.test_base import TestCase, yaml
 import unittest
 from unittest.mock import patch
 import logging
-
-try:
-    import yaml
-except ModuleNotFoundError:
-    logging.warning("PyYAML not installed. Cannot test YAMLConfigFileParser")
 
 
 class TestConfigParserSubclasses(TestCase):
@@ -350,7 +345,7 @@ class TestConfigParserSubclasses(TestCase):
             r"--setting2 was set to wibble, overriding bar in config file .*example1\.ini",
         )
 
-    @unittest.skipUnless("yaml" in globals(), "PyYAML not installed")
+    @unittest.skipUnless(yaml, "PyYAML not installed")
     def test_dict_arg(self):
 
         res = demo_dict_arg()

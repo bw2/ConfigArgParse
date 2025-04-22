@@ -15,6 +15,12 @@ logger.level = logging.WARNING
 stream_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stream_handler)
 
+try:
+    import yaml
+except ModuleNotFoundError:
+    yaml = None
+    logger.warning("PyYAML not installed. Cannot test YAMLConfigFileParser")
+
 
 def replace_error_method(arg_parser):
     """Swap out arg_parser's error(..) method so that instead of calling

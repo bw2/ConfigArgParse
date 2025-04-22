@@ -12,7 +12,7 @@ from io import StringIO
 
 import configargparse
 
-from tests.test_base import TestCase
+from tests.test_base import TestCase, yaml
 
 
 class TestIssues(TestCase):
@@ -169,4 +169,108 @@ class TestIssues(TestCase):
         self.assertEqual(
             p.last_parsed_args,
             ["first", "--option", "foo", "--another=aaa", "--config", conf_filename],
+        )
+
+    @unittest.skipUnless(yaml, "PyYAML not installed")
+    def test_issue_296(self):
+        """User complains that empty YAML config items and empty env vars act differently,
+        but that's not quite right - there is no way for an env var to distinguish
+        between None and '' and <absent>.
+
+        I do think there is a case that empty env vars and config lines should be considered
+        as absent for list values, as it's very rare to want an actual empty string
+        and if you really need one you can make one explicitly - [""]. However this would
+        require making a special case for these.
+
+        This test confirms the status quo, which is consistent if slightly counterintuitive.
+        """
+        self.initParser(config_file_parser_class=configargparse.YAMLConfigFileParser)
+
+        # Tests for YAML config parser. We want to test all these possibilities:
+        # <absent> (with and without an env var)
+        # None     (for: YAML) (for cmdline this could be --no-arg but that's only for booleans)
+        # ""       (for: YAML, cmdline, env)
+        # []       (for: YAML, cmdline, env)
+        # [""]     (for: YAML, env) (for cmdline this is the same as "")
+
+        self.add_arg("--absent_no_env", nargs="*", env_var=False)
+        self.add_arg("--absent_with_env", nargs="*", env_var="UNSET")
+
+        self.add_arg("--null_in_yaml", nargs="*")
+        self.add_arg("--blank_in_yaml", nargs="*")  # Same as None/null
+
+        self.add_arg("--empty_str_in_yaml", nargs="*")
+        self.add_arg("--empty_str_cmdline", nargs="*")
+        self.add_arg("--empty_str_in_env", nargs="*", env_var="EMPTY_STR")
+
+        self.add_arg("--empty_list_in_yaml", nargs="*")
+        self.add_arg("--empty_list_cmdline", nargs="*")
+        self.add_arg("--empty_list_in_env", nargs="*", env_var="EMPTY_LIST")
+
+        self.add_arg("--empty_str_in_list_in_yaml", nargs="*")
+        self.add_arg("--empty_str_in_list_in_env", nargs="*", env_var="EMPTY_STR_LIST")
+
+        env = dict(EMPTY_STR="", EMPTY_LIST="[]", EMPTY_STR_LIST='[""]')
+        config_lines = [
+            "null_in_yaml: null",
+            "blank_in_yaml:",
+            'empty_str_in_yaml: ""',
+            "empty_list_in_yaml: []",
+            'empty_str_in_list_in_yaml: [""]',
+        ]
+        ns = self.parse(
+            ["--empty_list_cmdline", "--empty_str_cmdline", ""],
+            config_file_contents=("\n".join(config_lines)),
+            env_vars=env,
+        )
+
+        self.assertEqual(
+            vars(ns),
+            {
+                "absent_no_env": None,
+                "absent_with_env": None,
+                "null_in_yaml": None,
+                "blank_in_yaml": None,
+                "empty_str_in_yaml": [""],
+                "empty_str_cmdline": [""],
+                "empty_str_in_env": [""],
+                "empty_list_in_yaml": [],
+                "empty_list_cmdline": [],
+                "empty_list_in_env": [],
+                "empty_str_in_list_in_yaml": [""],
+                "empty_str_in_list_in_env": [""],
+            },
+        )
+
+        # What about with a regular config file?
+        self.initParser()
+
+        self.add_arg("--absent", nargs="*")
+        self.add_arg("--blank_in_conf", nargs="*")
+        self.add_arg("--null_in_conf", nargs="*")
+        self.add_arg("--empty_str_in_conf", nargs="*")
+        self.add_arg("--empty_list_in_conf", nargs="*")
+        self.add_arg("--empty_str_in_list_in_conf", nargs="*")
+
+        config_lines = [
+            "blank_in_conf:",
+            "null_in_conf: null",
+            'empty_str_in_conf: ""',
+            "empty_list_in_conf: []",
+            'empty_str_in_list_in_conf: [""]',
+        ]
+        ns = self.parse(
+            [], config_file_contents=("\n".join(config_lines)), env_vars=dict()
+        )
+
+        self.assertEqual(
+            vars(ns),
+            {
+                "absent": None,
+                "blank_in_conf": [""],  # same as empty string
+                "null_in_conf": ["null"],  # null is not a special word!
+                "empty_str_in_conf": [""],
+                "empty_list_in_conf": [],
+                "empty_str_in_list_in_conf": [""],
+            },
         )
