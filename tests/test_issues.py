@@ -274,3 +274,74 @@ class TestIssues(TestCase):
                 "empty_str_in_list_in_conf": [""],
             },
         )
+
+    def test_issue_287(self):
+        """
+        Very similar to 296 above. Empty list in config file.
+        """
+        self.initParser()
+        self.add_arg("--absent", nargs="*")
+        self.add_arg("--empty_list_in_conf", nargs="*")
+
+        config_lines = ["empty_list_in_conf = []"]
+        ns = self.parse(
+            [], config_file_contents=("\n".join(config_lines)), env_vars=dict()
+        )
+
+        self.assertEqual(vars(ns), {"absent": None, "empty_list_in_conf": []})
+
+    @patch("configargparse.glob")
+    def test_issue_142(self, patched_glob):
+        """
+        Adding -h as a short option is broken?
+        """
+        # This only manifests when the config is set via "default_config_files"
+        # not when fed in via config_file_contents, so a mock open is used to
+        # simulate reading the config, and we also need a mock glob to pretend the
+        # file exists.
+        config_lines = (
+            "host = host_from_config\nextra = extra_from_config\nport = 8080\n"
+        )
+        mockopener = mock_open(read_data=config_lines)
+        patched_glob.glob.return_value = ["test.conf"]
+
+        self.initParser(
+            add_help=False,
+            default_config_files=["test.conf"],
+            config_file_open_func=mockopener,
+        )
+        self.add_arg("--help", action="help", help="Show help message")
+        self.add_arg("-h", "--host", default="localhost", help="hostname1")
+        self.add_arg("-e", "--extra", default="localhost", help="hostname2")
+        self.add_arg("-p", "--port", type=int, default=80, help="port")
+
+        # This works fine
+        res1 = self.parse([])
+        self.assertEqual(
+            vars(res1),
+            dict(host="host_from_config", extra="extra_from_config", port=8080),
+        )
+
+        # This too
+        res2 = self.parse(["--extra", "extra_from_cmdline"])
+        self.assertEqual(
+            vars(res2),
+            dict(host="host_from_config", extra="extra_from_cmdline", port=8080),
+        )
+
+        # This is the problem. Using '-h' on the command line puts the port
+        # back to 8080 (and ignores the config file in general)
+        res3 = self.parse(["-h", "host_from_cmdline"])
+        self.assertEqual(
+            vars(res3),
+            dict(host="host_from_cmdline", extra="extra_from_config", port=8080),
+        )
+
+        # Using the long form works fine
+        res4 = self.parse(
+            ["--host", "host_from_cmdline"], config_file_contents=config_lines
+        )
+        self.assertEqual(
+            vars(res4),
+            dict(host="host_from_cmdline", extra="extra_from_config", port=8080),
+        )
