@@ -1,9 +1,10 @@
 import argparse
 import configargparse
-from unittest import mock
+import unittest
+from unittest.mock import patch
 from io import StringIO
 
-from tests.test_base import TestCase
+from tests.test_base import TestCase, replace_error_method
 
 
 class TestMisc(TestCase):
@@ -11,8 +12,8 @@ class TestMisc(TestCase):
 
     """Test edge cases"""
 
-    @mock.patch("argparse.ArgumentParser.__repr__")
-    @mock.patch("argparse.ArgumentParser.__init__")
+    @patch("argparse.ArgumentParser.__repr__")
+    @patch("argparse.ArgumentParser.__init__")
     def testKwrgsArePassedToArgParse(self, argparse_init, argparse_repr):
         kwargs_for_argparse = {"allow_abbrev": False, "whatever_other_arg": "something"}
 
@@ -414,3 +415,27 @@ class TestMisc(TestCase):
             "Unable to open config file: 'file.txt'. Error: custom error",
             args="-g file.txt",
         )
+
+    @unittest.expectedFailure
+    def test_custom_prefix_booleanoptionalaction(self):
+        """
+        The BooleanOptionalAction in the underlying argumentparser module does not properly
+        respect the prefix_char setting.
+        """
+        ap = replace_error_method(argparse.ArgumentParser(prefix_chars="+-"))
+
+        ap.add_argument("++foo", action=argparse.BooleanOptionalAction, default=True)
+        ap.add_argument("--bar", action=argparse.BooleanOptionalAction, default=True)
+
+        # This is fine
+        res1 = ap.parse_args(["++foo", "--bar"])
+        self.assertEqual(vars(res1), dict(foo=True, bar=True))
+
+        # This works as expected
+        res2 = ap.parse_args(["--no-bar"])
+        self.assertEqual(vars(res2), dict(foo=True, bar=False))
+
+        # This does not parse. If we inspect ap._actions we will see there is no option
+        # available to turn off "++foo".
+        res3 = ap.parse_args(["++no-foo"])
+        self.assertEqual(vars(res3), dict(foo=False, bar=True))
