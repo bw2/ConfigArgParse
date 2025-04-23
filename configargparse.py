@@ -901,9 +901,12 @@ class ArgumentParser(argparse.ArgumentParser):
             )
 
     def get_possible_help_args(self):
-        """Returns ["--help", "-h"] but accounting for prefix_chars"""
+        """Returns eg. ["--help", "-h"] but accounting for custom setup"""
         return [
-            poss_arg for c in self.prefix_chars for poss_arg in [f"{c}{c}help", f"{c}h"]
+            poss_arg
+            for a in self._actions
+            for poss_arg in a.option_strings
+            if isinstance(a, argparse._HelpAction)
         ]
 
     def get_possible_double_minus(self):
@@ -1164,12 +1167,11 @@ class ArgumentParser(argparse.ArgumentParser):
                 ]
             )
 
-        # before parsing any config files, check if -h was specified.
-        supports_help_arg = any(
-            a for a in self._actions if isinstance(a, argparse._HelpAction)
-        )
-        skip_config_file_parsing = supports_help_arg and (
-            any(arg in self.get_possible_help_args() for arg in args[:double_minus_pos])
+        # before parsing any config files, check if -h or equivalent was specified.
+        skip_config_file_parsing = any(
+            self.already_on_command_line(args, a.option_strings)
+            for a in self._actions
+            if isinstance(a, argparse._HelpAction)
         )
 
         # prepare for reading config file(s)

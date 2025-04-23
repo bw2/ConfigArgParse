@@ -295,10 +295,10 @@ class TestIssues(TestCase):
         """
         Adding -h as a short option is broken?
         """
-        # This only manifests when the config is set via "default_config_files"
-        # not when fed in via config_file_contents, so a mock open is used to
-        # simulate reading the config, and we also need a mock glob to pretend the
-        # file exists.
+        # This only manifested when the config is set via "default_config_files" or
+        # a config_files option, not when fed in via config_file_contents, so a mock
+        # open is used here to simulate reading the config, and we also need a mock glob
+        # to pretend the file exists.
         config_lines = (
             "host = host_from_config\nextra = extra_from_config\nport = 8080\n"
         )
@@ -329,19 +329,26 @@ class TestIssues(TestCase):
             dict(host="host_from_config", extra="extra_from_cmdline", port=8080),
         )
 
-        # This is the problem. Using '-h' on the command line puts the port
-        # back to 8080 (and ignores the config file in general)
-        res3 = self.parse(["-h", "host_from_cmdline"])
+        # And this, setting config_file_contents directly
+        res3 = self.parse(
+            ["-h", "host_from_cmdline"], config_file_contents=config_lines
+        )
         self.assertEqual(
             vars(res3),
             dict(host="host_from_cmdline", extra="extra_from_config", port=8080),
         )
 
-        # Using the long form works fine
-        res4 = self.parse(
-            ["--host", "host_from_cmdline"], config_file_contents=config_lines
-        )
+        # Here was the problem. Using '-h' on the command line puts the port
+        # back to 8080 (and ignores the config file in general)
+        res4 = self.parse(["-h", "host_from_cmdline"])
         self.assertEqual(
             vars(res4),
+            dict(host="host_from_cmdline", extra="extra_from_config", port=8080),
+        )
+
+        # But using the long form works fine
+        res5 = self.parse(["--host", "host_from_cmdline"])
+        self.assertEqual(
+            vars(res5),
             dict(host="host_from_cmdline", extra="extra_from_config", port=8080),
         )
