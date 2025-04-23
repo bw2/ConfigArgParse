@@ -27,8 +27,10 @@ pip-log.txt
 .coverage
 .tox
 htmlcov
-#tox.ini
-#nosetests.xml
+
+# Local copies of test_argparse.py for unit testing and argparse.py for doc building
+/local_test_*.py
+/argparse.py
 
 # Translations
 *.mo
