@@ -71,10 +71,10 @@ class TestMisc(TestCase):
             self.assertEqual(ns.x, "bla")
 
     def testConstructor_ConfigFileArgs(self):
-        # We had some issues with unclosed files
-        import tracemalloc
-
-        tracemalloc.start()
+        # We had some issues with unclosed files. This was useful, but it does not
+        # work on PyPy
+        # import tracemalloc
+        # tracemalloc.start()
 
         # Test constructor args:
         #   args_for_setting_config_path
