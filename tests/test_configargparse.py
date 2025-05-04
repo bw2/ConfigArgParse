@@ -271,9 +271,9 @@ class TestBasicUseCases(TestCase):
                 '  -h, --help \\s+ show this help message and exit\n'
                 '  --genome GENOME \\s+ Path to genome file\n'
                 '  -v\n'
-                '  -g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE\n'
-                '  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
-                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n'%OPTIONAL_ARGS_STRING +
+                '  -g( MY_CFG_FILE)?, --my-cfg-file MY_CFG_FILE\n'
+                '  -d( DBSNP)?, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
+                '  -f( FRMT)?, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n'%OPTIONAL_ARGS_STRING +
                 7*r'(.+\s*)')
         else:
             self.assertRegex(self.format_help(),
@@ -286,10 +286,10 @@ class TestBasicUseCases(TestCase):
                 'g1:\n'
                 '  --genome GENOME \\s+ Path to genome file\n'
                 '  -v\n'
-                '  -g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE\n\n'
+                '  -g( MY_CFG_FILE)?, --my-cfg-file MY_CFG_FILE\n\n'
                 'g2:\n'
-                '  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
-                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n'%OPTIONAL_ARGS_STRING +
+                '  -d( DBSNP)?, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
+                '  -f( FRMT)?, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n'%OPTIONAL_ARGS_STRING +
                 7*r'(.+\s*)')
 
         self.assertParseArgsRaises("invalid choice: 'ZZZ'",
@@ -387,9 +387,9 @@ class TestBasicUseCases(TestCase):
             ' \\s*-f2 TYPE2_CFG_FILE\\)\\s+\\(-f FRMT \\| -b\\)\n\n'
             '%s:\n'
             '  -h, --help            show this help message and exit\n'
-            '  -f1 TYPE1_CFG_FILE, --type1-cfg-file TYPE1_CFG_FILE\n'
-            '  -f2 TYPE2_CFG_FILE, --type2-cfg-file TYPE2_CFG_FILE\n'
-            '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n'
+            '  -f1( TYPE1_CFG_FILE)?, --type1-cfg-file TYPE1_CFG_FILE\n'
+            '  -f2( TYPE2_CFG_FILE)?, --type2-cfg-file TYPE2_CFG_FILE\n'
+            '  -f( FRMT)?, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n'
             '  -b, --bam\\s+\\[env var: BAM_FORMAT\\]\n\n'
             'group1:\n'
             '  --genome GENOME       Path to genome file\n'
@@ -875,7 +875,7 @@ class TestMisc(TestCase):
             'usage: .* \\[-h\\] -c CONFIG_FILE --genome GENOME\n\n'
             '%s:\n'
             '  -h, --help\\s+ show this help message and exit\n'
-            '  -c CONFIG_FILE, --config CONFIG_FILE\\s+ my config file\n'
+            '  -c( CONFIG_FILE)?, --config CONFIG_FILE\\s+ my config file\n'
             '  --genome GENOME\\s+ Path to genome file\n\n'%OPTIONAL_ARGS_STRING +
             5*r'(.+\s*)')
 
@@ -935,8 +935,8 @@ class TestMisc(TestCase):
             r'\[-w CONFIG_OUTPUT_PATH\]\s* --arg1\s+ARG1\s*\[--flag\]\s*'
             '%s:\\s*'
             '-h, --help \\s* show this help message and exit '
-            r'-c CONFIG_FILE, --config CONFIG_FILE\s+my config file '
-            r'-w CONFIG_OUTPUT_PATH, --write-config CONFIG_OUTPUT_PATH takes '
+            r'-c( CONFIG_FILE)?, --config CONFIG_FILE\s+my config file '
+            r'-w( CONFIG_OUTPUT_PATH)?, --write-config CONFIG_OUTPUT_PATH takes '
             r'the current command line args and writes them '
             r'out to a config file at the given path, then exits '
             r'--arg1 ARG1 Arg1 help text '
@@ -1533,7 +1533,8 @@ else:
     test_argparse_source_code = test_argparse_source_code.replace(
         'argparse.ArgumentParser', 'configargparse.ArgumentParser').replace(
         'TestHelpFormattingMetaclass', '_TestHelpFormattingMetaclass').replace(
-        'test_main', '_test_main')
+        'test_main', '_test_main').replace(
+        'test_exit_on_error', '_test_exit_on_error')
 
     # pytest tries to collect tests from TestHelpFormattingMetaclass, and
     # test_main, and raises a warning when it finds it's not a test class
