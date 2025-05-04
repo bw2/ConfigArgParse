@@ -7,7 +7,7 @@
   <head>
     
     <title>configargparse</title>
-    <meta name="generator" content="pydoctor 23.4.1"> 
+    <meta name="generator" content="pydoctor 24.11.2"> 
         
     </meta>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
@@ -15,6 +15,7 @@
     <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="apidocs.css" />
     <link rel="stylesheet" type="text/css" href="extra.css" />
+    
 </head>
 
   <body>
@@ -52,7 +53,7 @@
             
             <span class="input-group-btn">
               <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
-              <a class="btn btn-default" id="search-help-button" title="Help" onclick="toggleSearchHelpText()"><img src="fonts/info.svg" alt="Help" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
             </span>
           </div>
         </div>
@@ -76,39 +77,6 @@
             <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
         </noscript>
 
-        <div class="hint" id="search-help-box">
-          <p class="rst-last">
-      
-            Search bar offers the following options:
-            <ul>   
-                <li>
-                  <strong>Term presence.</strong> The below example searches for documents that 
-                    must contain “foo”, might contain “bar” and must not contain “baz”: <code>+foo bar -baz</code>
-                </li> 
-
-                <li>
-                  <strong>Wildcards.</strong> The below example searches for documents with words beginning with “foo”: <code>foo*</code>
-                </li> 
-
-                <li>
-                  <strong>Search in specific fields.</strong> The following search matches all objects 
-                  in "twisted.mail" that matches “search”: <code>+qname:twisted.mail.* +search</code>
-
-                  <p>
-                    Possible fields: 'name', 'qname' (fully qualified name), 'docstring', and 'kind'.
-                    Last two fields are only applicable if "search in docstrings" is enabled.
-                  </p>
-                </li>
-
-                <li>
-                  <strong>Fuzzy matches.</strong> The following search matches all documents 
-                  that have a word within 1 edit distance of “foo”: <code>foo~1</code>
-                </li>
-            </ul>
-
-          </p>
-        </div>
-
         <div id="search-status"> </div>
 
         <div class="warning" id="search-warn-box" style="display: none;">
@@ -119,8 +87,8 @@
           <!-- Filled dynamically by JS -->
         </table>
         
-        <div style="margin-top: 8px;">
-          <p>Results provided by <a href="https://lunrjs.com">Lunr.js</a></p>
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
         </div>
       </div>
 
@@ -475,7 +443,7 @@
         </div>
 
         <div class="extrasDocstring">
-          <a href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py" class="sourceLink">(source)</a>
+          <a href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py" class="sourceLink">(source)</a>
           <p></p>
         </div>
 
@@ -496,7 +464,7 @@
     
     <td>Class</td>
     <td><code><a href="configargparse.ArgumentParser.html" class="internal-link" title="configargparse.ArgumentParser"><wbr></wbr>Argument<wbr></wbr>Parser</a></code></td>
-    <td>Drop-in replacement for <code><a href="argparse.ArgumentParser.html" class="internal-link">argparse.ArgumentParser</a></code> that adds support for environment variables and <tt class="rst-docutils literal">.ini</tt> or <tt class="rst-docutils literal"><span class="pre">.yaml-style</span></tt> config files.</td>
+    <td>Drop-in replacement for <code><a href="argparse.ArgumentParser.html" class="internal-link">argparse.ArgumentParser</a></code> that adds support for environment variables and <tt class="rst-docutils rst-literal">.ini</tt> or <tt class="rst-docutils rst-literal"><span class="pre">.yaml-style</span></tt> config files.</td>
   </tr><tr class="class">
     
     <td>Class</td>
@@ -531,7 +499,7 @@
     
     <td>Class</td>
     <td><code><a href="configargparse.YAMLConfigFileParser.html" class="internal-link" title="configargparse.YAMLConfigFileParser"><wbr></wbr>YAMLConfig<wbr></wbr>File<wbr></wbr>Parser</a></code></td>
-    <td>Parses YAML config files. Depends on the PyYAML module. <a class="rst-reference external" href="https://pypi.python.org/pypi/PyYAML" target="_top">https://pypi.python.org/pypi/PyYAML</a></td>
+    <td>Parses YAML config files. Depends on the PyYAML module. <a class="rst-external rst-reference" href="https://pypi.python.org/pypi/PyYAML" target="_top">https://pypi.python.org/pypi/PyYAML</a></td>
   </tr><tr class="exception">
     
     <td>Exception</td>
@@ -556,7 +524,7 @@
     
     <td>Function</td>
     <td><code><a href="#get_toml_section" class="internal-link" title="configargparse.get_toml_section">get<wbr></wbr>_toml<wbr></wbr>_section</a></code></td>
-    <td>Given some TOML data (as loaded with <code>toml.load()</code>), returns the requested section of the data. Returns <tt class="rst-docutils literal">None</tt> if the section is not found.</td>
+    <td>Given some TOML data (as loaded with <code>toml.load()</code>), returns the requested section of the data. Returns <tt class="rst-docutils rst-literal">None</tt> if the section is not found.</td>
   </tr><tr class="function">
     
     <td>Function</td>
@@ -576,10 +544,10 @@
     
     <td>Function</td>
     <td><code><a href="#unquote_str" class="internal-link" title="configargparse.unquote_str">unquote<wbr></wbr>_str</a></code></td>
-    <td>Unquote a maybe quoted string representation. If the string is not detected as being a quoted representation, it returns the same string as passed. It supports all kinds of python quotes: <tt class="rst-docutils literal">"""</tt>, <tt class="rst-docutils literal">'''</tt>, <tt class="rst-docutils literal">"</tt> and ...</td>
-  </tr><tr class="constant">
+    <td>Unquote a maybe quoted string representation. If the string is not detected as being a quoted representation, it returns the same string as passed. It supports all kinds of python quotes: <tt class="rst-docutils rst-literal">"""</tt>, <tt class="rst-docutils rst-literal">'''</tt>, <tt class="rst-docutils rst-literal">"</tt> and ...</td>
+  </tr><tr class="variable">
     
-    <td>Constant</td>
+    <td>Variable</td>
     <td><code><a href="#ACTION_TYPES_THAT_DONT_NEED_A_VALUE" class="internal-link" title="configargparse.ACTION_TYPES_THAT_DONT_NEED_A_VALUE">ACTION<wbr></wbr>_TYPES<wbr></wbr>_THAT<wbr></wbr>_DONT<wbr></wbr>_NEED<wbr></wbr>_A<wbr></wbr>_VALUE</a></code></td>
     <td><span class="undocumented">Undocumented</span></td>
   </tr><tr class="variable">
@@ -643,7 +611,7 @@
     
     
     <span class="py-keyword">def</span> <span class="py-defname">add_argument</span><span class="function-signature">(self, *args, **kwargs)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L1365">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L1365">
       
       (source)
     </a>
@@ -656,7 +624,7 @@
   <div class="docstring functionBody">
     
     <div><p>This method supports the same args as ArgumentParser.add_argument(..)
-as well as the additional args below.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">self</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">env<wbr></wbr>_var</span></td><td class="fieldArgDesc">If set, the value of this environment variable will override
+as well as the additional args below.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">self</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">env<wbr></wbr>_var</span></td><td class="fieldArgDesc">If set, the value of this environment variable will override
 any config file or default values for this arg (but can itself
 be overridden on the commandline). Also, if auto_env_var_prefix is
 set in the constructor, this env var name will be used instead of
@@ -667,7 +635,7 @@ Default: False</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg"
 config file path, and, when it is specified, will cause
 configargparse to write all current commandline args to this file
 as config options and then exit.
-Default: False</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="argparse.Action.html" class="internal-link">argparse.Action</a></code></td><td class="fieldArgDesc">the new argparse action</td></tr></table></div>
+Default: False</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="argparse.Action.html" class="internal-link">argparse.Action</a></code></td><td class="fieldArgDesc">the new argparse action</td></tr></table></div>
   </div>
 </div><div class="basefunction">
   
@@ -682,7 +650,7 @@ Default: False</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2"
     
     
     <span class="py-keyword">def</span> <span class="py-defname">already_on_command_line</span><span class="function-signature">(existing_args_list, potential_command_line_args, prefix_chars)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L1422">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L1422">
       
       (source)
     </a>
@@ -710,7 +678,7 @@ already present in existing_args.</p><table class="fieldTable"><tr class="fieldS
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_argument_parser</span><span class="function-signature">(name=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, **kwargs)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L60">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L60">
       
       (source)
     </a>
@@ -740,7 +708,7 @@ ArgumentParser constructor.</p></div>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_toml_section</span><span class="function-signature">(data, section)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L429">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L429">
       
       (source)
     </a>
@@ -753,7 +721,7 @@ ArgumentParser constructor.</p></div>
   <div class="docstring functionBody">
     
     <div><p>Given some TOML data (as loaded with <code>toml.load()</code>), returns the requested section of the data.
-Returns <tt class="rst-docutils literal">None</tt> if the section is not found.</p></div>
+Returns <tt class="rst-docutils rst-literal">None</tt> if the section is not found.</p></div>
   </div>
 </div><div class="basefunction">
   
@@ -768,7 +736,7 @@ Returns <tt class="rst-docutils literal">None</tt> if the section is not found.<
     
     
     <span class="py-keyword">def</span> <span class="py-defname">init_argument_parser</span><span class="function-signature">(name=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, **kwargs)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L41">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L41">
       
       (source)
     </a>
@@ -797,7 +765,7 @@ This instance can then be retrieved using get_argument_parser(..)</p></div>
     
     @<a href="https://docs.python.org/3/library/functools.html#functools.lru_cache" class="intersphinx-link">functools.lru_cache</a>(<wbr></wbr>maxsize=256, <wbr></wbr>typed=<a href="https://docs.python.org/3/library/constants.html#True" class="intersphinx-link">True</a>)<br />
     <span class="py-keyword">def</span> <span class="py-defname">is_quoted</span><span class="function-signature">(text, triple=<a href="https://docs.python.org/3/library/constants.html#True" class="intersphinx-link">True</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L381">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L381">
       
       (source)
     </a>
@@ -824,7 +792,7 @@ This instance can then be retrieved using get_argument_parser(..)</p></div>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">parse_toml_section_name</span><span class="function-signature">(section_name)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L410">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L410">
       
       (source)
     </a>
@@ -857,7 +825,7 @@ This instance can then be retrieved using get_argument_parser(..)</p></div>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">unquote_str</span><span class="function-signature">(text, triple=<a href="https://docs.python.org/3/library/constants.html#True" class="intersphinx-link">True</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L391">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L391">
       
       (source)
     </a>
@@ -871,14 +839,14 @@ This instance can then be retrieved using get_argument_parser(..)</p></div>
     
     <div><p>Unquote a maybe quoted string representation.
 If the string is not detected as being a quoted representation, it returns the same string as passed.
-It supports all kinds of python quotes: <tt class="rst-docutils literal">"""</tt>, <tt class="rst-docutils literal">'''</tt>, <tt class="rst-docutils literal">"</tt> and <tt class="rst-docutils literal">'</tt>.</p>
+It supports all kinds of python quotes: <tt class="rst-docutils rst-literal">"""</tt>, <tt class="rst-docutils rst-literal">'''</tt>, <tt class="rst-docutils rst-literal">"</tt> and <tt class="rst-docutils rst-literal">'</tt>.</p>
 <dl class="rst-docutils">
 <dt>@raises ValueError: If the string is detected as beeing quoted but literal_eval() fails to evaluate it as string.</dt>
 <dd>This would be a bug in the regex.</dd>
 </dl>
 <table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">text</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">triple</span></td><td class="fieldArgDesc">Also unquote tripple quoted strings.</td></tr></table></div>
   </div>
-</div><div class="baseconstant">
+</div><div class="basevariable">
   
   
   <a name="configargparse.ACTION_TYPES_THAT_DONT_NEED_A_VALUE">
@@ -890,7 +858,7 @@ It supports all kinds of python quotes: <tt class="rst-docutils literal">"""</tt
   <div class="functionHeader">
     
     <span class="py-defname">ACTION_TYPES_THAT_DONT_NEED_A_VALUE</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L25">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L25">
       
       (source)
     </a>
@@ -903,7 +871,7 @@ It supports all kinds of python quotes: <tt class="rst-docutils literal">"""</tt
   <div class="functionBody">
     
     <div><p class="undocumented">Undocumented</p></div>
-    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>(<wbr></wbr><a href="#ACTION_TYPES_THAT_DONT_NEED_A_VALUE" class="internal-link" title="configargparse.ACTION_TYPES_THAT_DONT_NEED_A_VALUE">ACTION_TYPES_THAT_DONT_NEED_A_VALUE</a>)</code></pre></td></tr></table>
+    
   </div>
 </div><div class="basevariable">
   
@@ -917,7 +885,7 @@ It supports all kinds of python quotes: <tt class="rst-docutils literal">"""</tt
   <div class="functionHeader">
     
     <span class="py-defname">is_boolean_optional_action</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L31">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L31">
       
       (source)
     </a>
@@ -944,7 +912,7 @@ It supports all kinds of python quotes: <tt class="rst-docutils literal">"""</tt
   <div class="functionHeader">
     
     <span class="py-defname">_COMMAND_LINE_SOURCE_KEY</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L667">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L667">
       
       (source)
     </a>
@@ -971,7 +939,7 @@ It supports all kinds of python quotes: <tt class="rst-docutils literal">"""</tt
   <div class="functionHeader">
     
     <span class="py-defname">_CONFIG_FILE_SOURCE_KEY</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L669">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L669">
       
       (source)
     </a>
@@ -998,7 +966,7 @@ It supports all kinds of python quotes: <tt class="rst-docutils literal">"""</tt
   <div class="functionHeader">
     
     <span class="py-defname">_DEFAULTS_SOURCE_KEY</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L670">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L670">
       
       (source)
     </a>
@@ -1025,7 +993,7 @@ It supports all kinds of python quotes: <tt class="rst-docutils literal">"""</tt
   <div class="functionHeader">
     
     <span class="py-defname">_ENV_VAR_SOURCE_KEY</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L668">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L668">
       
       (source)
     </a>
@@ -1052,7 +1020,7 @@ It supports all kinds of python quotes: <tt class="rst-docutils literal">"""</tt
   <div class="functionHeader">
     
     <span class="py-defname">_QUOTED_STR_REGEX</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L372">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L372">
       
       (source)
     </a>
@@ -1079,7 +1047,7 @@ It supports all kinds of python quotes: <tt class="rst-docutils literal">"""</tt
   <div class="functionHeader">
     
     <span class="py-defname">_TRIPLE_QUOTED_STR_REGEX</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L375">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L375">
       
       (source)
     </a>
@@ -1109,7 +1077,7 @@ $<span class="rst-re-group">)</span><span class="rst-variable-quote">'</span>,
   <div class="functionHeader">
     
     <span class="py-defname">_parsers</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L39">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L39">
       
       (source)
     </a>
@@ -1133,10 +1101,10 @@ $<span class="rst-re-group">)</span><span class="rst-variable-quote">'</span>,
     <footer class="navbar navbar-default">
 
   
-  <div class="container">
+  <div class="container-fluid">
     <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    23.4.1 at 2023-07-23 16:19:32.
+    24.11.2 at 2025-05-04 21:13:17.
   </div>
 
   <!-- Search related scripts needs to be loaded at the end of HTML 

@@ -6,7 +6,7 @@
   <head>
     
     <title>All Documents</title>
-    <meta name="generator" content="pydoctor 23.4.1"> 
+    <meta name="generator" content="pydoctor 24.11.2"> 
         
     </meta>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
@@ -14,6 +14,7 @@
     <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="apidocs.css" />
     <link rel="stylesheet" type="text/css" href="extra.css" />
+    
 </head>
   <body>
     
@@ -48,7 +49,7 @@
             
             <span class="input-group-btn">
               <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
-              <a class="btn btn-default" id="search-help-button" title="Help" onclick="toggleSearchHelpText()"><img src="fonts/info.svg" alt="Help" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
             </span>
           </div>
         </div>
@@ -72,39 +73,6 @@
             <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
         </noscript>
 
-        <div class="hint" id="search-help-box">
-          <p class="rst-last">
-      
-            Search bar offers the following options:
-            <ul>   
-                <li>
-                  <strong>Term presence.</strong> The below example searches for documents that 
-                    must contain “foo”, might contain “bar” and must not contain “baz”: <code>+foo bar -baz</code>
-                </li> 
-
-                <li>
-                  <strong>Wildcards.</strong> The below example searches for documents with words beginning with “foo”: <code>foo*</code>
-                </li> 
-
-                <li>
-                  <strong>Search in specific fields.</strong> The following search matches all objects 
-                  in "twisted.mail" that matches “search”: <code>+qname:twisted.mail.* +search</code>
-
-                  <p>
-                    Possible fields: 'name', 'qname' (fully qualified name), 'docstring', and 'kind'.
-                    Last two fields are only applicable if "search in docstrings" is enabled.
-                  </p>
-                </li>
-
-                <li>
-                  <strong>Fuzzy matches.</strong> The following search matches all documents 
-                  that have a word within 1 edit distance of “foo”: <code>foo~1</code>
-                </li>
-            </ul>
-
-          </p>
-        </div>
-
         <div id="search-status"> </div>
 
         <div class="warning" id="search-warn-box" style="display: none;">
@@ -115,8 +83,8 @@
           <!-- Filled dynamically by JS -->
         </table>
         
-        <div style="margin-top: 8px;">
-          <p>Results provided by <a href="https://lunrjs.com">Lunr.js</a></p>
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
         </div>
       </div>
 
@@ -2025,7 +1993,7 @@
             <div class="fullName">configargparse<wbr></wbr>.ACTION<wbr></wbr>_TYPES<wbr></wbr>_THAT<wbr></wbr>_DONT<wbr></wbr>_NEED<wbr></wbr>_A<wbr></wbr>_VALUE</div>
             <div class="url">configargparse.html#ACTION_TYPES_THAT_DONT_NEED_A_VALUE</div>
             <div class="type">Attribute</div>
-            <div class="kind">Constant</div>
+            <div class="kind">Variable</div>
             <div class="privacy">PUBLIC</div>
             <div class="summary"><span class="undocumented">Undocumented</span></div>
           </li><li id="configargparse.is_boolean_optional_action">
@@ -2179,7 +2147,7 @@
             <div class="type">Class</div>
             <div class="kind">Class</div>
             <div class="privacy">PUBLIC</div>
-            <div class="summary">Parses YAML config files. Depends on the PyYAML module. <a class="rst-reference external" href="https://pypi.python.org/pypi/PyYAML" target="_top">https://pypi.python.org/pypi/PyYAML</a></div>
+            <div class="summary">Parses YAML config files. Depends on the PyYAML module. <a class="rst-external rst-reference" href="https://pypi.python.org/pypi/PyYAML" target="_top">https://pypi.python.org/pypi/PyYAML</a></div>
           </li><li id="configargparse.YAMLConfigFileParser.get_syntax_description">
             
             <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>YAMLConfig<wbr></wbr>File<wbr></wbr>Parser<wbr></wbr>.get<wbr></wbr>_syntax<wbr></wbr>_description</div>
@@ -2243,7 +2211,7 @@
             <div class="type">Function</div>
             <div class="kind">Function</div>
             <div class="privacy">PUBLIC</div>
-            <div class="summary">Unquote a maybe quoted string representation. If the string is not detected as being a quoted representation, it returns the same string as passed. It supports all kinds of python quotes: <tt class="rst-docutils literal">"""</tt>, <tt class="rst-docutils literal">'''</tt>, <tt class="rst-docutils literal">"</tt> and ...</div>
+            <div class="summary">Unquote a maybe quoted string representation. If the string is not detected as being a quoted representation, it returns the same string as passed. It supports all kinds of python quotes: <tt class="rst-docutils rst-literal">"""</tt>, <tt class="rst-docutils rst-literal">'''</tt>, <tt class="rst-docutils rst-literal">"</tt> and ...</div>
           </li><li id="configargparse.parse_toml_section_name">
             
             <div class="fullName">configargparse<wbr></wbr>.parse<wbr></wbr>_toml<wbr></wbr>_section<wbr></wbr>_name</div>
@@ -2259,7 +2227,7 @@
             <div class="type">Function</div>
             <div class="kind">Function</div>
             <div class="privacy">PUBLIC</div>
-            <div class="summary">Given some TOML data (as loaded with <code>toml.load()</code>), returns the requested section of the data. Returns <tt class="rst-docutils literal">None</tt> if the section is not found.</div>
+            <div class="summary">Given some TOML data (as loaded with <code>toml.load()</code>), returns the requested section of the data. Returns <tt class="rst-docutils rst-literal">None</tt> if the section is not found.</div>
           </li><li id="configargparse.TomlConfigParser">
             
             <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>Toml<wbr></wbr>Config<wbr></wbr>Parser</div>
@@ -2451,7 +2419,7 @@
             <div class="type">Class</div>
             <div class="kind">Class</div>
             <div class="privacy">PUBLIC</div>
-            <div class="summary">Drop-in replacement for <code><a href="argparse.ArgumentParser.html" class="internal-link">argparse.ArgumentParser</a></code> that adds support for environment variables and <tt class="rst-docutils literal">.ini</tt> or <tt class="rst-docutils literal"><span class="pre">.yaml-style</span></tt> config files.</div>
+            <div class="summary">Drop-in replacement for <code><a href="argparse.ArgumentParser.html" class="internal-link">argparse.ArgumentParser</a></code> that adds support for environment variables and <tt class="rst-docutils rst-literal">.ini</tt> or <tt class="rst-docutils rst-literal"><span class="pre">.yaml-style</span></tt> config files.</div>
           </li><li id="configargparse.ArgumentParser.__init__">
             
             <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>Argument<wbr></wbr>Parser<wbr></wbr>.__init__</div>

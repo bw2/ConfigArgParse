@@ -7,7 +7,7 @@
   <head>
     
     <title>argparse</title>
-    <meta name="generator" content="pydoctor 23.4.1"> 
+    <meta name="generator" content="pydoctor 24.11.2"> 
         
     </meta>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
@@ -15,6 +15,7 @@
     <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="apidocs.css" />
     <link rel="stylesheet" type="text/css" href="extra.css" />
+    
 </head>
 
   <body>
@@ -52,7 +53,7 @@
             
             <span class="input-group-btn">
               <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
-              <a class="btn btn-default" id="search-help-button" title="Help" onclick="toggleSearchHelpText()"><img src="fonts/info.svg" alt="Help" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
             </span>
           </div>
         </div>
@@ -76,39 +77,6 @@
             <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
         </noscript>
 
-        <div class="hint" id="search-help-box">
-          <p class="rst-last">
-      
-            Search bar offers the following options:
-            <ul>   
-                <li>
-                  <strong>Term presence.</strong> The below example searches for documents that 
-                    must contain “foo”, might contain “bar” and must not contain “baz”: <code>+foo bar -baz</code>
-                </li> 
-
-                <li>
-                  <strong>Wildcards.</strong> The below example searches for documents with words beginning with “foo”: <code>foo*</code>
-                </li> 
-
-                <li>
-                  <strong>Search in specific fields.</strong> The following search matches all objects 
-                  in "twisted.mail" that matches “search”: <code>+qname:twisted.mail.* +search</code>
-
-                  <p>
-                    Possible fields: 'name', 'qname' (fully qualified name), 'docstring', and 'kind'.
-                    Last two fields are only applicable if "search in docstrings" is enabled.
-                  </p>
-                </li>
-
-                <li>
-                  <strong>Fuzzy matches.</strong> The following search matches all documents 
-                  that have a word within 1 edit distance of “foo”: <code>foo~1</code>
-                </li>
-            </ul>
-
-          </p>
-        </div>
-
         <div id="search-status"> </div>
 
         <div class="warning" id="search-warn-box" style="display: none;">
@@ -119,8 +87,8 @@
           <!-- Filled dynamically by JS -->
         </table>
         
-        <div style="margin-top: 8px;">
-          <p>Results provided by <a href="https://lunrjs.com">Lunr.js</a></p>
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
         </div>
       </div>
 
@@ -575,7 +543,7 @@
         </div>
 
         <div class="extrasDocstring">
-          <a href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py" class="sourceLink">(source)</a>
+          <a href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py" class="sourceLink">(source)</a>
           <p></p>
         </div>
 
@@ -607,7 +575,7 @@ args.log.close()
 <p>The module contains the following public classes:</p>
 <blockquote>
 <ul class="rst-simple">
-<li><dl class="rst-first rst-docutils">
+<li><dl class="rst-docutils rst-first">
 <dt>ArgumentParser -- The main entry point for command-line parsing. As the</dt>
 <dd>example above shows, the add_argument() method is used to populate
 the parser with actions for optional and positional arguments. Then
@@ -615,20 +583,20 @@ the parse_args() method is invoked to convert the args at the
 command-line into an object with attributes.</dd>
 </dl>
 </li>
-<li><dl class="rst-first rst-docutils">
+<li><dl class="rst-docutils rst-first">
 <dt>ArgumentError -- The exception raised by ArgumentParser objects when</dt>
 <dd>there are errors with the parser's actions. Errors raised while
 parsing the command-line are caught by ArgumentParser and emitted
 as command-line messages.</dd>
 </dl>
 </li>
-<li><dl class="rst-first rst-docutils">
+<li><dl class="rst-docutils rst-first">
 <dt>FileType -- A factory for defining types of files to be created. As the</dt>
 <dd>example above shows, instances of FileType are typically passed as
 the type= argument of add_argument() calls.</dd>
 </dl>
 </li>
-<li><dl class="rst-first rst-docutils">
+<li><dl class="rst-docutils rst-first">
 <dt>Action -- The base class for parser actions. Typically actions are</dt>
 <dd>selected by passing strings like 'store_true' or 'append_const' to
 the action= argument of add_argument(). However, for greater
@@ -636,7 +604,7 @@ customization of ArgumentParser actions, subclasses of Action may
 be defined and passed as the action= argument.</dd>
 </dl>
 </li>
-<li><dl class="rst-first rst-docutils">
+<li><dl class="rst-docutils rst-first">
 <dt>HelpFormatter, RawDescriptionHelpFormatter, RawTextHelpFormatter,</dt>
 <dd>ArgumentDefaultsHelpFormatter -- Formatter classes which
 may be passed as the formatter_class= argument to the
@@ -865,7 +833,7 @@ still considered an implementation detail.)</p>
   <div class="functionHeader">
     
     <span class="py-defname">ONE_OR_MORE</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L98">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L98">
       
       (source)
     </a>
@@ -892,7 +860,7 @@ still considered an implementation detail.)</p>
   <div class="functionHeader">
     
     <span class="py-defname">OPTIONAL</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L96">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L96">
       
       (source)
     </a>
@@ -919,7 +887,7 @@ still considered an implementation detail.)</p>
   <div class="functionHeader">
     
     <span class="py-defname">PARSER</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L99">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L99">
       
       (source)
     </a>
@@ -946,7 +914,7 @@ still considered an implementation detail.)</p>
   <div class="functionHeader">
     
     <span class="py-defname">REMAINDER</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L100">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L100">
       
       (source)
     </a>
@@ -973,7 +941,7 @@ still considered an implementation detail.)</p>
   <div class="functionHeader">
     
     <span class="py-defname">SUPPRESS</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L94">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L94">
       
       (source)
     </a>
@@ -1000,7 +968,7 @@ still considered an implementation detail.)</p>
   <div class="functionHeader">
     
     <span class="py-defname">ZERO_OR_MORE</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L97">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L97">
       
       (source)
     </a>
@@ -1027,7 +995,7 @@ still considered an implementation detail.)</p>
   <div class="functionHeader">
     
     <span class="py-defname">__version__</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L65">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L65">
       
       (source)
     </a>
@@ -1055,7 +1023,7 @@ still considered an implementation detail.)</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">_copy_items</span><span class="function-signature">(items)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L138">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L138">
       
       (source)
     </a>
@@ -1082,7 +1050,7 @@ still considered an implementation detail.)</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">_get_action_name</span><span class="function-signature">(argument)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L725">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L725">
       
       (source)
     </a>
@@ -1108,7 +1076,7 @@ still considered an implementation detail.)</p>
   <div class="functionHeader">
     
     <span class="py-defname">_UNRECOGNIZED_ARGS_ATTR</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L101">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L101">
       
       (source)
     </a>
@@ -1132,10 +1100,10 @@ still considered an implementation detail.)</p>
     <footer class="navbar navbar-default">
 
   
-  <div class="container">
+  <div class="container-fluid">
     <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    23.4.1 at 2023-07-23 16:19:32.
+    24.11.2 at 2025-05-04 21:13:17.
   </div>
 
   <!-- Search related scripts needs to be loaded at the end of HTML 

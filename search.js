@@ -113,16 +113,6 @@ function showResultContainer(){
   updateClearSearchBtn();
 }
 
-function toggleSearchHelpText() {
-  document.body.classList.toggle("search-help-hidden");
-  if (document.body.classList.contains("search-help-hidden") && input.value.length==0){
-    hideResultContainer();
-  }
-  else{
-    showResultContainer();
-  }
-}
-
 function resetResultList(){
   resetLongSearchTimerInfo();
   results_list.innerHTML = '';
@@ -168,20 +158,19 @@ function _stopSearchingProcess(){
 //////// SEARCH WARPPER FUNCTIONS /////////
 
 // Values configuring the search-as-you-type feature.
-var SEARCH_DEFAULT_DELAY = 100; // in miliseconds
-var SEARCH_INCREASED_DELAY = 200;
-var SEARCH_INDEX_SIZE_TRESH_INCREASE_DELAY = 10; // in MB
-var SEARCH_INDEX_SIZE_TRESH_DISABLE_SEARCH_AS_YOU_TYPE = 20;
-var SEARCH_AUTO_WILDCARD = true;
+var SEARCH_DEFAULT_DELAY = 150; // in miliseconds
+var SEARCH_INCREASED_DELAY = 300; // in miliseconds
+var SEARCH_INDEX_SIZE_TRESH_INCREASE_DELAY = 15; // in MB
+var SEARCH_INDEX_SIZE_TRESH_DISABLE_SEARCH_AS_YOU_TYPE = 25; // in MB
 
-// Search delay depends on index size.
+// Search delay depends on index size in MB
 function _getIndexSizePromise(indexURL){
   return httpGetPromise(indexURL).then((responseText) => {
     if (responseText==null){
       return 0;
     }
-    let indexSizeApprox = responseText.length / 1000000; // in MB
-    return indexSizeApprox;
+    let indexSizeApprox = responseText.length / 1000000;
+    return indexSizeApprox; // in MB
   });
 }
 function _getSearchDelayPromise(indexURL){ // -> Promise of a Search delay number.
@@ -293,8 +282,8 @@ function launchSearch(noDelay){
   if (isSearchReadyPromise==null){
     isSearchReadyPromise = _getIsSearchReadyPromise()
   }
-  return isSearchReadyPromise.then((r)=>{ 
-  return lunrSearch(_query, indexURL, _fields, "lunr.js", !noDelay?searchDelay:0, SEARCH_AUTO_WILDCARD).then((lunrResults) => { 
+  return isSearchReadyPromise.then((r)=>{  
+  return lunrSearch(_query, indexURL, _fields, "lunr.js", !noDelay?searchDelay:0).then((lunrResults) => { 
 
       // outdated query results
       if (_searchStartTime != _lastSearchStartTime){return;}
@@ -431,7 +420,6 @@ document.addEventListener('keyup', (evt) => {
 // we don't want to show it if the browser do not support JS.
 window.addEventListener('load', (event) => {
   document.getElementById('search-box-container').style.display = 'block';
-  document.getElementById('search-help-box').style.display = 'block';
   hideResultContainer();
 });
 
@@ -440,8 +428,7 @@ window.addEventListener("click", (event) => {
   if (event){
       // 1. Hide the dropdown if the user clicks outside of it  
       if (!event.target.closest('#search-results-container') 
-          && !event.target.closest('#search-box')
-          && !event.target.closest('#search-help-button')){
+          && !event.target.closest('#search-box')){
             hideResultContainer();
             return;
       }
@@ -456,7 +443,7 @@ window.addEventListener("click", (event) => {
       
       // 3.Hide the dropdown if the user clicks on a link that brings them to the same page.
       // This includes links in summaries.
-      link = event.target.closest('#search-results a')
+      link = event.target.closest('#search-results-container a')
       if (link){
         page_parts = document.location.pathname.split('/')
         current_page = page_parts[page_parts.length-1]

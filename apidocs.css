@@ -5,11 +5,25 @@ body {
     overflow-y: scroll;
 }
 
-.container-fluid{
-    max-width: 1380px;
+.container-fluid {
+    max-width: 1400px;
     width: 100%;
     flex: auto;
+    margin-left: 0;
 }
+
+/* For laptop displays */
+@media only screen and (max-width: 1850px) {
+    .container-fluid {
+        max-width: 1350px;
+    }
+}
+@media only screen and (max-width: 1750px) {
+    .container-fluid {
+        max-width: 1250px;
+    }
+}
+
 
 nav.navbar {
     width:100%;
@@ -46,7 +60,6 @@ nav.navbar .navbar-header {
     margin-bottom: 3px;
     border-bottom: 0;
     box-shadow: 0 0 8px 8px #fff;
-    z-index: 99;
 }
 
 .navbar-brand {
@@ -230,7 +243,7 @@ ul ul ul ul ul ul ul {
 
 .fieldTable tr:not(.fieldStart) td:first-child,
 .valueTable tr:not(.fieldStart) td:first-child{
-    padding: 3px 4px 3px 10px;
+    padding: 3px 4px 3px 15px;
 }
 
 .fieldTable tr td {
@@ -246,14 +259,15 @@ ul ul ul ul ul ul ul {
 
 /* parameters names in parameters table */
 .fieldTable tr td.fieldArgContainer > .fieldArg {
-    display: inline;
+    float: left;
+    margin-left: -5px;
 }
 
 /* parameters types (in parameters table) */
 .fieldTable tr td.fieldArgContainer > code {
     /* we don't want word break for the types because we already add <wbr> tags inside the type HTML, and that should suffice. */
     word-break: normal;
-    display: inline-flex;
+    display: inline;
     flex-wrap: wrap;
 }
 
@@ -409,7 +423,7 @@ table .private {
   
 - 'functionHeader' is used for lines like `def func():` and `var =`
 */
-code, .literal, .pre, #childList > div .functionHeader,
+code, .rst-literal, .pre, #childList > div .functionHeader,
 #splitTables > table tr td:nth-child(2), .fieldArg {
     font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
 }
@@ -452,7 +466,7 @@ blockquote {
 This defines the code style, it's black on light gray.
 It also overwrite the default values inherited from bootstrap min
 */
-code, .literal {
+code, .rst-literal {
     padding:2px 4px;
     background-color: #f4f4f4;
     border-radius:4px
@@ -579,20 +593,20 @@ div.rst-admonition {
     border-radius: 4px;
 }
 
-div.warning, div.attention, div.danger, div.error, div.caution {
+div.rst-warning, div.rst-attention, div.rst-danger, div.rst-error, div.rst-caution {
     background-color: #ffcf9cb0;
     border: 1px solid #ffbbaa;
 }
 
-div.danger p.rst-admonition-title, div.error p.rst-admonition-title, div.caution p.rst-admonition-title {
+div.rst-danger p.rst-admonition-title, div.rst-error p.rst-admonition-title, div.rst-caution p.rst-admonition-title {
     color: #b94a48;
 }
 
-div.tip p.rst-admonition-title, div.hint p.rst-admonition-title, div.important p.rst-admonition-title{
+div.rst-tip p.rst-admonition-title, div.rst-hint p.rst-admonition-title, div.rst-important p.rst-admonition-title{
     color: #3a87ad;
 }
 
-div.tip, div.hint, div.important {
+div.rst-tip, div.rst-hint, div.rst-important {
     background-color: #d9edf7;
     border-color: #bce8f1;
 }
@@ -1049,19 +1063,15 @@ input[type="search"]::-webkit-search-results-decoration { display: none; }
     padding: 5px 0 0 8px;
 }
 
-.search-help-hidden #search-help-box{
-    display: none!important;
-}
-
-#search-help-button{
+#apidocs-help-button{
     background-color: #e6e6e6;
 }
 
-.search-help-hidden #search-help-button{
+.search-help-hidden #apidocs-help-button{
     background-color: rgb(255, 255, 255);
 }
 
-.search-help-hidden #search-help-button:hover {
+.search-help-hidden #apidocs-help-button:hover {
     background-color: #e6e6e6;
 }
 
@@ -1126,6 +1136,14 @@ pre.constant-value              { padding: .5em; }
 }
 #childList a:target ~ .functionBody{
     box-shadow: -2px -8px 0px 13px rgb(253 255 223);
+}
+/* in class hierarchy */
+#summaryTree a:target ~ div {
+    background-color: rgb(253, 255, 223);
+    box-shadow: 0px 0px 0px 7px rgb(253, 255, 223);
+}
+#summaryTree div {
+    display: inline-table;
 }
 
 /* deprecations uses a orange text */

@@ -7,7 +7,7 @@
   <head>
     
     <title>configargparse.ArgumentParser</title>
-    <meta name="generator" content="pydoctor 23.4.1"> 
+    <meta name="generator" content="pydoctor 24.11.2"> 
         
     </meta>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
@@ -15,6 +15,7 @@
     <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="apidocs.css" />
     <link rel="stylesheet" type="text/css" href="extra.css" />
+    
 </head>
 
   <body>
@@ -52,7 +53,7 @@
             
             <span class="input-group-btn">
               <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
-              <a class="btn btn-default" id="search-help-button" title="Help" onclick="toggleSearchHelpText()"><img src="fonts/info.svg" alt="Help" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
             </span>
           </div>
         </div>
@@ -76,39 +77,6 @@
             <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
         </noscript>
 
-        <div class="hint" id="search-help-box">
-          <p class="rst-last">
-      
-            Search bar offers the following options:
-            <ul>   
-                <li>
-                  <strong>Term presence.</strong> The below example searches for documents that 
-                    must contain “foo”, might contain “bar” and must not contain “baz”: <code>+foo bar -baz</code>
-                </li> 
-
-                <li>
-                  <strong>Wildcards.</strong> The below example searches for documents with words beginning with “foo”: <code>foo*</code>
-                </li> 
-
-                <li>
-                  <strong>Search in specific fields.</strong> The following search matches all objects 
-                  in "twisted.mail" that matches “search”: <code>+qname:twisted.mail.* +search</code>
-
-                  <p>
-                    Possible fields: 'name', 'qname' (fully qualified name), 'docstring', and 'kind'.
-                    Last two fields are only applicable if "search in docstrings" is enabled.
-                  </p>
-                </li>
-
-                <li>
-                  <strong>Fuzzy matches.</strong> The following search matches all documents 
-                  that have a word within 1 edit distance of “foo”: <code>foo~1</code>
-                </li>
-            </ul>
-
-          </p>
-        </div>
-
         <div id="search-status"> </div>
 
         <div class="warning" id="search-warn-box" style="display: none;">
@@ -119,8 +87,8 @@
           <!-- Filled dynamically by JS -->
         </table>
         
-        <div style="margin-top: 8px;">
-          <p>Results provided by <a href="https://lunrjs.com">Lunr.js</a></p>
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
         </div>
       </div>
 
@@ -1386,13 +1354,13 @@
         </div>
 
         <div class="extrasDocstring">
-          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">ArgumentParser</span>(<a href="argparse.ArgumentParser.html" class="internal-link">argparse.ArgumentParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L673" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.ArgumentParser.__init__">ArgumentParser(*args, **kwargs)</a></code></p>
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">ArgumentParser</span>(<a href="argparse.ArgumentParser.html" class="internal-link" title="argparse.ArgumentParser">argparse.ArgumentParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L673" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.ArgumentParser.__init__">ArgumentParser(*args, **kwargs)</a></code></p>
           <p><a href="classIndex.html#configargparse.ArgumentParser">View In Hierarchy</a></p>
         </div>
 
         <div class="moduleDocstring">
           <div><p>Drop-in replacement for <code><a href="argparse.ArgumentParser.html" class="internal-link">argparse.ArgumentParser</a></code> that adds support for
-environment variables and <tt class="rst-docutils literal">.ini</tt> or <tt class="rst-docutils literal"><span class="pre">.yaml-style</span></tt> config files.</p></div>
+environment variables and <tt class="rst-docutils rst-literal">.ini</tt> or <tt class="rst-docutils rst-literal"><span class="pre">.yaml-style</span></tt> config files.</p></div>
         </div>
 
         <div id="splitTables">
@@ -1882,7 +1850,7 @@ environment variables and <tt class="rst-docutils literal">.ini</tt> or <tt clas
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__init__</span><span class="function-signature">(self, *args, **kwargs)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L678">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L678">
       
       (source)
     </a>
@@ -1895,13 +1863,13 @@ environment variables and <tt class="rst-docutils literal">.ini</tt> or <tt clas
   <div class="docstring functionBody">
     <div class="interfaceinfo">overrides <code><a href="argparse.ArgumentParser.html#__init__" class="internal-link">argparse.ArgumentParser.__init__</a></code></div>
     <div><p>Supports args of the <code><a href="argparse.ArgumentParser.html" class="internal-link">argparse.ArgumentParser</a></code> constructor
-as **kwargs, as well as the following additional args.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">add<wbr></wbr>_config<wbr></wbr>_file<wbr></wbr>_help</span></td><td class="fieldArgDesc">Whether to add a description of config file
+as **kwargs, as well as the following additional args.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">add<wbr></wbr>_config<wbr></wbr>_file<wbr></wbr>_help</span></td><td class="fieldArgDesc">Whether to add a description of config file
 syntax to the help message.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">add<wbr></wbr>_env<wbr></wbr>_var<wbr></wbr>_help</span></td><td class="fieldArgDesc">Whether to add something to the help message for
 args that can be set through environment variables.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">auto<wbr></wbr>_env<wbr></wbr>_var<wbr></wbr>_prefix</span></td><td class="fieldArgDesc">If set to a string instead of None, all config-
 file-settable options will become also settable via environment
 variables whose names are this prefix followed by the config
-file key, all in upper case. (eg. setting this to <tt class="rst-docutils literal">foo_</tt> will
-allow an arg like <tt class="rst-docutils literal"><span class="pre">--my-arg</span></tt> to also be set via the FOO_MY_ARG
+file key, all in upper case. (eg. setting this to <tt class="rst-docutils rst-literal">foo_</tt> will
+allow an arg like <tt class="rst-docutils rst-literal"><span class="pre">--my-arg</span></tt> to also be set via the FOO_MY_ARG
 environment variable)</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">default<wbr></wbr>_config<wbr></wbr>_files</span></td><td class="fieldArgDesc"><p>When specified, this list of config files will
 be parsed in order, with the values from each config file
 taking precedence over previous ones. This allows an application
@@ -1932,7 +1900,7 @@ provided, these args cause configargparse to write out a config
 file with settings based on the other provided commandline args,
 environment variants and defaults, and then to exit.
 (eg. ["-w", "--write-out-config-file"]). Default: []</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">write<wbr></wbr>_out<wbr></wbr>_config<wbr></wbr>_file<wbr></wbr>_arg<wbr></wbr>_help<wbr></wbr>_message</span></td><td class="fieldArgDesc">The help message to use for
-the args in args_for_writing_out_config_file.</td></tr></table></div>
+the args in args_for_writing_out_config_file.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">**kwargs</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -1947,7 +1915,7 @@ the args in args_for_writing_out_config_file.</td></tr></table></div>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">convert_item_to_command_line_arg</span><span class="function-signature">(self, action, key, value)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L1099">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L1099">
       
       (source)
     </a>
@@ -1977,7 +1945,7 @@ configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fiel
     
     
     <span class="py-keyword">def</span> <span class="py-defname">format_help</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L1305">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L1305">
       
       (source)
     </a>
@@ -2004,7 +1972,7 @@ configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fiel
     
     
     <span class="py-keyword">def</span> <span class="py-defname">format_values</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L1271">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L1271">
       
       (source)
     </a>
@@ -2032,7 +2000,7 @@ configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fiel
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_command_line_key_for_unknown_config_file_setting</span><span class="function-signature">(self, key)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L1036">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L1036">
       
       (source)
     </a>
@@ -2061,7 +2029,7 @@ doesn't have a user-specified commandline arg key).</p><table class="fieldTable"
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_items_for_config_file_output</span><span class="function-signature">(self, source_to_settings, parsed_namespace)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L1052">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L1052">
       
       (source)
     </a>
@@ -2090,7 +2058,7 @@ or lists</td></tr></table></div>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_possible_config_keys</span><span class="function-signature">(self, action)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L1176">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L1176">
       
       (source)
     </a>
@@ -2119,7 +2087,7 @@ can be used to set the given action's value in a config file.</p><table class="f
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_source_to_settings_dict</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L989">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L989">
       
       (source)
     </a>
@@ -2153,7 +2121,7 @@ will be the option name, and the value will be a 2-tuple of the form (<code><a h
     
     
     <span class="py-keyword">def</span> <span class="py-defname">parse_args</span><span class="function-signature">(self, args=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, namespace=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, config_file_contents=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, env_vars=<a href="https://docs.python.org/3/library/os.html#os.environ" class="intersphinx-link">os.environ</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L784">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L784">
       
       (source)
     </a>
@@ -2181,7 +2149,7 @@ as well as the following additional args.</p><table class="fieldTable"><tr class
     
     
     <span class="py-keyword">def</span> <span class="py-defname">parse_known_args</span><span class="function-signature">(self, args=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, namespace=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, config_file_contents=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, env_vars=<a href="https://docs.python.org/3/library/os.html#os.environ" class="intersphinx-link">os.environ</a>, ignore_help_args=<a href="https://docs.python.org/3/library/constants.html#False" class="intersphinx-link">False</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L808">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L808">
       
       (source)
     </a>
@@ -2194,7 +2162,7 @@ as well as the following additional args.</p><table class="fieldTable"><tr class
   <div class="docstring functionBody">
     <div class="interfaceinfo">overrides <code><a href="argparse.ArgumentParser.html#parse_known_args" class="internal-link">argparse.ArgumentParser.parse_known_args</a></code></div>
     <div><p>Supports all the same args as the <code><a href="argparse.ArgumentParser.html#parse_args" class="internal-link" title="argparse.ArgumentParser.parse_args">argparse.ArgumentParser.parse_args()</a></code>,
-as well as the following additional args.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">args</span></td><td class="fieldArgDesc">a list of args as in argparse, or a string (eg. "-x -y bla")</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">namespace</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config<wbr></wbr>_file<wbr></wbr>_contents:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc"></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">env<wbr></wbr>_vars:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc"></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">ignore<wbr></wbr>_help<wbr></wbr>_args:</span><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">This flag determines behavior when user specifies <tt class="rst-docutils literal"><span class="pre">--help</span></tt> or <tt class="rst-docutils literal"><span class="pre">-h</span></tt>. If False,
+as well as the following additional args.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">args</span></td><td class="fieldArgDesc">a list of args as in argparse, or a string (eg. "-x -y bla")</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">namespace</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config<wbr></wbr>_file<wbr></wbr>_contents:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc"></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">env<wbr></wbr>_vars:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc"></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">ignore<wbr></wbr>_help<wbr></wbr>_args:</span><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">This flag determines behavior when user specifies <tt class="rst-docutils rst-literal"><span class="pre">--help</span></tt> or <tt class="rst-docutils rst-literal"><span class="pre">-h</span></tt>. If False,
 it will have the default behavior - printing help and exiting. If True, it won't do either.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="argparse.Namespace.html" class="internal-link">argparse.Namespace</a></code>, <code><a href="https://docs.python.org/3/library/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]]</code></td><td class="fieldArgDesc">tuple namescpace, unknown_args</td></tr></table></div>
   </div>
 </div><div class="basemethod">
@@ -2210,7 +2178,7 @@ it will have the default behavior - printing help and exiting. If True, it won't
     
     
     <span class="py-keyword">def</span> <span class="py-defname">print_values</span><span class="function-signature">(self, file=<a href="https://docs.python.org/3/library/sys.html#sys.stdout" class="intersphinx-link">sys.stdout</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L1301">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L1301">
       
       (source)
     </a>
@@ -2237,7 +2205,7 @@ it will have the default behavior - printing help and exiting. If True, it won't
     
     
     <span class="py-keyword">def</span> <span class="py-defname">write_config_file</span><span class="function-signature">(self, parsed_namespace, output_file_paths, exit_after=<a href="https://docs.python.org/3/library/constants.html#False" class="intersphinx-link">False</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L1007">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L1007">
       
       (source)
     </a>
@@ -2264,7 +2232,7 @@ it will have the default behavior - printing help and exiting. If True, it won't
     
     
     <span class="py-keyword">def</span> <span class="py-defname">_open_config_files</span><span class="function-signature">(self, command_line_args)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L1196">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L1196">
       
       (source)
     </a>
@@ -2293,7 +2261,7 @@ constructor that are present on disk.</p><table class="fieldTable"><tr class="fi
   <div class="functionHeader">
     
     <span class="py-defname">_add_config_file_help</span>: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L758">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L758">
       
       (source)
     </a>
@@ -2320,7 +2288,7 @@ constructor that are present on disk.</p><table class="fieldTable"><tr class="fi
   <div class="functionHeader">
     
     <span class="py-defname">_add_env_var_help</span>: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L759">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L759">
       
       (source)
     </a>
@@ -2347,7 +2315,7 @@ constructor that are present on disk.</p><table class="fieldTable"><tr class="fi
   <div class="functionHeader">
     
     <span class="py-defname">_auto_env_var_prefix</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L760">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L760">
       
       (source)
     </a>
@@ -2374,7 +2342,7 @@ constructor that are present on disk.</p><table class="fieldTable"><tr class="fi
   <div class="functionHeader">
     
     <span class="py-defname">_config_file_open_func</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L756">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L756">
       
       (source)
     </a>
@@ -2401,7 +2369,7 @@ constructor that are present on disk.</p><table class="fieldTable"><tr class="fi
   <div class="functionHeader">
     
     <span class="py-defname">_config_file_parser</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L766">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L766">
       
       (source)
     </a>
@@ -2428,7 +2396,7 @@ constructor that are present on disk.</p><table class="fieldTable"><tr class="fi
   <div class="functionHeader">
     
     <span class="py-defname">_default_config_files</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L770">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L770">
       
       (source)
     </a>
@@ -2455,7 +2423,7 @@ constructor that are present on disk.</p><table class="fieldTable"><tr class="fi
   <div class="functionHeader">
     
     <span class="py-defname">_ignore_unknown_config_file_keys</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L771">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L771">
       
       (source)
     </a>
@@ -2482,7 +2450,7 @@ constructor that are present on disk.</p><table class="fieldTable"><tr class="fi
   <div class="functionHeader">
     
     <span class="py-defname">_source_to_settings</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/configargparse.py#L846">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/configargparse.py#L846">
       
       (source)
     </a>
@@ -2506,10 +2474,10 @@ constructor that are present on disk.</p><table class="fieldTable"><tr class="fi
     <footer class="navbar navbar-default">
 
   
-  <div class="container">
+  <div class="container-fluid">
     <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    23.4.1 at 2023-07-23 16:19:32.
+    24.11.2 at 2025-05-04 21:13:17.
   </div>
 
   <!-- Search related scripts needs to be loaded at the end of HTML 

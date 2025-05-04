@@ -7,7 +7,7 @@
   <head>
     
     <title>argparse.HelpFormatter._Section</title>
-    <meta name="generator" content="pydoctor 23.4.1"> 
+    <meta name="generator" content="pydoctor 24.11.2"> 
         
     </meta>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
@@ -15,6 +15,7 @@
     <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="apidocs.css" />
     <link rel="stylesheet" type="text/css" href="extra.css" />
+    
 </head>
 
   <body>
@@ -52,7 +53,7 @@
             
             <span class="input-group-btn">
               <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
-              <a class="btn btn-default" id="search-help-button" title="Help" onclick="toggleSearchHelpText()"><img src="fonts/info.svg" alt="Help" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
             </span>
           </div>
         </div>
@@ -76,39 +77,6 @@
             <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
         </noscript>
 
-        <div class="hint" id="search-help-box">
-          <p class="rst-last">
-      
-            Search bar offers the following options:
-            <ul>   
-                <li>
-                  <strong>Term presence.</strong> The below example searches for documents that 
-                    must contain “foo”, might contain “bar” and must not contain “baz”: <code>+foo bar -baz</code>
-                </li> 
-
-                <li>
-                  <strong>Wildcards.</strong> The below example searches for documents with words beginning with “foo”: <code>foo*</code>
-                </li> 
-
-                <li>
-                  <strong>Search in specific fields.</strong> The following search matches all objects 
-                  in "twisted.mail" that matches “search”: <code>+qname:twisted.mail.* +search</code>
-
-                  <p>
-                    Possible fields: 'name', 'qname' (fully qualified name), 'docstring', and 'kind'.
-                    Last two fields are only applicable if "search in docstrings" is enabled.
-                  </p>
-                </li>
-
-                <li>
-                  <strong>Fuzzy matches.</strong> The following search matches all documents 
-                  that have a word within 1 edit distance of “foo”: <code>foo~1</code>
-                </li>
-            </ul>
-
-          </p>
-        </div>
-
         <div id="search-status"> </div>
 
         <div class="warning" id="search-warn-box" style="display: none;">
@@ -119,8 +87,8 @@
           <!-- Filled dynamically by JS -->
         </table>
         
-        <div style="margin-top: 8px;">
-          <p>Results provided by <a href="https://lunrjs.com">Lunr.js</a></p>
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
         </div>
       </div>
 
@@ -670,7 +638,7 @@
         </div>
 
         <div class="extrasDocstring">
-          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">_Section</span>(<a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L201" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="argparse.HelpFormatter._Section.__init__">HelpFormatter._Section(formatter, parent, heading)</a></code></p>
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">_Section</span>(<a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L201" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="argparse.HelpFormatter._Section.__init__">HelpFormatter._Section(formatter, parent, heading)</a></code></p>
           <p><a href="classIndex.html#argparse.HelpFormatter._Section">View In Hierarchy</a></p>
         </div>
 
@@ -733,7 +701,7 @@
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__init__</span><span class="function-signature">(self, formatter, parent, heading=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L203">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L203">
       
       (source)
     </a>
@@ -760,7 +728,7 @@
     
     
     <span class="py-keyword">def</span> <span class="py-defname">format_help</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L209">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L209">
       
       (source)
     </a>
@@ -786,7 +754,7 @@
   <div class="functionHeader">
     
     <span class="py-defname">formatter</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L204">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L204">
       
       (source)
     </a>
@@ -813,7 +781,7 @@
   <div class="functionHeader">
     
     <span class="py-defname">heading</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L206">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L206">
       
       (source)
     </a>
@@ -840,7 +808,7 @@
   <div class="functionHeader">
     
     <span class="py-defname">items</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#list" class="intersphinx-link">list</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L207">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L207">
       
       (source)
     </a>
@@ -867,7 +835,7 @@
   <div class="functionHeader">
     
     <span class="py-defname">parent</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L205">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L205">
       
       (source)
     </a>
@@ -891,10 +859,10 @@
     <footer class="navbar navbar-default">
 
   
-  <div class="container">
+  <div class="container-fluid">
     <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    23.4.1 at 2023-07-23 16:19:32.
+    24.11.2 at 2025-05-04 21:13:17.
   </div>
 
   <!-- Search related scripts needs to be loaded at the end of HTML 

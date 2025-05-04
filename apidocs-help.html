@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html lang="EN">
+  
+
+  <head>
+    
+    <title>Help</title>
+    <meta name="generator" content="pydoctor 24.11.2"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+    
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default mainnavbar">
+      
+  
+  <div class="container-fluid">
+
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+        <span class="navbar-brand">
+          <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7</a> <a href="index.html">API Documentation</a>
+        </span>
+
+        <a href="moduleIndex.html">
+          Modules
+        </a>
+
+        <a href="classIndex.html">
+          Classes
+        </a>
+
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
+          </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
+
+        <div id="search-status"> </div>
+
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
+
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
+        </div>
+      </div>
+
+    </div>
+
+
+  </div>
+</nav>
+
+    <div class="container-fluid">
+
+      <div class="page-header">
+        <h1>Help</h1>
+        <div id="showPrivate">
+          <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+        </div>
+      </div>
+
+    <div class="rst-section" id="rst-navigation">
+<h2 class="heading">Navigation</h2>
+<p>There is one page per class, module and package.
+Each page present summary table(s) which feature the members of the object.</p>
+<div class="rst-section" id="rst-package-or-module-page">
+<h3 class="heading">Package or Module page</h3>
+<p>Each of these pages has two main sections consisting of:</p>
+<ul class="rst-simple">
+<li>summary tables submodules and subpackages and the members of the module or in the <tt class="rst-docutils rst-literal">__init__.py</tt> file.</li>
+<li>detailed descriptions of function and attribute members.</li>
+</ul>
+</div>
+<div class="rst-section" id="rst-class-page">
+<h3 class="heading">Class page</h3>
+<p>Each class has its own separate page.
+Each of these pages has three main sections consisting of:</p>
+<ul class="rst-simple">
+<li>declaration, constructors, know subclasses and description</li>
+<li>summary tables of members, including inherited</li>
+<li>detailed descriptions of method and attribute members</li>
+</ul>
+<p>Entries in each of these sections are omitted if they are empty or not applicable.</p>
+</div>
+<div class="rst-section" id="rst-module-index">
+<h3 class="heading">Module Index</h3>
+<p>Provides a high level overview of the packages and modules structure.</p>
+</div>
+<div class="rst-section" id="rst-class-hierarchy">
+<h3 class="heading">Class Hierarchy</h3>
+<p>Provides a list of classes organized by inheritance structure. Note that <tt class="rst-docutils rst-literal">object</tt> is ommited.</p>
+</div>
+<div class="rst-section" id="rst-index-of-names">
+<h3 class="heading">Index Of Names</h3>
+<p>The Index contains an alphabetic index of all objects in the documentation.</p>
+</div>
+</div>
+<div class="rst-section" id="rst-search">
+<h2 class="heading">Search</h2>
+<p>You can search for definitions of modules, packages, classes, functions, methods and attributes.</p>
+<p>These items can be searched using part or all of the name and/or from their docstrings if "search in docstrings" is enabled.
+Multiple search terms can be provided separated by whitespace.</p>
+<p>The search is powered by <a class="rst-external rst-reference" href="https://lunrjs.com/" target="_top">lunrjs</a>.</p>
+<div class="rst-section" id="rst-indexing">
+<h3 class="heading">Indexing</h3>
+<p>By default the search only matches on the name of the object.
+Enable the full text search in the docstrings with the checkbox option.</p>
+<p>You can instruct the search to look only in specific fields by passing the field name in the search like <tt class="rst-docutils rst-literal">docstring:term</tt>.</p>
+<p><strong>Possible fields are</strong>:</p>
+<ul class="rst-simple">
+<li><tt class="rst-docutils rst-literal">name</tt>, the name of the object (example: "MyClassAdapter" or "my_fmin_opti").</li>
+<li><tt class="rst-docutils rst-literal">qname</tt>, the fully qualified name of the object (example: "lib.classses.MyClassAdapter").</li>
+<li><tt class="rst-docutils rst-literal">names</tt>, the name splitted on camel case or snake case (example: "My Class Adapter" or "my fmin opti")</li>
+<li><tt class="rst-docutils rst-literal">docstring</tt>, the docstring of the object (example: "This is an adapter for HTTP json requests that logs into a file...")</li>
+<li><tt class="rst-docutils rst-literal">kind</tt>, can be one of: "PACKAGE", "MODULE", "CLASS", "INTERFACE", "EXCEPTION", "CLASS_METHOD", "STATIC_METHOD", "METHOD", "FUNCTION", "CONSTANT", "TYPE_VARIABLE", "TYPE_ALIAS", "CLASS_VARIABLE", "SCHEMA_FIELD", "ATTRIBUTE", "INSTANCE_VARIABLE", "PROPERTY", "VARIABLE"</li>
+</ul>
+<p>Last two fields are only applicable if "search in docstrings" is enabled.</p>
+</div>
+<div class="rst-section" id="rst-other-search-features">
+<h3 class="heading">Other search features</h3>
+<dl class="rst-docutils">
+<dt>Term presence.</dt>
+<dd><p class="rst-first">The default behaviour is to give a better ranking to object matching multiple terms of your query,
+but still show entries that matches only one of the two terms.
+To change this behavour, you can use the sign <tt class="rst-docutils rst-literal">+</tt>.</p>
+<ul class="rst-simple rst-last">
+<li>To indicate a term must exactly match use the plus sing: <tt class="rst-docutils rst-literal">+</tt>.</li>
+<li>To indicate a term must not match use the minus sing: <tt class="rst-docutils rst-literal">-</tt>.</li>
+</ul>
+</dd>
+<dt>Wildcards</dt>
+<dd><p class="rst-first">A trailling wildcard is automatically added to each term of your query if they don't contain an explicit term presence (<tt class="rst-docutils rst-literal">+</tt> or <tt class="rst-docutils rst-literal">-</tt>).
+Searching for <tt class="rst-docutils rst-literal">foo</tt> is the same as searching for <tt class="rst-docutils rst-literal">foo*</tt>.</p>
+<p>If the query include a dot (<tt class="rst-docutils rst-literal">.</tt>), a leading wildcard will to also added,
+searching for <tt class="rst-docutils rst-literal">model.</tt> is the same as <tt class="rst-docutils rst-literal">*model.*</tt> and <tt class="rst-docutils rst-literal">.model</tt> is the same as <tt class="rst-docutils rst-literal">*.model*</tt>.</p>
+<p class="rst-last">In addition to this automatic feature, you can manually add a wildcard anywhere else in the query.</p>
+</dd>
+</dl>
+</div>
+<div class="rst-section" id="rst-query-examples">
+<h3 class="heading">Query examples</h3>
+<ul class="rst-simple">
+<li>"doc" matches "pydoctor.model.Documentable" and "pydoctor.model.DocLocation".</li>
+<li>"+doc" matches "pydoctor.model.DocLocation" but won't match "pydoctor.model.Documentable".</li>
+<li>"ensure doc" matches "pydoctor.epydoc2stan.ensure_parsed_docstring" and other object whose matches either "doc" or "ensure".</li>
+<li>"inp str" matches "java.io.InputStream" and other object whose matches either "in" or "str".</li>
+<li>"model." matches everything in the pydoctor.model module.</li>
+<li>".web.*tag" matches "twisted.web.teplate.Tag" and related.</li>
+<li>"docstring:ansi" matches object whose docstring matches "ansi".</li>
+</ul>
+</div>
+</div>
+
+
+    <hr />
+    
+    <p>
+      <a href="https://github.com/twisted/pydoctor/issues">Report a bug or suggest an enhancement</a>
+    </p>
+
+    </div>
+    <footer class="navbar navbar-default">
+
+  
+  <div class="container-fluid">
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    24.11.2 at 2025-05-04 21:13:17.
+  </div>
+
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+  <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
+</footer>
+    
+    <script src="pydoctor.js" type="text/javascript"></script>
+    
+  </body>
+
+</html>

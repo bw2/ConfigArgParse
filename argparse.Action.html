@@ -7,7 +7,7 @@
   <head>
     
     <title>argparse.Action</title>
-    <meta name="generator" content="pydoctor 23.4.1"> 
+    <meta name="generator" content="pydoctor 24.11.2"> 
         
     </meta>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
@@ -15,6 +15,7 @@
     <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="apidocs.css" />
     <link rel="stylesheet" type="text/css" href="extra.css" />
+    
 </head>
 
   <body>
@@ -52,7 +53,7 @@
             
             <span class="input-group-btn">
               <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
-              <a class="btn btn-default" id="search-help-button" title="Help" onclick="toggleSearchHelpText()"><img src="fonts/info.svg" alt="Help" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
             </span>
           </div>
         </div>
@@ -76,39 +77,6 @@
             <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
         </noscript>
 
-        <div class="hint" id="search-help-box">
-          <p class="rst-last">
-      
-            Search bar offers the following options:
-            <ul>   
-                <li>
-                  <strong>Term presence.</strong> The below example searches for documents that 
-                    must contain “foo”, might contain “bar” and must not contain “baz”: <code>+foo bar -baz</code>
-                </li> 
-
-                <li>
-                  <strong>Wildcards.</strong> The below example searches for documents with words beginning with “foo”: <code>foo*</code>
-                </li> 
-
-                <li>
-                  <strong>Search in specific fields.</strong> The following search matches all objects 
-                  in "twisted.mail" that matches “search”: <code>+qname:twisted.mail.* +search</code>
-
-                  <p>
-                    Possible fields: 'name', 'qname' (fully qualified name), 'docstring', and 'kind'.
-                    Last two fields are only applicable if "search in docstrings" is enabled.
-                  </p>
-                </li>
-
-                <li>
-                  <strong>Fuzzy matches.</strong> The following search matches all documents 
-                  that have a word within 1 edit distance of “foo”: <code>foo~1</code>
-                </li>
-            </ul>
-
-          </p>
-        </div>
-
         <div id="search-status"> </div>
 
         <div class="warning" id="search-warn-box" style="display: none;">
@@ -119,8 +87,8 @@
           <!-- Filled dynamically by JS -->
         </table>
         
-        <div style="margin-top: 8px;">
-          <p>Results provided by <a href="https://lunrjs.com">Lunr.js</a></p>
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
         </div>
       </div>
 
@@ -773,7 +741,7 @@
         </div>
 
         <div class="extrasDocstring">
-          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">Action</span>(<a href="argparse._AttributeHolder.html" class="internal-link" title="argparse._AttributeHolder">_AttributeHolder</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L769" class="sourceLink">(source)</a></code></p><p>Known subclasses: <code><a href="argparse.BooleanOptionalAction.html" class="internal-link">argparse.BooleanOptionalAction</a></code>, <code><a href="argparse._AppendAction.html" class="internal-link">argparse._AppendAction</a></code>, <code><a href="argparse._AppendConstAction.html" class="internal-link">argparse._AppendConstAction</a></code>, <code><a href="argparse._CountAction.html" class="internal-link">argparse._CountAction</a></code>, <code><a href="argparse._HelpAction.html" class="internal-link">argparse._HelpAction</a></code>, <code><a href="argparse._StoreAction.html" class="internal-link">argparse._StoreAction</a></code>, <code><a href="argparse._StoreConstAction.html" class="internal-link">argparse._StoreConstAction</a></code>, <code><a href="argparse._SubParsersAction.html" class="internal-link">argparse._SubParsersAction</a></code>, <code><a href="argparse._SubParsersAction._ChoicesPseudoAction.html" class="internal-link">argparse._SubParsersAction._ChoicesPseudoAction</a></code>, <code><a href="argparse._VersionAction.html" class="internal-link">argparse._VersionAction</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="argparse.Action.__init__">Action(option_strings, dest, nargs, const, ...)</a></code></p>
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">Action</span>(<a href="argparse._AttributeHolder.html" class="internal-link" title="argparse._AttributeHolder">_AttributeHolder</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L769" class="sourceLink">(source)</a></code></p><p>Known subclasses: <code><a href="argparse.BooleanOptionalAction.html" class="internal-link">argparse.BooleanOptionalAction</a></code>, <code><a href="argparse._AppendAction.html" class="internal-link">argparse._AppendAction</a></code>, <code><a href="argparse._AppendConstAction.html" class="internal-link">argparse._AppendConstAction</a></code>, <code><a href="argparse._CountAction.html" class="internal-link">argparse._CountAction</a></code>, <code><a href="argparse._HelpAction.html" class="internal-link">argparse._HelpAction</a></code>, <code><a href="argparse._StoreAction.html" class="internal-link">argparse._StoreAction</a></code>, <code><a href="argparse._StoreConstAction.html" class="internal-link">argparse._StoreConstAction</a></code>, <code><a href="argparse._SubParsersAction.html" class="internal-link">argparse._SubParsersAction</a></code>, <code><a href="argparse._SubParsersAction._ChoicesPseudoAction.html" class="internal-link">argparse._SubParsersAction._ChoicesPseudoAction</a></code>, <code><a href="argparse._VersionAction.html" class="internal-link">argparse._VersionAction</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="argparse.Action.__init__">Action(option_strings, dest, nargs, const, ...)</a></code></p>
           <p><a href="classIndex.html#argparse.Action">View In Hierarchy</a></p>
         </div>
 
@@ -786,7 +754,7 @@ all attributes of Action instances.</p>
 <p>Keyword Arguments:</p>
 <blockquote>
 <ul>
-<li><dl class="rst-first rst-docutils">
+<li><dl class="rst-docutils rst-first">
 <dt>option_strings -- A list of command-line option strings which</dt>
 <dd><p class="rst-first rst-last">should be associated with this action.</p>
 </dd>
@@ -794,7 +762,7 @@ all attributes of Action instances.</p>
 </li>
 <li><p class="rst-first">dest -- The name of the attribute to hold the created object(s)</p>
 </li>
-<li><dl class="rst-first rst-docutils">
+<li><dl class="rst-docutils rst-first">
 <dt>nargs -- The number of command-line arguments that should be</dt>
 <dd><p class="rst-first">consumed. By default, one argument will be consumed and a single
 value will be produced.  Other values include:</p>
@@ -812,7 +780,7 @@ nargs=1, a list containing a single value will be produced.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="rst-first rst-docutils">
+<li><dl class="rst-docutils rst-first">
 <dt>const -- The value to be produced if the option is specified and the</dt>
 <dd><p class="rst-first rst-last">option uses an action that takes no values.</p>
 </dd>
@@ -820,7 +788,7 @@ nargs=1, a list containing a single value will be produced.</p>
 </li>
 <li><p class="rst-first">default -- The value to be produced if the option is not specified.</p>
 </li>
-<li><dl class="rst-first rst-docutils">
+<li><dl class="rst-docutils rst-first">
 <dt>type -- A callable that accepts a single string argument, and</dt>
 <dd><p class="rst-first rst-last">returns the converted value.  The standard Python types str, int,
 float, and complex are useful examples of such callables.  If None,
@@ -828,7 +796,7 @@ str is used.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="rst-first rst-docutils">
+<li><dl class="rst-docutils rst-first">
 <dt>choices -- A container of values that should be allowed. If not None,</dt>
 <dd><p class="rst-first rst-last">after a command-line argument has been converted to the appropriate
 type, an exception will be raised if it is not a member of this
@@ -836,7 +804,7 @@ collection.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="rst-first rst-docutils">
+<li><dl class="rst-docutils rst-first">
 <dt>required -- True if the action must always be specified at the</dt>
 <dd><p class="rst-first rst-last">command line. This is only meaningful for optional command-line
 arguments.</p>
@@ -845,7 +813,7 @@ arguments.</p>
 </li>
 <li><p class="rst-first">help -- The help string describing the argument.</p>
 </li>
-<li><dl class="rst-first rst-docutils">
+<li><dl class="rst-docutils rst-first">
 <dt>metavar -- The name to be used for the option's argument with the</dt>
 <dd><p class="rst-first rst-last">help string. If None, the 'dest' value will be used as the name.</p>
 </dd>
@@ -970,7 +938,7 @@ arguments.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__call__</span><span class="function-signature">(self, parser, namespace, values, option_string=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L860">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L860">
       
       (source)
     </a>
@@ -997,7 +965,7 @@ arguments.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__init__</span><span class="function-signature">(self, option_strings, dest, nargs=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, const=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, default=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, type=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, choices=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, required=<a href="https://docs.python.org/3/library/constants.html#False" class="intersphinx-link">False</a>, help=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, metavar=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L820">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L820">
       
       (source)
     </a>
@@ -1024,7 +992,7 @@ arguments.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">format_usage</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L857">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L857">
       
       (source)
     </a>
@@ -1050,7 +1018,7 @@ arguments.</p>
   <div class="functionHeader">
     
     <span class="py-defname">choices</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L837">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L837">
       
       (source)
     </a>
@@ -1077,7 +1045,7 @@ arguments.</p>
   <div class="functionHeader">
     
     <span class="py-defname">const</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L834">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L834">
       
       (source)
     </a>
@@ -1104,7 +1072,7 @@ arguments.</p>
   <div class="functionHeader">
     
     <span class="py-defname">default</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L835">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L835">
       
       (source)
     </a>
@@ -1131,7 +1099,7 @@ arguments.</p>
   <div class="functionHeader">
     
     <span class="py-defname">dest</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L832">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L832">
       
       (source)
     </a>
@@ -1158,7 +1126,7 @@ arguments.</p>
   <div class="functionHeader">
     
     <span class="py-defname">help</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L839">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L839">
       
       (source)
     </a>
@@ -1185,7 +1153,7 @@ arguments.</p>
   <div class="functionHeader">
     
     <span class="py-defname">metavar</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L840">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L840">
       
       (source)
     </a>
@@ -1212,7 +1180,7 @@ arguments.</p>
   <div class="functionHeader">
     
     <span class="py-defname">nargs</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L833">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L833">
       
       (source)
     </a>
@@ -1239,7 +1207,7 @@ arguments.</p>
   <div class="functionHeader">
     
     <span class="py-defname">option_strings</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L831">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L831">
       
       (source)
     </a>
@@ -1266,7 +1234,7 @@ arguments.</p>
   <div class="functionHeader">
     
     <span class="py-defname">required</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L838">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L838">
       
       (source)
     </a>
@@ -1293,7 +1261,7 @@ arguments.</p>
   <div class="functionHeader">
     
     <span class="py-defname">type</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L836">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L836">
       
       (source)
     </a>
@@ -1321,7 +1289,7 @@ arguments.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">_get_kwargs</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/1.7/argparse.py#L842">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/21f6534347b76e3c3b0abbc4d212ab2c9546ba95/argparse.py#L842">
       
       (source)
     </a>
@@ -1344,10 +1312,10 @@ arguments.</p>
     <footer class="navbar navbar-default">
 
   
-  <div class="container">
+  <div class="container-fluid">
     <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    23.4.1 at 2023-07-23 16:19:32.
+    24.11.2 at 2025-05-04 21:13:17.
   </div>
 
   <!-- Search related scripts needs to be loaded at the end of HTML 

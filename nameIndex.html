@@ -7,7 +7,7 @@
   <head>
     
     <title>Index of Names</title>
-    <meta name="generator" content="pydoctor 23.4.1"> 
+    <meta name="generator" content="pydoctor 24.11.2"> 
         
     </meta>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
@@ -15,6 +15,7 @@
     <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="apidocs.css" />
     <link rel="stylesheet" type="text/css" href="extra.css" />
+    
 </head>
 
   <body>
@@ -52,7 +53,7 @@
             
             <span class="input-group-btn">
               <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
-              <a class="btn btn-default" id="search-help-button" title="Help" onclick="toggleSearchHelpText()"><img src="fonts/info.svg" alt="Help" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
             </span>
           </div>
         </div>
@@ -76,39 +77,6 @@
             <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
         </noscript>
 
-        <div class="hint" id="search-help-box">
-          <p class="rst-last">
-      
-            Search bar offers the following options:
-            <ul>   
-                <li>
-                  <strong>Term presence.</strong> The below example searches for documents that 
-                    must contain “foo”, might contain “bar” and must not contain “baz”: <code>+foo bar -baz</code>
-                </li> 
-
-                <li>
-                  <strong>Wildcards.</strong> The below example searches for documents with words beginning with “foo”: <code>foo*</code>
-                </li> 
-
-                <li>
-                  <strong>Search in specific fields.</strong> The following search matches all objects 
-                  in "twisted.mail" that matches “search”: <code>+qname:twisted.mail.* +search</code>
-
-                  <p>
-                    Possible fields: 'name', 'qname' (fully qualified name), 'docstring', and 'kind'.
-                    Last two fields are only applicable if "search in docstrings" is enabled.
-                  </p>
-                </li>
-
-                <li>
-                  <strong>Fuzzy matches.</strong> The following search matches all documents 
-                  that have a word within 1 edit distance of “foo”: <code>foo~1</code>
-                </li>
-            </ul>
-
-          </p>
-        </div>
-
         <div id="search-status"> </div>
 
         <div class="warning" id="search-warn-box" style="display: none;">
@@ -119,8 +87,8 @@
           <!-- Filled dynamically by JS -->
         </table>
         
-        <div style="margin-top: 8px;">
-          <p>Results provided by <a href="https://lunrjs.com">Lunr.js</a></p>
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
         </div>
       </div>
 
@@ -146,7 +114,7 @@
         <h2>A</h2>
         <p class="letterlinks">A - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#E">E</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#O">O</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#W">W</a> - <a href="#Y">Y</a> - <a href="#Z">Z</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>Action - <code data-type="Class"><a href="argparse.Action.html" class="internal-link">argparse.Action</a></code></li><li>ACTION_TYPES_THAT_DONT_NEED_A_VALUE - <code data-type="Constant"><a href="configargparse.html#ACTION_TYPES_THAT_DONT_NEED_A_VALUE" class="internal-link">configargparse.ACTION_TYPES_THAT_DONT_NEED_A_VALUE</a></code></li><li>add_argument<ul><li class="private"><code data-type="Method"><a href="argparse._ActionsContainer.html#add_argument" class="internal-link">argparse._ActionsContainer.add_argument</a></code></li><li><code data-type="Method"><a href="argparse.HelpFormatter.html#add_argument" class="internal-link">argparse.HelpFormatter.add_argument</a></code></li><li><code data-type="Function"><a href="configargparse.html#add_argument" class="internal-link">configargparse.add_argument</a></code></li></ul></li><li class="private">add_argument_group - <code data-type="Method"><a href="argparse._ActionsContainer.html#add_argument_group" class="internal-link">argparse._ActionsContainer.add_argument_group</a></code></li><li>add_arguments - <code data-type="Method"><a href="argparse.HelpFormatter.html#add_arguments" class="internal-link">argparse.HelpFormatter.add_arguments</a></code></li><li>add_help - <code data-type="Instance Variable"><a href="argparse.ArgumentParser.html#add_help" class="internal-link">argparse.ArgumentParser.add_help</a></code></li><li class="private">add_mutually_exclusive_group - <code data-type="Method"><a href="argparse._ActionsContainer.html#add_mutually_exclusive_group" class="internal-link">argparse._ActionsContainer.add_mutually_exclusive_group</a></code></li><li class="private">add_parser - <code data-type="Method"><a href="argparse._SubParsersAction.html#add_parser" class="internal-link">argparse._SubParsersAction.add_parser</a></code></li><li>add_subparsers - <code data-type="Method"><a href="argparse.ArgumentParser.html#add_subparsers" class="internal-link">argparse.ArgumentParser.add_subparsers</a></code></li><li>add_text - <code data-type="Method"><a href="argparse.HelpFormatter.html#add_text" class="internal-link">argparse.HelpFormatter.add_text</a></code></li><li>add_usage - <code data-type="Method"><a href="argparse.HelpFormatter.html#add_usage" class="internal-link">argparse.HelpFormatter.add_usage</a></code></li><li>allow_abbrev - <code data-type="Instance Variable"><a href="argparse.ArgumentParser.html#allow_abbrev" class="internal-link">argparse.ArgumentParser.allow_abbrev</a></code></li><li>already_on_command_line - <code data-type="Function"><a href="configargparse.html#already_on_command_line" class="internal-link">configargparse.already_on_command_line</a></code></li><li>argparse - <code data-type="Module"><a href="argparse.html" class="internal-link">argparse</a></code></li><li class="private">argument_default - <code data-type="Instance Variable"><a href="argparse._ActionsContainer.html#argument_default" class="internal-link">argparse._ActionsContainer.argument_default</a></code></li><li>argument_name - <code data-type="Instance Variable"><a href="argparse.ArgumentError.html#argument_name" class="internal-link">argparse.ArgumentError.argument_name</a></code></li><li>ArgumentDefaultsHelpFormatter - <code data-type="Class"><a href="argparse.ArgumentDefaultsHelpFormatter.html" class="internal-link">argparse.ArgumentDefaultsHelpFormatter</a></code></li><li>ArgumentDefaultsRawHelpFormatter - <code data-type="Class"><a href="configargparse.ArgumentDefaultsRawHelpFormatter.html" class="internal-link">configargparse.ArgumentDefaultsRawHelpFormatter</a></code></li><li>ArgumentError - <code data-type="Exception"><a href="argparse.ArgumentError.html" class="internal-link">argparse.ArgumentError</a></code></li><li>ArgumentParser<ul><li><code data-type="Class"><a href="argparse.ArgumentParser.html" class="internal-link">argparse.ArgumentParser</a></code></li><li><code data-type="Class"><a href="configargparse.ArgumentParser.html" class="internal-link">configargparse.ArgumentParser</a></code></li></ul></li><li>ArgumentTypeError - <code data-type="Exception"><a href="argparse.ArgumentTypeError.html" class="internal-link">argparse.ArgumentTypeError</a></code></li>
+          <li>Action - <code data-type="Class"><a href="argparse.Action.html" class="internal-link">argparse.Action</a></code></li><li>ACTION_TYPES_THAT_DONT_NEED_A_VALUE - <code data-type="Variable"><a href="configargparse.html#ACTION_TYPES_THAT_DONT_NEED_A_VALUE" class="internal-link">configargparse.ACTION_TYPES_THAT_DONT_NEED_A_VALUE</a></code></li><li>add_argument<ul><li class="private"><code data-type="Method"><a href="argparse._ActionsContainer.html#add_argument" class="internal-link">argparse._ActionsContainer.add_argument</a></code></li><li><code data-type="Method"><a href="argparse.HelpFormatter.html#add_argument" class="internal-link">argparse.HelpFormatter.add_argument</a></code></li><li><code data-type="Function"><a href="configargparse.html#add_argument" class="internal-link">configargparse.add_argument</a></code></li></ul></li><li class="private">add_argument_group - <code data-type="Method"><a href="argparse._ActionsContainer.html#add_argument_group" class="internal-link">argparse._ActionsContainer.add_argument_group</a></code></li><li>add_arguments - <code data-type="Method"><a href="argparse.HelpFormatter.html#add_arguments" class="internal-link">argparse.HelpFormatter.add_arguments</a></code></li><li>add_help - <code data-type="Instance Variable"><a href="argparse.ArgumentParser.html#add_help" class="internal-link">argparse.ArgumentParser.add_help</a></code></li><li class="private">add_mutually_exclusive_group - <code data-type="Method"><a href="argparse._ActionsContainer.html#add_mutually_exclusive_group" class="internal-link">argparse._ActionsContainer.add_mutually_exclusive_group</a></code></li><li class="private">add_parser - <code data-type="Method"><a href="argparse._SubParsersAction.html#add_parser" class="internal-link">argparse._SubParsersAction.add_parser</a></code></li><li>add_subparsers - <code data-type="Method"><a href="argparse.ArgumentParser.html#add_subparsers" class="internal-link">argparse.ArgumentParser.add_subparsers</a></code></li><li>add_text - <code data-type="Method"><a href="argparse.HelpFormatter.html#add_text" class="internal-link">argparse.HelpFormatter.add_text</a></code></li><li>add_usage - <code data-type="Method"><a href="argparse.HelpFormatter.html#add_usage" class="internal-link">argparse.HelpFormatter.add_usage</a></code></li><li>allow_abbrev - <code data-type="Instance Variable"><a href="argparse.ArgumentParser.html#allow_abbrev" class="internal-link">argparse.ArgumentParser.allow_abbrev</a></code></li><li>already_on_command_line - <code data-type="Function"><a href="configargparse.html#already_on_command_line" class="internal-link">configargparse.already_on_command_line</a></code></li><li>argparse - <code data-type="Module"><a href="argparse.html" class="internal-link">argparse</a></code></li><li class="private">argument_default - <code data-type="Instance Variable"><a href="argparse._ActionsContainer.html#argument_default" class="internal-link">argparse._ActionsContainer.argument_default</a></code></li><li>argument_name - <code data-type="Instance Variable"><a href="argparse.ArgumentError.html#argument_name" class="internal-link">argparse.ArgumentError.argument_name</a></code></li><li>ArgumentDefaultsHelpFormatter - <code data-type="Class"><a href="argparse.ArgumentDefaultsHelpFormatter.html" class="internal-link">argparse.ArgumentDefaultsHelpFormatter</a></code></li><li>ArgumentDefaultsRawHelpFormatter - <code data-type="Class"><a href="configargparse.ArgumentDefaultsRawHelpFormatter.html" class="internal-link">configargparse.ArgumentDefaultsRawHelpFormatter</a></code></li><li>ArgumentError - <code data-type="Exception"><a href="argparse.ArgumentError.html" class="internal-link">argparse.ArgumentError</a></code></li><li>ArgumentParser<ul><li><code data-type="Class"><a href="argparse.ArgumentParser.html" class="internal-link">argparse.ArgumentParser</a></code></li><li><code data-type="Class"><a href="configargparse.ArgumentParser.html" class="internal-link">configargparse.ArgumentParser</a></code></li></ul></li><li>ArgumentTypeError - <code data-type="Exception"><a href="argparse.ArgumentTypeError.html" class="internal-link">argparse.ArgumentTypeError</a></code></li>
         </ul>
       
         <a name="B">
@@ -344,10 +312,10 @@
     <footer class="navbar navbar-default">
 
   
-  <div class="container">
+  <div class="container-fluid">
     <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    23.4.1 at 2023-07-23 16:19:32.
+    24.11.2 at 2025-05-04 21:13:17.
   </div>
 
   <!-- Search related scripts needs to be loaded at the end of HTML 
