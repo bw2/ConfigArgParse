@@ -14,12 +14,9 @@ import re
 import sys
 import types
 from collections import OrderedDict
-import textwrap
+from io import StringIO
 
-if sys.version_info >= (3, 0):
-    from io import StringIO
-else:
-    from StringIO import StringIO
+import textwrap
 
 
 ACTION_TYPES_THAT_DONT_NEED_A_VALUE = [argparse._StoreTrueAction,
