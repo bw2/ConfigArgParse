@@ -14,6 +14,7 @@ tested and guaranteed to work.
 """
 
 import os
+
 # This gets us the correct path to the directory where the sample config files are kept
 from pathlib import Path
 
