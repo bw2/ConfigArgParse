@@ -1,9 +1,9 @@
-import sys
 import argparse
-import configargparse
-from unittest import mock, expectedFailure
+import sys
 from io import StringIO
+from unittest import expectedFailure, mock
 
+import configargparse
 from tests.test_base import TestCase, captured_output
 
 

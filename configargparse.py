@@ -4,20 +4,21 @@ A drop-in replacement for `argparse` that allows options to also be set via conf
 :see: `configargparse.ArgumentParser`, `configargparse.add_argument`
 """
 
-import os, sys, re
 import argparse
 import ast
 import csv
 import functools
-import json
 import glob
+import json
+import logging
+import os
+import re
+import sys
+import textwrap
 import types
 from collections import OrderedDict
-import textwrap
 from contextlib import suppress
 from io import StringIO
-
-import logging
 
 _logger = logging.getLogger(__name__)
 
@@ -366,11 +367,10 @@ class YAMLConfigFileParser(ConfigFileParser):
             )
 
         try:
-            from yaml import CSafeLoader as SafeLoader
             from yaml import CDumper as Dumper
+            from yaml import CSafeLoader as SafeLoader
         except ImportError:
-            from yaml import SafeLoader
-            from yaml import Dumper
+            from yaml import Dumper, SafeLoader
 
         return yaml, SafeLoader, Dumper
 

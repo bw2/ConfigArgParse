@@ -14,10 +14,10 @@ tested and guaranteed to work.
 """
 
 import os
-import configargparse
-
 # This gets us the correct path to the directory where the sample config files are kept
 from pathlib import Path
+
+import configargparse
 
 example_configs = Path(__file__).parent.absolute() / "example_configs"
 
@@ -317,10 +317,11 @@ def demo_recursive_config():
 
 ### Unit tests below this line for use with "python -munittest"
 
-from tests.test_base import TestCase, yaml
+import logging
 import unittest
 from unittest.mock import patch
-import logging
+
+from tests.test_base import TestCase, yaml
 
 
 class TestConfigParserSubclasses(TestCase):

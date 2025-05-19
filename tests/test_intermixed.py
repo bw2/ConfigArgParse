@@ -1,9 +1,9 @@
-import sys
 import argparse
-import configargparse
-from unittest import mock
+import sys
 from io import StringIO
+from unittest import mock
 
+import configargparse
 from tests.test_base import TestCase, captured_output
 
 # Intermixed parsing was added in Python 3.7

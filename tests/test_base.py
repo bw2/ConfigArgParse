@@ -1,13 +1,14 @@
 import argparse
-import configargparse
-from contextlib import contextmanager
 import logging
 import os
 import sys
 import types
 import unittest
+from contextlib import contextmanager
 from io import StringIO
 from tempfile import NamedTemporaryFile
+
+import configargparse
 
 # enable logging to simplify debugging
 logger = logging.getLogger()

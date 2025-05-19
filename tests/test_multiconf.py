@@ -1,9 +1,10 @@
 # FIXME - tests from here need to be translated and moved to test_config_parser_subclasses.py
 
 import os
-from pdb import set_trace
 import sys
 import unittest
+from pdb import set_trace
+
 from configargparse import ArgumentParser
 
 

@@ -4,14 +4,15 @@ https://github.com/bw2/ConfigArgParse/issues/275
 No fixes without a test case!
 """
 
-import os, sys, re
-from textwrap import dedent
+import os
+import re
+import sys
 import unittest
-from unittest.mock import patch, mock_open
 from io import StringIO
+from textwrap import dedent
+from unittest.mock import mock_open, patch
 
 import configargparse
-
 from tests.test_base import TestCase, yaml
 
 

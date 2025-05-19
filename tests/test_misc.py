@@ -1,9 +1,9 @@
 import argparse
-import configargparse
 import unittest
-from unittest.mock import patch
 from io import StringIO
+from unittest.mock import patch
 
+import configargparse
 from tests.test_base import TestCase, replace_error_method
 
 

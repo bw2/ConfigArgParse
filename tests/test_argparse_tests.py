@@ -1,8 +1,11 @@
-import os, sys, re
-import logging
 import inspect
-import configargparse
+import logging
+import os
+import re
+import sys
 from textwrap import dedent as dd
+
+import configargparse
 
 ################################################################################
 # since configargparse should work as a drop-in replacement for argparse

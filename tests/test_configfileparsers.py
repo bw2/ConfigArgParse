@@ -1,9 +1,9 @@
 import argparse
-import configargparse
+import logging
 import unittest
 from io import StringIO
-import logging
 
+import configargparse
 from tests.test_base import TestCase, yaml
 
 
