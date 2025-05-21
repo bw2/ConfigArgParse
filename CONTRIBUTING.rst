@@ -6,11 +6,11 @@ What can you do
 
 If you like the project and think you could help with making it better, there are many ways you can do it:
 
-- Create a new issue for new feature proposal or a bug
-- Triage old issues that needs a refresh
+- Create an issue to report a bug or suggest a new feature
+- Triage old issues that need a refresh
 - Implement existing issues
 - Help with improving the documentation
-- Spread a word about the project to your colleagues, friends, blogs or any other channels
+- Spread the word about the project to your colleagues, friends, blogs or any other channels
 - Any other things you could imagine
 
 Any contribution would be of great help and we'll highly appreciate it! 
@@ -22,7 +22,7 @@ Development process
 Create a fork of the git repository and checkout a new branch from master branch. 
 The branch name may start with an associated issue number so that we can easily cross-reference them. 
 For example, use ``1234-some-brach-name`` as the name of the branch working to fix issue 1234. 
-Once you’re ready to run a full batterie of tests to your changes, open a pull request.
+Once your changes are ready and are passing the automated tests, open a pull request.
 
 Don’t forget to sync your fork once in while to work from the latest revision.
 
@@ -36,9 +36,9 @@ Review process
 
 - Code changes and code added should have tests: untested code is buggy code and should
   not be accepted by reviewers.
-- All code changes must be reviewed by at least one maintainers who is not an author 
+- All code changes must be reviewed by at least one maintainer who is not an author 
   of the code being added.
-- When one is done with the review, always say what the next step(s) should be: 
+- When a reviewer completes a review, they should always say what the next step(s) should be: 
   - Ok we can merge the patch as is 
   - Some optional changes requested
   - Some required changes are requested
