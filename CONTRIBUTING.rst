@@ -1,14 +1,14 @@
 Contributing to ConfigArgParse
 ------------------------------
 
-What can you do 
+What you can do 
 ~~~~~~~~~~~~~~~
 
 If you like the project and think you could help with making it better, there are many ways you can do it:
 
 - Create an issue to report a bug or suggest a new feature
 - Triage old issues that need a refresh
-- Implement existing issues
+- Implement fixes for existing issues
 - Help with improving the documentation
 - Spread the word about the project to your colleagues, friends, blogs or any other channels
 - Any other things you could imagine
@@ -24,7 +24,7 @@ The branch name may start with an associated issue number so that we can easily 
 For example, use ``1234-some-brach-name`` as the name of the branch working to fix issue 1234. 
 Once your changes are ready and are passing the automated tests, open a pull request.
 
-Don’t forget to sync your fork once in while to work from the latest revision.
+Don’t forget to sync your fork once in a while to work from the latest revision.
 
 Pre-commit checks
 ~~~~~~~~~~~~~~~~~
@@ -43,7 +43,7 @@ Review process
   - Some optional changes requested
   - Some required changes are requested
   - An issue should be opened to tackle another problem discovered during the coding process.
-- If a substential change is pushed after a review, a follow-up review should be done. 
+- If a substantial change is pushed after a review, a follow-up review should be done. 
   Small changes and nit-picks do not required follow-up reviews.
 
 Release process 
@@ -66,5 +66,5 @@ The following is a high level overview and might not match the current state of 
 
 ---
 
-owner: people with administrative rights on the repo, only them are able to push a new tag.
+owner: people with administrative rights on the repo, only they are able to push a new tag.
 maintainers: people with push rights, they can merge PR if the requirements are met. 
