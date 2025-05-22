@@ -326,6 +326,8 @@ class YAMLConfigFileParser(ConfigFileParser):
         for key, value in parsed_obj.items():
             if isinstance(value, list):
                 result[key] = value
+            elif isinstance(value, dict):
+                result[key] = value
             elif value is None:
                 pass
             else:
@@ -1166,6 +1168,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 self.error(("%s can't be set to a list '%s' unless its action type is changed "
                             "to 'append' or nargs is set to '*', '+', or > 1") % (key, value))
         elif isinstance(value, str):
+            args.append( "%s=%s" % (command_line_key, value) )
+        elif isinstance(value, dict):
             args.append( "%s=%s" % (command_line_key, value) )
         else:
             raise ValueError("Unexpected value type {} for value: {}".format(
