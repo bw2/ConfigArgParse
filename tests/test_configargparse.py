@@ -8,16 +8,9 @@ import sys
 import tempfile
 import types
 import unittest
+from unittest import mock
 
-try:
-    import mock
-except ImportError:
-    from unittest import mock
-
-if sys.version_info >= (3, 0):
-    from io import StringIO
-else:
-    from StringIO import StringIO
+from io import StringIO
 
 if sys.version_info >= (3, 10):
     OPTIONAL_ARGS_STRING="options"
@@ -271,9 +264,9 @@ class TestBasicUseCases(TestCase):
                 '  -h, --help \\s+ show this help message and exit\n'
                 '  --genome GENOME \\s+ Path to genome file\n'
                 '  -v\n'
-                '  -g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE\n'
-                '  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
-                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n'%OPTIONAL_ARGS_STRING +
+                '  -g(?: MY_CFG_FILE)?, --my-cfg-file MY_CFG_FILE\n'
+                '  -d(?: DBSNP)?, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
+                '  -f(?: FRMT)?, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n'%OPTIONAL_ARGS_STRING +
                 7*r'(.+\s*)')
         else:
             self.assertRegex(self.format_help(),
@@ -286,10 +279,10 @@ class TestBasicUseCases(TestCase):
                 'g1:\n'
                 '  --genome GENOME \\s+ Path to genome file\n'
                 '  -v\n'
-                '  -g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE\n\n'
+                '  -g(?: MY_CFG_FILE)?, --my-cfg-file MY_CFG_FILE\n\n'
                 'g2:\n'
-                '  -d DBSNP, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
-                '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n'%OPTIONAL_ARGS_STRING +
+                '  -d(?: DBSNP)?, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n'
+                '  -f(?: FRMT)?, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n'%OPTIONAL_ARGS_STRING +
                 7*r'(.+\s*)')
 
         self.assertParseArgsRaises("invalid choice: 'ZZZ'",
@@ -383,18 +376,17 @@ class TestBasicUseCases(TestCase):
             '  --format: \\s+ BED\n')
 
         self.assertRegex(self.format_help(),
-            r'usage: .* \[-h\] --genome GENOME \[-v\]\s+ \(-f1 TYPE1_CFG_FILE \|'
-            ' \\s*-f2 TYPE2_CFG_FILE\\)\\s+\\(-f FRMT \\| -b\\)\n\n'
+            r'usage: .* \[-h\] --genome GENOME \[-v\]\s+\(-f1 TYPE1_CFG_FILE \|'
+            r'\s+-f2 TYPE2_CFG_FILE\)\s+\(-f FRMT \| -b\)\n\n'
             '%s:\n'
             '  -h, --help            show this help message and exit\n'
-            '  -f1 TYPE1_CFG_FILE, --type1-cfg-file TYPE1_CFG_FILE\n'
-            '  -f2 TYPE2_CFG_FILE, --type2-cfg-file TYPE2_CFG_FILE\n'
-            '  -f FRMT, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n'
+            '  -f1(?: TYPE1_CFG_FILE)?, --type1-cfg-file TYPE1_CFG_FILE\n'
+            '  -f2(?: TYPE2_CFG_FILE)?, --type2-cfg-file TYPE2_CFG_FILE\n'
+            '  -f(?: FRMT)?, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n'
             '  -b, --bam\\s+\\[env var: BAM_FORMAT\\]\n\n'
             'group1:\n'
             '  --genome GENOME       Path to genome file\n'
-            '  -v\n\n'%OPTIONAL_ARGS_STRING +
-            5*r'(.+\s*)')
+            '  -v\n\n'%OPTIONAL_ARGS_STRING)
         config_file.close()
 
     def testSubParsers(self):
@@ -872,11 +864,11 @@ class TestMisc(TestCase):
         self.assertEqual(ns.genome, "hg20")
 
         self.assertRegex(self.format_help(),
-            'usage: .* \\[-h\\] -c CONFIG_FILE --genome GENOME\n\n'
-            '%s:\n'
-            '  -h, --help\\s+ show this help message and exit\n'
-            '  -c CONFIG_FILE, --config CONFIG_FILE\\s+ my config file\n'
-            '  --genome GENOME\\s+ Path to genome file\n\n'%OPTIONAL_ARGS_STRING +
+            r'usage: .* \[-h\] -c CONFIG_FILE --genome GENOME\n\n'
+            r'%s:\n'
+            r'  -h, --help\s+ show this help message and exit\n'
+            r'  -c(?: CONFIG_FILE)?, --config CONFIG_FILE\s+ my config file\n'
+            r'  --genome GENOME\s+ Path to genome file\n\n'%OPTIONAL_ARGS_STRING +
             5*r'(.+\s*)')
 
         # just run print_values() to make sure it completes and returns None
@@ -935,8 +927,8 @@ class TestMisc(TestCase):
             r'\[-w CONFIG_OUTPUT_PATH\]\s* --arg1\s+ARG1\s*\[--flag\]\s*'
             '%s:\\s*'
             '-h, --help \\s* show this help message and exit '
-            r'-c CONFIG_FILE, --config CONFIG_FILE\s+my config file '
-            r'-w CONFIG_OUTPUT_PATH, --write-config CONFIG_OUTPUT_PATH takes '
+            r'-c(?: CONFIG_FILE)?, --config CONFIG_FILE\s+my config file '
+            r'-w(?: CONFIG_OUTPUT_PATH)?, --write-config CONFIG_OUTPUT_PATH takes '
             r'the current command line args and writes them '
             r'out to a config file at the given path, then exits '
             r'--arg1 ARG1 Arg1 help text '
@@ -946,7 +938,7 @@ class TestMisc(TestCase):
             r'Config file syntax allows: key=value, flag=true, stuff=\[a,b,c\] '
             r'\(for details, see syntax at https://goo.gl/R74nmi\). '
             r'In general, command-line values override config file values '
-            r'which override defaults. '.replace(' ', '\s*') % OPTIONAL_ARGS_STRING
+            r'which override defaults. '.replace(' ', r'\s*') % OPTIONAL_ARGS_STRING
         )
 
     def test_FormatHelpProg(self):

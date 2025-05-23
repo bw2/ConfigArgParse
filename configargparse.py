@@ -15,11 +15,7 @@ import sys
 import types
 from collections import OrderedDict
 import textwrap
-
-if sys.version_info >= (3, 0):
-    from io import StringIO
-else:
-    from StringIO import StringIO
+from io import StringIO
 
 
 ACTION_TYPES_THAT_DONT_NEED_A_VALUE = [argparse._StoreTrueAction,
@@ -781,6 +777,10 @@ class ArgumentParser(argparse.ArgumentParser):
                 help=write_out_config_file_arg_help_message,
                 is_write_out_config_file_arg=True)
 
+        # TODO: delete me!
+        if sys.version_info < (3, 9):
+            self.exit_on_error = True
+
     def parse_args(self, args = None, namespace = None,
                    config_file_contents = None, env_vars = os.environ):
         """Supports all the same args as the `argparse.ArgumentParser.parse_args()`,
@@ -802,7 +802,11 @@ class ArgumentParser(argparse.ArgumentParser):
             ignore_help_args=False)
 
         if argv:
-            self.error('unrecognized arguments: %s' % ' '.join(argv))
+            msg = 'unrecognized arguments: %s' % ' '.join(argv)
+            if self.exit_on_error:
+                self.error(msg)
+            else:
+                raise ArgumentError(None, msg)
         return args
 
     def parse_known_args(
