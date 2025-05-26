@@ -84,6 +84,7 @@ tests_require = [
     "mock",
     "PyYAML",
     "pytest",
+    "toml",
 ]
 
 
