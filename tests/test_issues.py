@@ -184,6 +184,8 @@ class TestIssues(TestCase):
         require making a special case for these.
 
         This test confirms the status quo, which is consistent if slightly counterintuitive.
+
+        TODO - move this in with the related tests in test_basicuse.py
         """
         self.initParser(config_file_parser_class=configargparse.YAMLConfigFileParser)
 
