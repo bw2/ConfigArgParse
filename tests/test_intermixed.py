@@ -11,6 +11,7 @@ from tests.test_base import TestCase, captured_output
 # add some of our own. Since ConfigArgParse only allows the setting of named arguments,
 # and intermixed parsing only impacts positional arguments, we shouldn't have problems.
 
+
 @unittest.skipUnless(sys.version_info >= (3, 7), "Intermixed parsing added in py3.7")
 class TestIntermixed(TestCase):
 
