@@ -26,7 +26,7 @@ example_configs = Path(__file__).parent.absolute() / "example_configs"
 Scenario 1 - Making it so that a specific argument cannot be set within the config file.
 
 For this we'll use the DefaultConfigFileParser class. We can subclass this and define our own
-tweak_value() method.
+process_config_entry() method.
 
 This was inspired by https://github.com/bw2/ConfigArgParse/issues/301
 """
@@ -38,12 +38,12 @@ class ForbiddenArgConfigFileParser(configargparse.DefaultConfigFileParser):
     # catch both.
     forbidden_args = ["setting2", "--setting2"]
 
-    def tweak_value(self, key, value, filename):
+    def process_config_entry(self, key, value, filename):
         if key in self.forbidden_args:
             # Set value to None, to completely ignore this setting
             value = None
 
-        # tweak_value() should always return {key: value}
+        # process_config_entry() should always return {key: value}
         return {key: value}
 
 
@@ -92,12 +92,12 @@ class LoggingConfigFileParser(configargparse.DefaultConfigFileParser):
         self.all_values_seen = []
         super().__init__()
 
-    def tweak_value(self, key, value, filename):
+    def process_config_entry(self, key, value, filename):
         # Remember everything that we see
         stripped_key = key.lstrip("-")  # Remove any optional -- prefix
         self.all_values_seen.append((stripped_key, value, filename))
 
-        # tweak_value() should always return {key: value}
+        # process_config_entry() should always return {key: value}
         return {key: value}
 
 
@@ -196,7 +196,7 @@ class DictYAMLConfigFileParser(configargparse.YAMLConfigFileParser):
     A custom parser to match with the custom action above
     """
 
-    def tweak_value(self, key, value, filename):
+    def process_config_entry(self, key, value, filename):
         if isinstance(value, dict):
             # Check that no keys contain "="
             if any("=" in k for k in value):
@@ -267,7 +267,7 @@ class RecursiveConfigFileParser(configargparse.DefaultConfigFileParser):
         # Must call the suporclass constructor - DefaultConfigFileParser takes no args
         super().__init__()
 
-    def tweak_value(self, key, value, filename):
+    def process_config_entry(self, key, value, filename):
         if key == self.config_key:
             # Found the config key. Create a new parser and parse the included file(s)
             newdict = dict()

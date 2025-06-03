@@ -136,17 +136,17 @@ class ConfigFileParser:
         """
         raise NotImplementedError("serialize(..) not implemented")
 
-    def _tweak_value(self, key, value, filename):
-        """Ensure that all tweaked values really are strings, or list of strings,
-        or none, in order to update the collection of values.
+    def _process_config_entry(self, key, value, filename):
+        """Ensure that all (possibly altered) values really are strings, or list of strings,
+        or None, in order to update the collection of values.
         """
-        # Call the function designed to be overridden in subclass.
-        tweaked_dict = self.tweak_value(key, value, filename)
+        # Call the function designed to be overridden in subclasses.
+        altered_dict = self.process_config_entry(key, value, filename)
 
         # Seems a little weird, but anything that is not a list is converted to string,
         # It will be converted back to boolean, int or whatever after.
         # Because config values are still passed to argparser for computation.
-        for newkey, newvalue in tweaked_dict.items():
+        for newkey, newvalue in altered_dict.items():
             if newvalue is None:
                 pass
             elif isinstance(newvalue, list):
@@ -159,7 +159,7 @@ class ConfigFileParser:
             else:
                 yield newkey, str(newvalue)
 
-    def tweak_value(self, key, value, filename):
+    def process_config_entry(self, key, value, filename):
         """This function may be overridden in custom ConfigFileParser subclasses
         to allow for modification or values or other side effects when a value is
         found in a config file.
@@ -252,7 +252,7 @@ class DefaultConfigFileParser(ConfigFileParser):
                         value = [elem.strip() for elem in value[1:-1].split(",")]
 
                 # Allow for post-modification of values by subclass
-                items.update(self._tweak_value(key, value, filename))
+                items.update(self._process_config_entry(key, value, filename))
             else:
                 raise ConfigFileParserException(
                     "Unexpected line {} in {}: {}".format(i, filename or "stream", line)
@@ -321,7 +321,9 @@ class ConfigparserConfigFileParser(ConfigFileParser):
                     prelist_string = multiLine2SingleLine.split("[")[0]
                     if "{" not in prelist_string:
                         multiLine2SingleLine = literal_eval(multiLine2SingleLine)
-                result.update(self._tweak_value(key, multiLine2SingleLine, filename))
+                result.update(
+                    self._process_config_entry(key, multiLine2SingleLine, filename)
+                )
         return result
 
     def serialize(self, items):
@@ -396,8 +398,8 @@ class YAMLConfigFileParser(ConfigFileParser):
         result = OrderedDict()
         for key, value in parsed_obj.items():
 
-            # Allow for subclasses to tweak the values
-            result.update(self._tweak_value(key, value, filename))
+            # Allow for subclasses to see, and possibly alter, the values
+            result.update(self._process_config_entry(key, value, filename))
 
         return result
 
@@ -586,7 +588,7 @@ class TomlConfigParser(ConfigFileParser):
             data = get_toml_section(config, section)
             if data:
                 for key, value in data.items():
-                    result.update(self._tweak_value(key, value, filename))
+                    result.update(self._process_config_entry(key, value, filename))
 
                 # once we found the data, no need to look further
                 break
