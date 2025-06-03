@@ -291,6 +291,7 @@ class TestIssues(TestCase):
 
         self.assertEqual(vars(ns), {"absent": None, "empty_list_in_conf": []})
 
+    @unittest.skipUnless(sys.version_info >= (3, 7), "mock_open() does not work until py3.7")
     @patch("configargparse.glob")
     def test_issue_142(self, patched_glob):
         """

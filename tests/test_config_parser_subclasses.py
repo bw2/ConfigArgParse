@@ -343,7 +343,7 @@ class TestConfigParserSubclasses(TestCase):
 
         self.assertEqual(len(pp_calls), 1)
         self.assertRegex(
-            " ".join(pp_calls[0].args),
+            " ".join(pp_calls[0][1]),
             r"--setting2 was set to wibble, overriding bar in config file .*example1\.ini",
         )
 
