@@ -927,7 +927,7 @@ class ArgumentParser(argparse.ArgumentParser):
         Returns:
             argparse.Namespace: namespace
         """
-        return self._parse_args_cap(
+        return self._parse_args_impl(
             False,
             args=args,
             namespace=namespace,
@@ -949,7 +949,7 @@ class ArgumentParser(argparse.ArgumentParser):
         Returns:
             argparse.Namespace: namespace
         """
-        return self._parse_args_cap(
+        return self._parse_args_impl(
             True,
             args=args,
             namespace=namespace,
@@ -957,13 +957,13 @@ class ArgumentParser(argparse.ArgumentParser):
             env_vars=env_vars,
         )
 
-    def _parse_args_cap(
+    def _parse_args_impl(
         self, intermixed, args, namespace, config_file_contents, env_vars
     ):
         """This is the actual implementation of parse_args (with intermixed=False) or
         parse_intermixed_args (with intermixed=True).
         """
-        args, argv = self._parse_known_args_cap(
+        args, argv = self._parse_known_args_impl(
             intermixed=intermixed,
             args=args,
             namespace=namespace,
@@ -1022,7 +1022,7 @@ class ArgumentParser(argparse.ArgumentParser):
         Returns:
             tuple[argparse.Namespace, list[str]]: tuple namescpace, unknown_args
         """
-        return self._parse_known_args_cap(
+        return self._parse_known_args_impl(
             intermixed=False,
             args=args,
             namespace=namespace,
@@ -1053,7 +1053,7 @@ class ArgumentParser(argparse.ArgumentParser):
         Returns:
             tuple[argparse.Namespace, list[str]]: tuple namescpace, unknown_args
         """
-        return self._parse_known_args_cap(
+        return self._parse_known_args_impl(
             intermixed=True,
             args=args,
             namespace=namespace,
@@ -1062,7 +1062,7 @@ class ArgumentParser(argparse.ArgumentParser):
             ignore_help_args=ignore_help_args,
         )
 
-    def _parse_known_args_cap(
+    def _parse_known_args_impl(
         self,
         intermixed,
         args,
