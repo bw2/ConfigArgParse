@@ -2,7 +2,7 @@ name: unit tests
 
 on:
   push:
-    branches: [ master, blacken ]
+    branches: [ master ]
     tags:
       - '*'
   pull_request:
