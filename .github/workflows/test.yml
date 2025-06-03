@@ -6,54 +6,72 @@ on:
     tags:
       - '*'
   pull_request:
+    branches: [ master ]
 
 jobs:
+  black:
+    name: Run Black
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+
+      - name: Install Black
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install black
+
+      - name: Check Python formatting conforms to Black
+        run: black -t py38 --check --diff .
+
+  test_legacy:
+    needs: [black]
+
+    name: Docker py${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ['3.6', '3.7', '3.8']
+
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Run tests with Docker
+        run: |
+          docker run -i --rm -v ${{ github.workspace }}:/app -w /app python:${{ matrix.python-version }} bash <<'END'
+            python -m pip install --upgrade pip setuptools wheel tox
+            python -m pip install '.[test]'
+            python -munittest -v
+          END
+
   test:
-    name: ${{ matrix.os }} py${{ matrix.python-version }} ${{ matrix.use-docker && '(docker)' || '' }}
+    needs: [black]
+
+    name: ${{ matrix.os }} py${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        include:
-          - name: Legacy Python on Ubuntu
-            os: ubuntu-latest
-            python-version: '3.6'
-            use-docker: true
-          - name: Legacy Python on Ubuntu
-            os: ubuntu-latest
-            python-version: '3.7'
-            use-docker: true
-          - name: Legacy Python on Ubuntu
-            os: ubuntu-latest
-            python-version: '3.8'
-            use-docker: true
-
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.9','3.10','3.11','3.12','3.13']
-        use-docker: [false]
+        python-version: ['3.8','3.9','3.10','3.11','3.12','3.13','pypy3.11']
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@master
       - name: Set up Python ${{ matrix.python-version }}
-        if: ${{ !matrix.use-docker }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Run tests with Docker
-        if: ${{ matrix.use-docker }}
-        run: |
-          docker run --rm -v ${{ github.workspace }}:/app -w /app python:${{ matrix.python-version }} bash -c "
-            python -m pip install --upgrade pip setuptools wheel tox
-            python -m pip install '.[test]'
-            pytest
-          "
-
-      - name: Run tests
-        if: ${{ !matrix.use-docker }}
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel tox
           python -m pip install '.[test]'
-          pytest
+
+      - name: Run tests
+        run: python -munittest -v
