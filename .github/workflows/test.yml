@@ -28,6 +28,27 @@ jobs:
       - name: Check Python formatting conforms to Black
         run: black -t py38 --check --diff .
 
+  test_legacy:
+    needs: [black]
+
+    name: Ubuntu+Docker py${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ['3.6', '3.7', '3.8']
+
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Run tests with Docker
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/app -w /app python:${{ matrix.python-version }} bash <<'.'
+            python -m pip install --upgrade pip setuptools wheel tox
+            python -m pip install '.[test]'
+            python -munittest -v
+          .
+
   test:
     needs: [black]
 
