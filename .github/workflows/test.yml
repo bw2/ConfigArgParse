@@ -48,7 +48,7 @@ jobs:
           docker run --rm -v ${{ github.workspace }}:/app -w /app python:${{ matrix.python-version }} bash -c "
             python -m pip install --upgrade pip setuptools wheel tox
             python -m pip install '.[test]'
-            pytest
+            pytest --cov=.
           "
 
       - name: Run tests
@@ -56,4 +56,4 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools wheel tox
           python -m pip install '.[test]'
-          pytest
+          pytest --cov=.
