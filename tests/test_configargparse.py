@@ -10,6 +10,7 @@ import pytest
 import types
 import unittest
 from unittest import mock
+import textwrap
 
 from io import StringIO
 
@@ -1768,7 +1769,71 @@ class TestConfigFileParsers(TestCase):
         assert args.level == 35
 
 
-class TestSimpleConfigFile:
+class TestTomlConfigParser:
+    @pytest.fixture(autouse=True)
+    def cwd(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+
+    @pytest.fixture
+    def toml_file(self, tmp_path):
+        toml_file = tmp_path / "config.toml"
+        toml_file.write_text(textwrap.dedent("""\
+        [section]
+        key1 = 'toml1'
+        key2 = 'toml2'
+        """))
+
+    @pytest.fixture
+    def toml_file_advanced(self, tmp_path):
+        toml_file = tmp_path / "config.toml"
+        toml_file.write_text(textwrap.dedent("""\
+        [tool.section]
+        key1 = "toml1"
+        key2 = [1, 2, 3]
+        """))
+
+    @pytest.fixture
+    def toml_file_empty(self, tmp_path):
+        toml_file = tmp_path / "config.toml"
+        toml_file.write_text("")
+
+    @pytest.fixture
+    def toml_file_empty_section(self, tmp_path):
+        toml_file = tmp_path / "config.toml"
+        toml_file.write_text("[section]")
+
+    @pytest.mark.usefixtures("toml_file")
+    def test_section(self):
+        parser = configargparse.TomlConfigParser(['section'])
+        with open('config.toml', 'rb') as f:
+            assert parser.parse(f) == {'key1': 'toml1', 'key2': 'toml2'}
+
+    @pytest.mark.usefixtures("toml_file")
+    def test_no_sections(self):
+        parser = configargparse.TomlConfigParser([])
+        with open('config.toml', 'rb') as f:
+            assert parser.parse(f) == {}
+
+    @pytest.mark.usefixtures("toml_file_empty_section")
+    def test_empty_section(self):
+        parser = configargparse.TomlConfigParser(['section'])
+        with open('config.toml', 'rb') as f:
+            assert parser.parse(f) == {}
+
+    @pytest.mark.usefixtures("toml_file_empty")
+    def test_empty_section(self):
+        parser = configargparse.TomlConfigParser(['section'])
+        with open('config.toml', 'rb') as f:
+            assert parser.parse(f) == {}
+
+    @pytest.mark.usefixtures("toml_file_advanced")
+    def test_advanced(self):
+        parser = configargparse.TomlConfigParser(['tool.section'])
+        with open('config.toml', 'rb') as f:
+            assert parser.parse(f) == {'key1': "toml1", 'key2': [1, 2, 3]}
+
+
+class TestCompositeConfigParser:
     @pytest.fixture
     def parser(self):
         parser = configargparse.ArgParser(
@@ -1785,7 +1850,7 @@ class TestSimpleConfigFile:
         parser.add_argument('--key1', type=str)
         parser.add_argument('--key2', type=str)
         return parser
-    
+
     @pytest.fixture(autouse=True)
     def cwd(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
@@ -1794,12 +1859,12 @@ class TestSimpleConfigFile:
     def yaml_file(self, tmp_path):
         yaml_file = tmp_path / "config.yaml"
         yaml_file.write_text("[section]\nkey1: yaml1\nkey2: yaml2")
-    
+
     @pytest.fixture
     def ini_file(self, tmp_path):
         ini_file = tmp_path / "config.ini"
         ini_file.write_text("[section]\nkey1=ini1\nkey2=ini2")
-    
+
     @pytest.fixture
     def toml_file(self, tmp_path):
         toml_file = tmp_path / "config.toml"
@@ -1838,6 +1903,7 @@ class TestSimpleConfigFile:
     def test_toml_extra(self, parser):
         with pytest.raises(SystemExit):
             parser.parse_args([])
+
 
 ################################################################################
 # since configargparse should work as a drop-in replacement for argparse
