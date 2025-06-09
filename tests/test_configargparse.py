@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 import tempfile
+import pytest
 import types
 import unittest
 from unittest import mock
@@ -1766,6 +1767,68 @@ class TestConfigFileParsers(TestCase):
         assert args.verbose == True
         assert args.level == 35
 
+
+class TestXXX:
+    @pytest.fixture
+    def parser(self):
+        parser = configargparse.ArgParser(description='test', default_config_files=['config.yaml', 'config.toml', 'config.ini'])
+        parser.add_argument('--config', is_config_file=True)
+        parser.add_argument('--key1', type=str)
+        parser.add_argument('--key2', type=str)
+        return parser
+    
+    @pytest.fixture(autouse=True)
+    def cwd(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+
+    @pytest.fixture
+    def yaml_file(self, tmp_path):
+        yaml_file = tmp_path / "config.yaml"
+        yaml_file.write_text("key1: yaml1\nkey2: yaml2")
+    
+    @pytest.fixture
+    def ini_file(self, tmp_path):
+        ini_file = tmp_path / "config.ini"
+        ini_file.write_text("[section]\nkey1=ini1\nkey2=ini2")
+    
+    @pytest.fixture
+    def toml_file(self, tmp_path):
+        toml_file = tmp_path / "config.toml"
+        toml_file.write_text("key1 = 'toml1'\nkey2 = 'toml2'")
+    
+    @pytest.fixture
+    def toml_file_extra(self, tmp_path, toml_file):
+        toml_file = tmp_path / "config.toml"
+        with toml_file.open("a") as f:
+            f.write("\nkey3 = 'toml3'\nkey4 = 'toml4'")
+    
+    def test_plain(self, parser):
+        assert vars(parser.parse_args([])) == {'config': None, 'key1': None, 'key2': None}
+    
+    @pytest.mark.usefixtures("yaml_file", "ini_file", "toml_file")
+    def test_with_all_configs(self, parser):
+        assert vars(parser.parse_args([])) == {'config': None, 'key1': "ini1", 'key2': "ini2"}
+
+    @pytest.mark.usefixtures("yaml_file", "ini_file", "toml_file")
+    def test_with_all_configs_override(self, parser):
+        assert vars(parser.parse_args(['--key1', 'val1'])) == {'config': None, 'key1': "val1", 'key2': "ini2"}
+
+    @pytest.mark.usefixtures("yaml_file")
+    def test_missing_primary_config(self, parser):
+        assert vars(parser.parse_args([])) == {'config': None, 'key1': "yaml1", 'key2': "yaml2"}
+
+    @pytest.mark.usefixtures("yaml_file", "toml_file")
+    def test_toml(self, parser):
+        assert vars(parser.parse_args([])) == {'config': None, 'key1': "toml1", 'key2': "toml2"}
+
+    @pytest.mark.usefixtures("yaml_file", "ini_file", "toml_file")
+    def test_override_primary_config(self, parser):
+        assert vars(parser.parse_args(['--config', 'config.yaml'])) == {'config': 'config.yaml', 'key1': "yaml1", 'key2': "yaml2"}
+
+    @pytest.mark.usefixtures("yaml_file", "ini_file", "toml_file_extra")
+    def test_toml_extra(self, parser, tmp_path):
+        with pytest.raises(SystemExit):
+            parser.parse_args([])
 
 ################################################################################
 # since configargparse should work as a drop-in replacement for argparse
