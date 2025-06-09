@@ -1768,10 +1768,19 @@ class TestConfigFileParsers(TestCase):
         assert args.level == 35
 
 
-class TestXXX:
+class TestSimpleConfigFile:
     @pytest.fixture
     def parser(self):
-        parser = configargparse.ArgParser(description='test', default_config_files=['config.yaml', 'config.toml', 'config.ini'])
+        parser = configargparse.ArgParser(
+            description='test', 
+            default_config_files=['config.yaml', 'config.toml', 'config.ini'],
+            config_file_parser_class=configargparse.CompositeConfigParser(
+                [
+                    configargparse.TomlConfigParser(['section']),
+                    configargparse.YAMLConfigFileParser,
+                    configargparse.IniConfigParser(['section'], False),
+                ]
+            ),)
         parser.add_argument('--config', is_config_file=True)
         parser.add_argument('--key1', type=str)
         parser.add_argument('--key2', type=str)
@@ -1784,7 +1793,7 @@ class TestXXX:
     @pytest.fixture
     def yaml_file(self, tmp_path):
         yaml_file = tmp_path / "config.yaml"
-        yaml_file.write_text("key1: yaml1\nkey2: yaml2")
+        yaml_file.write_text("[section]\nkey1: yaml1\nkey2: yaml2")
     
     @pytest.fixture
     def ini_file(self, tmp_path):
@@ -1794,7 +1803,7 @@ class TestXXX:
     @pytest.fixture
     def toml_file(self, tmp_path):
         toml_file = tmp_path / "config.toml"
-        toml_file.write_text("key1 = 'toml1'\nkey2 = 'toml2'")
+        toml_file.write_text("[section]\nkey1 = 'toml1'\nkey2 = 'toml2'")
     
     @pytest.fixture
     def toml_file_extra(self, tmp_path, toml_file):
@@ -1826,7 +1835,7 @@ class TestXXX:
         assert vars(parser.parse_args(['--config', 'config.yaml'])) == {'config': 'config.yaml', 'key1': "yaml1", 'key2': "yaml2"}
 
     @pytest.mark.usefixtures("yaml_file", "ini_file", "toml_file_extra")
-    def test_toml_extra(self, parser, tmp_path):
+    def test_toml_extra(self, parser):
         with pytest.raises(SystemExit):
             parser.parse_args([])
 
