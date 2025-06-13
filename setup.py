@@ -89,7 +89,7 @@ tests_require = [
 
 setup(
     name="ConfigArgParse",
-    version="1.7.1",
+    version="1.7.2.dev0",
     description="A drop-in replacement for argparse that allows options to "
     "also be set via config files and/or environment variables.",
     long_description=long_description,
