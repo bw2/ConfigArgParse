@@ -51,18 +51,9 @@ Release process
 
 The following is a high level overview and might not match the current state of things.
 
-- Create a branch: name it with release dash the name of the new version, i.e. ``release-1.5.1``
-- On the branch, update the version and release notes.
-- Create a PR for that branch, wait for tests to pass and get an approval.
-- At this point, the *owner* should checkout the release branch, 
-  created and push a new tag named after the version i.e. ``1.5.1``, 
-  this will trigger the PyPi release process, monitor the process in the GitHub action UI...
-- Update the version and append ``.dev0`` to the current 
-  version number. In this way, stable versions only exist for a brief period of time 
-  (if someone tries to do a pip install from the git source, they will get a ``.dev0`` 
-  version instead of a misleading stable version number)
-- Wait for tests to pass and merge PR
-
+- Edit setup.py to update the version number and create a PR with this change  (suggested branch name format: ``release-1.5.1``)
+- Once that PR is approved and merged, the *owner* should push a new tag with the same name as the version i.e. ``1.5.1`` by running `git pull; git tag 1.5.1; git push --tags`. 
+  This will trigger the PyPi release process. Monitor the process in the GitHub action UI...
 
 ---
 
