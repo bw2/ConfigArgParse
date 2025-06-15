@@ -105,9 +105,9 @@ jobs:
           coverage xml
           coverage html
           coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
-          cp downloaded_artifacts htmlcov/all_coverage
+          cp -r downloaded_artifacts htmlcov/all_coverage
           cp coverage.xml htmlcov/coverage.xml
-          cp -r .coverage htmlcov/.coverage
+          cp .coverage htmlcov/.coverage
 
       - name: Upload single coverage artifact
         uses: actions/upload-artifact@v4
