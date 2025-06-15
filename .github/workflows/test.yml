@@ -105,6 +105,7 @@ jobs:
           coverage xml
           coverage html
           coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
+          cp downloaded_artifacts htmlcov/all_coverage
           cp coverage.xml htmlcov/coverage.xml
           cp .coverage htmlcov/.coverage
 
