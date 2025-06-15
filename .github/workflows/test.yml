@@ -3,33 +3,85 @@ name: unit tests
 on:
   push:
     branches: [ master ]
-    tags: 
+    tags:
       - '*'
   pull_request:
-    branches: [ master ]
 
-jobs: 
+jobs:
   test:
-    name: ${{ matrix.os }} py${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }} 
+    name: ${{ matrix.os }} py${{ matrix.python-version }} ${{ matrix.use-docker && '(docker)' || '' }}
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
+        include:
+          - name: Legacy Python on Ubuntu
+            os: ubuntu-latest
+            python-version: '3.6'
+            use-docker: true
+          - name: Legacy Python on Ubuntu
+            os: ubuntu-latest
+            python-version: '3.7'
+            use-docker: true
+          - name: Legacy Python on Ubuntu
+            os: ubuntu-latest
+            python-version: '3.8'
+            use-docker: true
+
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.7','3.8','3.9','3.10','3.11']
+        python-version: ['3.9','3.10','3.11','3.12','3.13']
+        use-docker: [false]
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        if: ${{ !matrix.use-docker }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
+      - name: Run tests with Docker
+        if: ${{ matrix.use-docker }}
         run: |
-          python -m pip install --upgrade pip setuptools wheel tox 
-          python -m pip install '.[test]'
-      
+          docker run --rm -v ${{ github.workspace }}:/app -w /app python:${{ matrix.python-version }} bash -c "
+            python -m pip install --upgrade pip setuptools wheel tox
+            python -m pip install '.[test]'
+            pytest
+          "
+
       - name: Run tests
-        run: pytest
+        if: ${{ !matrix.use-docker }}
+        run: |
+          python -m pip install --upgrade pip setuptools wheel tox
+          python -m pip install '.[test]'
+          pytest
+
+  release:
+      needs: [ test ]
+      name: PyPI
+      runs-on: ubuntu-latest
+      environment: pypi
+      permissions:
+        id-token: write
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: Set up Python 3.12
+          uses: actions/setup-python@v5
+          with:
+            python-version: 3.12
+        
+        - name: Install build dependencies
+          run: |
+            python -m pip install -U setuptools wheel
+
+        - name: Build
+          run: |
+            python setup.py --quiet build check sdist bdist_wheel
+            ls -alh ./dist/
+
+        - name: Publish to PyPI - on tag
+          if: startsWith(github.ref, 'refs/tags/')
+          uses: pypa/gh-action-pypi-publish@release/v1
