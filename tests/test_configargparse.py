@@ -9,11 +9,7 @@ import tempfile
 import types
 import unittest
 from io import StringIO
-
-try:
-    import mock
-except ImportError:
-    from unittest import mock
+from unittest import mock
 
 if sys.version_info >= (3, 10):
     OPTIONAL_ARGS_STRING="options"
