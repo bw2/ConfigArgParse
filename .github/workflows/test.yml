@@ -79,8 +79,6 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -92,7 +90,7 @@ jobs:
           path: downloaded_artifacts
 
       - name: Clean up temporary artifacts
-        uses: geekyeggo/delete-artifact@v5
+        uses: geekyeggo/delete-artifact@f275313e70c08f6120db482d7a6b98377786765b # v5.1.0
         with:
           name: coverage-*
 
@@ -120,7 +118,7 @@ jobs:
           retention-days: ${{ github.ref == 'refs/heads/master' && 90 || 1 }}
 
   release:
-      needs: coverage
+      needs: [test, coverage]
       name: PyPI
       runs-on: ubuntu-latest
       environment: pypi
