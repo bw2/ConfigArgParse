@@ -99,11 +99,12 @@ jobs:
 
       - name: Combine coverage.py
         run: |
+          cp -r downloaded_artifacts all_coverage
           coverage combine $(find downloaded_artifacts/ -type f | xargs)
           coverage xml
           coverage html
           coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
-          cp -r downloaded_artifacts htmlcov/all_coverage
+          cp -r all_coverage htmlcov/all_coverage
           cp coverage.xml htmlcov/coverage.xml
           cp .coverage htmlcov/.coverage
 
