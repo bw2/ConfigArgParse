@@ -119,7 +119,7 @@ jobs:
           retention-days: ${{ github.ref == 'refs/heads/master' && 90 || 1 }}
 
   release:
-      needs: [ test ]
+      needs: coverage
       name: PyPI
       runs-on: ubuntu-latest
       environment: pypi
