@@ -70,11 +70,6 @@ class TestCase(unittest.TestCase):
         self.format_values = self.parser.format_values
         self.format_help = self.parser.format_help
 
-        if not hasattr(self, "assertRegex"):
-            self.assertRegex = self.assertRegexpMatches
-        if not hasattr(self, "assertRaisesRegex"):
-            self.assertRaisesRegex = self.assertRaisesRegexp
-
         return self.parser
 
     def assertParseArgsRaises(self, regex, args, **kwargs):
@@ -1155,19 +1150,6 @@ class TestMisc(TestCase):
     def test_FormatHelpProgLib(self):
         parser = argparse.ArgumentParser("format_help_prog")
         self.assertRegex(parser.format_help(), "usage: format_help_prog .*")
-
-    class CustomClass(object):
-        def __init__(self, name):
-            self.name = name
-
-        def __str__(self):
-            return self.name
-
-    @staticmethod
-    def valid_custom(s):
-        if s == "invalid":
-            raise Exception("invalid name")
-        return TestMisc.CustomClass(s)
 
     def testConstructor_WriteOutConfigFileArgs(self):
         # Test constructor args:
