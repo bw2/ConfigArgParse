@@ -14,6 +14,7 @@ def cov(cov, request):
 
     sys_context = "{}-py{}.{}".format(platform.system(), sys.version_info.major, sys.version_info.minor)
     test_name = request.node.nodeid
-    context = "{}_{}".format(sys_context, test_name)
+    context = "{}_{}".format(test_name, sys_context)
     cov.switch_context(context)
     return cov
+    
