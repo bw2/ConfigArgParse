@@ -1165,7 +1165,7 @@ class TestMisc(TestCase):
         self.add_arg("--config-file-settable-arg", type=int)
         self.add_arg("--config-file-settable-arg2", type=int, default=3)
         self.add_arg("--config-file-settable-flag", action="store_true")
-        self.add_arg("--config-file-settable-custom", type=TestMisc.valid_custom)
+        self.add_arg("--config-file-settable-custom")
         self.add_arg("-l", "--config-file-settable-list", action="append")
 
         # write out a config file
