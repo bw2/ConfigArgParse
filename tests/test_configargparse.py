@@ -70,11 +70,6 @@ class TestCase(unittest.TestCase):
         self.format_values = self.parser.format_values
         self.format_help = self.parser.format_help
 
-        if not hasattr(self, "assertRegex"):
-            self.assertRegex = self.assertRegexpMatches
-        if not hasattr(self, "assertRaisesRegex"):
-            self.assertRaisesRegex = self.assertRaisesRegexp
-
         return self.parser
 
     def assertParseArgsRaises(self, regex, args, **kwargs):
@@ -1156,19 +1151,6 @@ class TestMisc(TestCase):
         parser = argparse.ArgumentParser("format_help_prog")
         self.assertRegex(parser.format_help(), "usage: format_help_prog .*")
 
-    class CustomClass(object):
-        def __init__(self, name):
-            self.name = name
-
-        def __str__(self):
-            return self.name
-
-    @staticmethod
-    def valid_custom(s):
-        if s == "invalid":
-            raise Exception("invalid name")
-        return TestMisc.CustomClass(s)
-
     def testConstructor_WriteOutConfigFileArgs(self):
         # Test constructor args:
         #   args_for_writing_out_config_file
@@ -1183,7 +1165,7 @@ class TestMisc(TestCase):
         self.add_arg("--config-file-settable-arg", type=int)
         self.add_arg("--config-file-settable-arg2", type=int, default=3)
         self.add_arg("--config-file-settable-flag", action="store_true")
-        self.add_arg("--config-file-settable-custom", type=TestMisc.valid_custom)
+        self.add_arg("--config-file-settable-custom")
         self.add_arg("-l", "--config-file-settable-list", action="append")
 
         # write out a config file
