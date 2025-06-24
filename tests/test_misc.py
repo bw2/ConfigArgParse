@@ -203,16 +203,11 @@ class TestMisc(TestCase):
 
     class CustomClass(object):
         def __init__(self, name):
-            self.name = name
+            # As a test, this will convert the argument to lower case
+            self.name = name.lower()
 
         def __str__(self):
             return self.name
-
-    @staticmethod
-    def valid_custom(s):
-        if s == "invalid":
-            raise Exception("invalid name")
-        return TestMisc.CustomClass(s)
 
     def testConstructor_WriteOutConfigFileArgs(self):
         # Test constructor args:
@@ -228,14 +223,14 @@ class TestMisc(TestCase):
             self.add_arg("--config-file-settable-arg", type=int)
             self.add_arg("--config-file-settable-arg2", type=int, default=3)
             self.add_arg("--config-file-settable-flag", action="store_true")
-            self.add_arg("--config-file-settable-custom", type=TestMisc.valid_custom)
+            self.add_arg("--config-file-settable-custom", type=TestMisc.CustomClass)
             self.add_arg("-l", "--config-file-settable-list", action="append")
 
             # write out a config file
             command_line_args = "-w %s " % cfg_f.name
             command_line_args += "--config-file-settable-arg 1 "
             command_line_args += "--config-file-settable-flag "
-            command_line_args += "--config-file-settable-custom custom_value "
+            command_line_args += "--config-file-settable-custom CUSTOM_VALUE "
             command_line_args += "-l a -l b -l c -l d "
 
             self.assertFalse(self.parser._exit_method_called)
