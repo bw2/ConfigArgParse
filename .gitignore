@@ -6,6 +6,7 @@ apidocs
 *.so
 
 # Packages
+*.whl
 *.egg
 *.egg-info
 dist
@@ -51,3 +52,4 @@ docs/_build
 .idea
 
 .eggs/
+*.whl
