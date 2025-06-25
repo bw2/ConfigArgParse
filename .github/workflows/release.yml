@@ -1,0 +1,54 @@
+name: release
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - 'v.+'
+
+jobs:
+  build:
+
+    name: Build the module
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout with tags
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+
+      - name: Python module build
+        run: |
+          rm -rf dist
+          python -m build
+
+      - name: Confirm the module version from the .whl file
+        id: get-whl-version
+        run: |
+          id=$(echo ${{github.event.client_payload.value}} | cut -d- -f2)
+          pip install pkginfo
+          version=$(
+            python -c 'from pkginfo import Wheel; import sys; print(Wheel(sys.argv[1]).version)' \
+              dist/*-any.whl
+          )
+          printf '::set-output name=version::%s\n' "$version"
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ steps.get-whl-version.outputs.version }}
+          release_name: Release ${{ steps.get-whl-version.outputs.version }}
+          body: |
+            Auto release. See Git log for details.
+          draft: false
+          prerelease: false
