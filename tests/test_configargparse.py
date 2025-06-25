@@ -1,6 +1,7 @@
 import argparse
 import configargparse
 from contextlib import contextmanager
+import importlib
 import inspect
 import logging
 import os
@@ -26,6 +27,7 @@ logger = logging.getLogger()
 logger.level = logging.DEBUG
 stream_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stream_handler)
+toml_installed = importlib.util.find_spec('toml') is None
 
 
 def replace_error_method(arg_parser):
@@ -1750,6 +1752,7 @@ class TestConfigFileParsers(TestCase):
         assert args.level == 35
 
 
+@unittest.skipIf(toml_installed, 'foo not supported')
 class TestTomlConfigParser(unittest.TestCase):
     def setUp(self):
         # Create a temp directory for each test
