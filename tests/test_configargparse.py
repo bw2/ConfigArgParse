@@ -1752,7 +1752,7 @@ class TestConfigFileParsers(TestCase):
         assert args.level == 35
 
 
-@unittest.skipIf(toml_installed, 'foo not supported')
+@unittest.skipIf(toml_installed, 'toml library not installed')
 class TestTomlConfigParser(unittest.TestCase):
     def setUp(self):
         # Create a temp directory for each test
