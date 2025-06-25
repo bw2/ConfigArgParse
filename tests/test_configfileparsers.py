@@ -2,6 +2,7 @@ import argparse
 import logging
 import unittest
 from io import StringIO
+from textwrap import dedent
 
 import configargparse
 from tests.test_base import TestCase, yaml
@@ -395,3 +396,49 @@ class TestConfigFileParsers(TestCase):
         self.assertEqual(args.verbosity, 3)
         self.assertIs(args.verbose, True)
         self.assertEqual(args.level, 35)
+
+class TestTomlConfigParser(TestCase):
+
+    # Standard TOML file snippets
+    toml_file = dedent("""\
+        [section]
+        key1 = 'toml1'
+        key2 = 'toml2'
+        """)
+
+    toml_file_advanced = dedent("""\
+        [tool.section]
+        key1 = "toml1"
+        key2 = [1, 2, 3]
+        """)
+
+    toml_file_empty = ""
+
+    toml_file_empty_section = "[section]\n"
+
+    def test_section(self):
+        parser = configargparse.TomlConfigParser(['section'])
+        f = StringIO(self.toml_file)
+        self.assertEqual(parser.parse(f), {'key1': 'toml1', 'key2': 'toml2'})
+
+    def test_no_sections(self):
+        parser = configargparse.TomlConfigParser([])
+        f = StringIO(self.toml_file)
+        self.assertEqual(parser.parse(f), {})
+
+    def test_empty_section(self):
+        parser = configargparse.TomlConfigParser(['section'])
+        f = StringIO(self.toml_file_empty_section)
+        self.assertEqual(parser.parse(f), {})
+
+    def test_empty(self):
+        parser = configargparse.TomlConfigParser(['section'])
+        f = StringIO(self.toml_file_empty)
+        self.assertEqual(parser.parse(f), {})
+
+    def test_advanced(self):
+        parser = configargparse.TomlConfigParser(['tool.section'])
+        f = StringIO(self.toml_file_advanced)
+        # Note the integers get converted to strings
+        self.assertEqual(dict(parser.parse(f)), {'key1': "toml1", 'key2': ['1', '2', '3']})
+
