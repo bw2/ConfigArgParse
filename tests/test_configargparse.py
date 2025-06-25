@@ -6,7 +6,6 @@ import logging
 import os
 import sys
 import tempfile
-import pytest
 import types
 import unittest
 from unittest import mock
@@ -1751,74 +1750,72 @@ class TestConfigFileParsers(TestCase):
         assert args.level == 35
 
 
-class TestTomlConfigParser:
-    @pytest.fixture(autouse=True)
-    def cwd(self, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
+class TestTomlConfigParser(unittest.TestCase):
+    def setUp(self):
+        # Create a temp directory for each test
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.old_cwd = os.getcwd()
+        os.chdir(self.tmpdir.name)
 
-    @pytest.fixture
-    def toml_file(self, tmp_path):
-        toml_file = tmp_path / "config.toml"
-        toml_file.write_text(textwrap.dedent("""\
-        [section]
-        key1 = 'toml1'
-        key2 = 'toml2'
-        """))
+    def tearDown(self):
+        os.chdir(self.old_cwd)
+        self.tmpdir.cleanup()
 
-    @pytest.fixture
-    def toml_file_advanced(self, tmp_path):
-        toml_file = tmp_path / "config.toml"
-        toml_file.write_text(textwrap.dedent("""\
-        [tool.section]
-        key1 = "toml1"
-        key2 = [1, 2, 3]
-        """))
+    def write_toml_file(self, content):
+        toml_path = os.path.join(self.tmpdir.name, "config.toml")
+        with open(toml_path, "w") as f:
+            f.write(textwrap.dedent(content))
+        return toml_path
 
-    @pytest.fixture
-    def toml_file_empty(self, tmp_path):
-        toml_file = tmp_path / "config.toml"
-        toml_file.write_text("")
-
-    @pytest.fixture
-    def toml_file_empty_section(self, tmp_path):
-        toml_file = tmp_path / "config.toml"
-        toml_file.write_text("[section]")
-
-    @pytest.mark.usefixtures("toml_file")
     def test_section(self):
+        self.write_toml_file("""
+            [section]
+            key1 = 'toml1'
+            key2 = 'toml2'
+        """)
         parser = configargparse.TomlConfigParser(['section'])
         with open('config.toml', 'rb') as f:
-            assert parser.parse(f) == {'key1': 'toml1', 'key2': 'toml2'}
+            self.assertEqual(parser.parse(f), {'key1': 'toml1', 'key2': 'toml2'})
 
-    @pytest.mark.usefixtures("toml_file")
     def test_no_sections(self):
+        self.write_toml_file("""
+            [section]
+            key1 = 'toml1'
+            key2 = 'toml2'
+        """)
         parser = configargparse.TomlConfigParser([])
         with open('config.toml', 'rb') as f:
-            assert parser.parse(f) == {}
+            self.assertEqual(parser.parse(f), {})
 
-    @pytest.mark.usefixtures("toml_file_empty_section")
     def test_empty_section(self):
+        self.write_toml_file("[section]")
         parser = configargparse.TomlConfigParser(['section'])
         with open('config.toml', 'rb') as f:
-            assert parser.parse(f) == {}
+            self.assertEqual(parser.parse(f), {})
 
-    @pytest.mark.usefixtures("toml_file_empty")
-    def test_empty_section(self):
+    def test_empty_file(self):
+        self.write_toml_file("")
         parser = configargparse.TomlConfigParser(['section'])
         with open('config.toml', 'rb') as f:
-            assert parser.parse(f) == {}
+            self.assertEqual(parser.parse(f), {})
 
-    @pytest.mark.usefixtures("toml_file_advanced")
     def test_advanced(self):
+        self.write_toml_file("""
+            [tool.section]
+            key1 = "toml1"
+            key2 = [1, 2, 3]
+        """)
         parser = configargparse.TomlConfigParser(['tool.section'])
         with open('config.toml', 'rb') as f:
-            assert parser.parse(f) == {'key1': "toml1", 'key2': [1, 2, 3]}
+            self.assertEqual(parser.parse(f), {'key1': "toml1", 'key2': [1, 2, 3]})
 
 
-class TestCompositeConfigParser:
-    @pytest.fixture
-    def parser(self):
-        parser = configargparse.ArgParser(
+class TestCompositeConfigParser(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.old_cwd = os.getcwd()
+        os.chdir(self.tmpdir.name)
+        self.parser = configargparse.ArgParser(
             description='test', 
             default_config_files=['config.yaml', 'config.toml', 'config.ini'],
             config_file_parser_class=configargparse.CompositeConfigParser(
@@ -1827,64 +1824,69 @@ class TestCompositeConfigParser:
                     configargparse.YAMLConfigFileParser,
                     configargparse.IniConfigParser(['section'], False),
                 ]
-            ),)
-        parser.add_argument('--config', is_config_file=True)
-        parser.add_argument('--key1', type=str)
-        parser.add_argument('--key2', type=str)
-        return parser
+            ),
+        )
+        self.parser.add_argument('--config', is_config_file=True)
+        self.parser.add_argument('--key1', type=str)
+        self.parser.add_argument('--key2', type=str)
 
-    @pytest.fixture(autouse=True)
-    def cwd(self, tmp_path, monkeypatch):
-        monkeypatch.chdir(tmp_path)
+    def tearDown(self):
+        os.chdir(self.old_cwd)
+        self.tmpdir.cleanup()
 
-    @pytest.fixture
-    def yaml_file(self, tmp_path):
-        yaml_file = tmp_path / "config.yaml"
-        yaml_file.write_text("[section]\nkey1: yaml1\nkey2: yaml2")
+    def write_yaml_file(self, content="[section]\nkey1: yaml1\nkey2: yaml2"):
+        with open("config.yaml", "w") as f:
+            f.write(content)
 
-    @pytest.fixture
-    def ini_file(self, tmp_path):
-        ini_file = tmp_path / "config.ini"
-        ini_file.write_text("[section]\nkey1=ini1\nkey2=ini2")
+    def write_ini_file(self, content="[section]\nkey1=ini1\nkey2=ini2"):
+        with open("config.ini", "w") as f:
+            f.write(content)
 
-    @pytest.fixture
-    def toml_file(self, tmp_path):
-        toml_file = tmp_path / "config.toml"
-        toml_file.write_text("[section]\nkey1 = 'toml1'\nkey2 = 'toml2'")
-    
-    @pytest.fixture
-    def toml_file_extra(self, tmp_path, toml_file):
-        toml_file = tmp_path / "config.toml"
-        with toml_file.open("a") as f:
+    def write_toml_file(self, content="[section]\nkey1 = 'toml1'\nkey2 = 'toml2'"):
+        with open("config.toml", "w") as f:
+            f.write(content)
+
+    def write_toml_file_extra(self):
+        self.write_toml_file()
+        with open("config.toml", "a") as f:
             f.write("\nkey3 = 'toml3'\nkey4 = 'toml4'")
-    
-    def test_plain(self, parser):
-        assert vars(parser.parse_args([])) == {'config': None, 'key1': None, 'key2': None}
-    
-    @pytest.mark.usefixtures("yaml_file", "ini_file", "toml_file")
-    def test_with_all_configs(self, parser):
-        assert vars(parser.parse_args([])) == {'config': None, 'key1': "ini1", 'key2': "ini2"}
 
-    @pytest.mark.usefixtures("yaml_file", "ini_file", "toml_file")
-    def test_with_all_configs_override(self, parser):
-        assert vars(parser.parse_args(['--key1', 'val1'])) == {'config': None, 'key1': "val1", 'key2': "ini2"}
+    def test_plain(self):
+        self.assertEqual(vars(self.parser.parse_args([])), {'config': None, 'key1': None, 'key2': None})
 
-    @pytest.mark.usefixtures("yaml_file")
-    def test_missing_primary_config(self, parser):
-        assert vars(parser.parse_args([])) == {'config': None, 'key1': "yaml1", 'key2': "yaml2"}
+    def test_with_all_configs(self):
+        self.write_yaml_file()
+        self.write_ini_file()
+        self.write_toml_file()
+        self.assertEqual(vars(self.parser.parse_args([])), {'config': None, 'key1': "ini1", 'key2': "ini2"})
 
-    @pytest.mark.usefixtures("yaml_file", "toml_file")
-    def test_toml(self, parser):
-        assert vars(parser.parse_args([])) == {'config': None, 'key1': "toml1", 'key2': "toml2"}
+    def test_with_all_configs_override(self):
+        self.write_yaml_file()
+        self.write_ini_file()
+        self.write_toml_file()
+        self.assertEqual(vars(self.parser.parse_args(['--key1', 'val1'])), {'config': None, 'key1': "val1", 'key2': "ini2"})
 
-    @pytest.mark.usefixtures("yaml_file", "ini_file", "toml_file")
-    def test_override_primary_config(self, parser):
-        assert vars(parser.parse_args(['--config', 'config.yaml'])) == {'config': 'config.yaml', 'key1': "yaml1", 'key2': "yaml2"}
+    def test_missing_primary_config(self):
+        self.write_yaml_file()
+        self.assertEqual(vars(self.parser.parse_args([])), {'config': None, 'key1': "yaml1", 'key2': "yaml2"})
 
-    @pytest.mark.usefixtures("yaml_file", "ini_file", "toml_file_extra")
-    def test_toml_extra(self, parser):
-        with pytest.raises(SystemExit):
-            parser.parse_args([])
+    def test_toml(self):
+        self.write_yaml_file()
+        self.write_toml_file()
+        self.assertEqual(vars(self.parser.parse_args([])), {'config': None, 'key1': "toml1", 'key2': "toml2"})
+
+    def test_override_primary_config(self):
+        self.write_yaml_file()
+        self.write_ini_file()
+        self.write_toml_file()
+        self.assertEqual(vars(self.parser.parse_args(['--config', 'config.yaml'])), {'config': 'config.yaml', 'key1': "yaml1", 'key2': "yaml2"})
+
+    def test_toml_extra(self):
+        self.write_yaml_file()
+        self.write_ini_file()
+        self.write_toml_file_extra()
+        with self.assertRaises(SystemExit):
+            self.parser.parse_args([])
 
 
 ################################################################################
