@@ -1752,7 +1752,7 @@ class TestConfigFileParsers(TestCase):
 
 class TestTomlConfigParser(unittest.TestCase):
 
-    def write_toml_file(self, content, obj=StringIO):
+    def write_toml_file(self, content, obj=BytesIO):
         f = obj()
         dedent = lambda x: x
         if isinstance(content, str):
@@ -1763,7 +1763,7 @@ class TestTomlConfigParser(unittest.TestCase):
 
     def test_section(self):
         f = self.write_toml_file(
-            """
+            b"""
             [section]
             key1 = 'toml1'
             key2 = 'toml2'
@@ -1774,7 +1774,7 @@ class TestTomlConfigParser(unittest.TestCase):
 
     def test_no_sections(self):
         f = self.write_toml_file(
-            """
+            b"""
             [section]
             key1 = 'toml1'
             key2 = 'toml2'
@@ -1784,19 +1784,19 @@ class TestTomlConfigParser(unittest.TestCase):
         self.assertEqual(parser.parse(f), {})
 
     def test_empty_section(self):
-        f = self.write_toml_file("[section]")
+        f = self.write_toml_file(b"[section]")
         parser = configargparse.TomlConfigParser(["section"])
         self.assertEqual(parser.parse(f), {})
 
     def test_empty_file(self):
-        f = self.write_toml_file("")
+        f = self.write_toml_file(b"")
         parser = configargparse.TomlConfigParser(["section"])
         self.assertEqual(parser.parse(f), {})
 
     @unittest.expectedFailure  # Ints should be strings
     def test_advanced(self):
         f = self.write_toml_file(
-            """
+            b"""
             [tool.section]
             key1 = "toml1"
             key2 = [1, 2, 3]
@@ -1805,11 +1805,11 @@ class TestTomlConfigParser(unittest.TestCase):
         parser = configargparse.TomlConfigParser(["tool.section"])
         self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": ["1", "2", "3"]})
 
-    def test_fails_binary_read(self):
+    def test_fails_str_read(self):
         f = self.write_toml_file(
-            b"""[tool.section]\nkey1 = "toml1"
+            """[tool.section]\nkey1 = "toml1"
             """,
-            obj=BytesIO,
+            obj=StringIO,
         )
         parser = configargparse.TomlConfigParser(["tool.section"])
         with self.assertRaises(configargparse.ConfigFileParserException):
