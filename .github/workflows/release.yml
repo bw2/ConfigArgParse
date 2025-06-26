@@ -8,10 +8,11 @@ on:
   push:
     tags:
       - 'v*.*'
-    branches-ignore: [ '**', '!master' ]
 
 jobs:
   build:
+    # per https://github.com/orgs/community/discussions/13226#discussioncomment-11958813-permalink
+    if: github.event.base_ref == 'refs/heads/master'
 
     name: Build the module
     runs-on: ubuntu-latest
