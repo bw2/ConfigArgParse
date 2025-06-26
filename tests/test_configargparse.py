@@ -11,7 +11,7 @@ import unittest
 from unittest import mock
 import textwrap
 
-from io import StringIO
+from io import BytesIO, StringIO
 
 if sys.version_info >= (3, 10):
     OPTIONAL_ARGS_STRING = "options"
@@ -1752,9 +1752,12 @@ class TestConfigFileParsers(TestCase):
 
 class TestTomlConfigParser(unittest.TestCase):
 
-    def write_toml_file(self, content):
-        f = StringIO()
-        f.write(textwrap.dedent(content))
+    def write_toml_file(self, content, obj=StringIO):
+        f = obj()
+        dedent = lambda x: x
+        if isinstance(content, str):
+            dedent = textwrap.dedent
+        f.write(dedent(content))
         f.seek(0)
         return f
 
@@ -1803,21 +1806,14 @@ class TestTomlConfigParser(unittest.TestCase):
         self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": ["1", "2", "3"]})
 
     def test_fails_binary_read(self):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_file = os.path.join(temp_dir, "config.toml")
-            with open(temp_file, "w") as f:
-                f.write(
-                    textwrap.dedent(
-                        """
-                        [tool.section]
-                        key1 = "toml1"
-                        """
-                    )
-                )
-            parser = configargparse.TomlConfigParser(["tool.section"])
-            with self.assertRaises(configargparse.ConfigFileParserException):
-                with open(temp_file, "rb") as f:
-                    parser.parse(f)
+        f = self.write_toml_file(
+            b"""[tool.section]\nkey1 = "toml1"
+            """,
+            obj=BytesIO,
+        )
+        parser = configargparse.TomlConfigParser(["tool.section"])
+        with self.assertRaises(configargparse.ConfigFileParserException):
+            parser.parse(f)
 
 
 class TestCompositeConfigParser(unittest.TestCase):
