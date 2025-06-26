@@ -3,8 +3,6 @@ name: unit tests
 on:
   push:
     branches: [ master ]
-    tags:
-      - '*'
   pull_request:
     branches: [ master ]
 
