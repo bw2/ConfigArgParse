@@ -1,16 +1,16 @@
 #!/bin/bash
 # This bash script builds the API documentation for ConfigArgParse.
 
-# Resolve source directory path. From https://stackoverflow.com/questions/59895/how-to-get-the-source-directory-of-a-bash-script-from-within-the-script-itself/246128#246128
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-cd $SCRIPT_DIR
+# Resolve source directory path.
+cd -P "$( dirname "${BASH_SOURCE}" )"
 
 # Stop if errors
 set -euo pipefail
 IFS=$'\n\t,'
 
 # Figure the project version
-project_version="$(python3 setup.py -V)"
+project_version="$(setuptools-git-versioning)"
+printf 'Project version is %s, according to setuptools-git-versioning\n' "$project_version"
 
 # Figure commit ref
 git_sha="$(git rev-parse HEAD)"
@@ -24,9 +24,9 @@ fi
 # Init output folder
 docs_folder="./apidocs/"
 rm -rf "${docs_folder}"
-mkdir -p "${docs_folder}"
+mkdir -vp "${docs_folder}"
 
-# We generate the docs for the argparse module too, such that we can document 
+# We generate the docs for the argparse module too, such that we can document
 # the methods inherited from argparse.ArgumentParser, not only the methods that configargparse overrides.
 # And it help to have a better vision of the whole thing also.
 curl https://raw.githubusercontent.com/python/cpython/3.9/Lib/argparse.py > ./argparse.py
@@ -44,6 +44,6 @@ pydoctor \
     --project-base-dir=.\
     --docformat=google \
     --html-output="${docs_folder}" \
-    ./argparse.py ./configargparse.py || true 
+    ./argparse.py ./configargparse.py || true
 
 echo "API docs generated in ${docs_folder}"
