@@ -1751,85 +1751,72 @@ class TestConfigFileParsers(TestCase):
 
 
 class TestTomlConfigParser(unittest.TestCase):
-    def setUp(self):
-        # Create a temp directory for each test
-        self.tmpdir = tempfile.TemporaryDirectory()
-        self.old_cwd = os.getcwd()
-        os.chdir(self.tmpdir.name)
-
-    def tearDown(self):
-        os.chdir(self.old_cwd)
-        self.tmpdir.cleanup()
 
     def write_toml_file(self, content):
-        toml_path = os.path.join(self.tmpdir.name, "config.toml")
-        with open(toml_path, "w") as f:
-            f.write(textwrap.dedent(content))
-        return toml_path
+        f = StringIO()
+        f.write(textwrap.dedent(content))
+        f.seek(0)
+        return f
 
     def test_section(self):
-        self.write_toml_file(
+        f = self.write_toml_file(
             """
             [section]
             key1 = 'toml1'
             key2 = 'toml2'
-        """
+            """
         )
         parser = configargparse.TomlConfigParser(["section"])
-        with open("config.toml", "r") as f:
-            self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": "toml2"})
+        self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": "toml2"})
 
     def test_no_sections(self):
-        self.write_toml_file(
+        f = self.write_toml_file(
             """
             [section]
             key1 = 'toml1'
             key2 = 'toml2'
-        """
+            """
         )
         parser = configargparse.TomlConfigParser([])
-        with open("config.toml", "r") as f:
-            self.assertEqual(parser.parse(f), {})
+        self.assertEqual(parser.parse(f), {})
 
     def test_empty_section(self):
-        self.write_toml_file("[section]")
+        f = self.write_toml_file("[section]")
         parser = configargparse.TomlConfigParser(["section"])
-        with open("config.toml", "r") as f:
-            self.assertEqual(parser.parse(f), {})
+        self.assertEqual(parser.parse(f), {})
 
     def test_empty_file(self):
-        self.write_toml_file("")
+        f = self.write_toml_file("")
         parser = configargparse.TomlConfigParser(["section"])
-        with open("config.toml", "r") as f:
-            self.assertEqual(parser.parse(f), {})
+        self.assertEqual(parser.parse(f), {})
 
     @unittest.expectedFailure  # Ints should be strings
     def test_advanced(self):
-        self.write_toml_file(
+        f = self.write_toml_file(
             """
             [tool.section]
             key1 = "toml1"
             key2 = [1, 2, 3]
-        """
+            """
         )
         parser = configargparse.TomlConfigParser(["tool.section"])
-        with open("config.toml", "r") as f:
-            self.assertEqual(
-                parser.parse(f), {"key1": "toml1", "key2": ["1", "2", "3"]}
-            )
+        self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": ["1", "2", "3"]})
 
     def test_fails_binary_read(self):
-        self.write_toml_file(
-            """
-            [tool.section]
-            key1 = "toml1"
-            key2 = [1, 2, 3]
-        """
-        )
-        parser = configargparse.TomlConfigParser(["tool.section"])
-        with self.assertRaises(configargparse.ConfigFileParserException):
-            with open("config.toml", "rb") as f:
-                parser.parse(f)
+        with tempfile.NamedTemporaryFile() as temp_file:
+            with open(temp_file.name, "w") as f:
+                f.write(
+                    textwrap.dedent(
+                        """
+                        [tool.section]
+                        key1 = "toml1"
+                        """
+                    )
+                )
+            parser = configargparse.TomlConfigParser(["tool.section"])
+            with self.assertRaises(configargparse.ConfigFileParserException):
+                with open(temp_file.name, "rb") as f:
+                    parser.parse(f)
 
 
 class TestCompositeConfigParser(unittest.TestCase):
