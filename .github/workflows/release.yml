@@ -45,7 +45,6 @@ jobs:
       - name: Create new draft release
         id: create_release
         uses: actions/action-gh-release@v2
-        env:
         with:
           draft: true
           files: dist/*
