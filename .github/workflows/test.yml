@@ -43,7 +43,8 @@ jobs:
 
       - name: Run tests with Docker
         run: |
-          docker run -i --rm -v ${{ github.workspace }}:/app -w /app python:${{ matrix.python-version }} bash <<'END'
+          docker run -i --rm -v .:/app -w /app python:${{ matrix.python-version }} bash <<'END'
+            set -xe
             python -m pip install --upgrade pip setuptools wheel
             python -m pip install '.[test]'
             python -munittest -v
