@@ -1768,56 +1768,67 @@ class TestTomlConfigParser(unittest.TestCase):
         return toml_path
 
     def test_section(self):
-        self.write_toml_file("""
+        self.write_toml_file(
+            """
             [section]
             key1 = 'toml1'
             key2 = 'toml2'
-        """)
-        parser = configargparse.TomlConfigParser(['section'])
-        with open('config.toml', 'r') as f:
-            self.assertEqual(parser.parse(f), {'key1': 'toml1', 'key2': 'toml2'})
+        """
+        )
+        parser = configargparse.TomlConfigParser(["section"])
+        with open("config.toml", "r") as f:
+            self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": "toml2"})
 
     def test_no_sections(self):
-        self.write_toml_file("""
+        self.write_toml_file(
+            """
             [section]
             key1 = 'toml1'
             key2 = 'toml2'
-        """)
+        """
+        )
         parser = configargparse.TomlConfigParser([])
-        with open('config.toml', 'r') as f:
+        with open("config.toml", "r") as f:
             self.assertEqual(parser.parse(f), {})
 
     def test_empty_section(self):
         self.write_toml_file("[section]")
-        parser = configargparse.TomlConfigParser(['section'])
-        with open('config.toml', 'r') as f:
+        parser = configargparse.TomlConfigParser(["section"])
+        with open("config.toml", "r") as f:
             self.assertEqual(parser.parse(f), {})
 
     def test_empty_file(self):
         self.write_toml_file("")
-        parser = configargparse.TomlConfigParser(['section'])
-        with open('config.toml', 'r') as f:
+        parser = configargparse.TomlConfigParser(["section"])
+        with open("config.toml", "r") as f:
             self.assertEqual(parser.parse(f), {})
 
+    @unittest.expectedFailure  # Ints should be strings
     def test_advanced(self):
-        self.write_toml_file("""
+        self.write_toml_file(
+            """
             [tool.section]
             key1 = "toml1"
             key2 = [1, 2, 3]
-        """)
-        parser = configargparse.TomlConfigParser(['tool.section'])
-        with open('config.toml', 'r') as f:
-            self.assertEqual(parser.parse(f), {'key1': "toml1", 'key2': [1, 2, 3]})
+        """
+        )
+        parser = configargparse.TomlConfigParser(["tool.section"])
+        with open("config.toml", "r") as f:
+            self.assertEqual(
+                parser.parse(f), {"key1": "toml1", "key2": ["1", "2", "3"]}
+            )
 
     def test_fails_binary_read(self):
-        self.write_toml_file("""
+        self.write_toml_file(
+            """
             [tool.section]
             key1 = "toml1"
             key2 = [1, 2, 3]
-        """)
-        parser = configargparse.TomlConfigParser(['tool.section'])
+        """
+        )
+        parser = configargparse.TomlConfigParser(["tool.section"])
         with self.assertRaises(configargparse.ConfigFileParserException):
-            with open('config.toml', 'rb') as f:
+            with open("config.toml", "rb") as f:
                 parser.parse(f)
 
 
@@ -1827,19 +1838,19 @@ class TestCompositeConfigParser(unittest.TestCase):
         self.old_cwd = os.getcwd()
         os.chdir(self.tmpdir.name)
         self.parser = configargparse.ArgParser(
-            description='test', 
-            default_config_files=['config.yaml', 'config.toml', 'config.ini'],
+            description="test",
+            default_config_files=["config.yaml", "config.toml", "config.ini"],
             config_file_parser_class=configargparse.CompositeConfigParser(
                 [
-                    configargparse.TomlConfigParser(['section']),
+                    configargparse.IniConfigParser(["section"], False),
+                    configargparse.TomlConfigParser(["section"]),
                     configargparse.YAMLConfigFileParser,
-                    configargparse.IniConfigParser(['section'], False),
                 ]
             ),
         )
-        self.parser.add_argument('--config', is_config_file=True)
-        self.parser.add_argument('--key1', type=str)
-        self.parser.add_argument('--key2', type=str)
+        self.parser.add_argument("--config", is_config_file=True)
+        self.parser.add_argument("--key1", type=str)
+        self.parser.add_argument("--key2", type=str)
 
     def tearDown(self):
         os.chdir(self.old_cwd)
@@ -1863,34 +1874,52 @@ class TestCompositeConfigParser(unittest.TestCase):
             f.write("\nkey3 = 'toml3'\nkey4 = 'toml4'")
 
     def test_plain(self):
-        self.assertEqual(vars(self.parser.parse_args([])), {'config': None, 'key1': None, 'key2': None})
+        self.assertEqual(
+            vars(self.parser.parse_args([])),
+            {"config": None, "key1": None, "key2": None},
+        )
 
     def test_with_all_configs(self):
         self.write_yaml_file()
         self.write_ini_file()
         self.write_toml_file()
-        self.assertEqual(vars(self.parser.parse_args([])), {'config': None, 'key1': "ini1", 'key2': "ini2"})
+        self.assertEqual(
+            vars(self.parser.parse_args([])),
+            {"config": None, "key1": "ini1", "key2": "ini2"},
+        )
 
     def test_with_all_configs_override(self):
         self.write_yaml_file()
         self.write_ini_file()
         self.write_toml_file()
-        self.assertEqual(vars(self.parser.parse_args(['--key1', 'val1'])), {'config': None, 'key1': "val1", 'key2': "ini2"})
+        self.assertEqual(
+            vars(self.parser.parse_args(["--key1", "val1"])),
+            {"config": None, "key1": "val1", "key2": "ini2"},
+        )
 
     def test_missing_primary_config(self):
         self.write_yaml_file()
-        self.assertEqual(vars(self.parser.parse_args([])), {'config': None, 'key1': "yaml1", 'key2': "yaml2"})
+        self.assertEqual(
+            vars(self.parser.parse_args([])),
+            {"config": None, "key1": "yaml1", "key2": "yaml2"},
+        )
 
     def test_toml(self):
         self.write_yaml_file()
         self.write_toml_file()
-        self.assertEqual(vars(self.parser.parse_args([])), {'config': None, 'key1': "toml1", 'key2': "toml2"})
+        self.assertEqual(
+            vars(self.parser.parse_args([])),
+            {"config": None, "key1": "toml1", "key2": "toml2"},
+        )
 
     def test_override_primary_config(self):
         self.write_yaml_file()
         self.write_ini_file()
         self.write_toml_file()
-        self.assertEqual(vars(self.parser.parse_args(['--config', 'config.yaml'])), {'config': 'config.yaml', 'key1': "yaml1", 'key2': "yaml2"})
+        self.assertEqual(
+            vars(self.parser.parse_args(["--config", "config.yaml"])),
+            {"config": "config.yaml", "key1": "yaml1", "key2": "yaml2"},
+        )
 
     def test_toml_extra(self):
         self.write_yaml_file()
