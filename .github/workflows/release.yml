@@ -37,11 +37,10 @@ jobs:
         id: get-whl-version
         run: |
           pip install pkginfo
-          version=$(
-            python -c 'from pkginfo import Wheel; import sys; print(Wheel(sys.argv[1]).version)' \
-              dist/*-any.whl
-          )
-          printf '::set-output name=version::%s\n' "$version"
+          printf 'version=' >> $GITHUB_OUTPUT
+          python -c 'from pkginfo import Wheel; import sys; print(Wheel(sys.argv[1]).version)' \
+              dist/*-any.whl >> $GITHUB_OUTPUT
+          tail -v $GITHUB_OUTPUT
 
       - name: Create new draft release
         if: github.ref_type == 'tag'
