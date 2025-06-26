@@ -572,7 +572,6 @@ class TomlConfigParser(ConfigFileParser):
 
     def parse(self, stream):
         """Parses the keys and values from a TOML config file."""
-        # parse with configparser to allow multi-line values
         import toml
 
         filename = getattr(stream, "name", None)
