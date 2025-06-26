@@ -43,8 +43,9 @@ jobs:
           printf '::set-output name=version::%s\n' "$version"
 
       - name: Create new draft release
+        if: github.ref_type == 'tag'
         id: create_release
-        uses: actions/action-gh-release@v2
+        uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: dist/*
