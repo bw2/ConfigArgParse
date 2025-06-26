@@ -397,29 +397,34 @@ class TestConfigFileParsers(TestCase):
         self.assertIs(args.verbose, True)
         self.assertEqual(args.level, 35)
 
+
 class TestTomlConfigParser(TestCase):
 
     # Standard TOML file snippets
-    toml_file = dedent("""\
+    toml_file = dedent(
+        """\
         [section]
         key1 = 'toml1'
         key2 = 'toml2'
-        """)
+        """
+    )
 
-    toml_file_advanced = dedent("""\
+    toml_file_advanced = dedent(
+        """\
         [tool.section]
         key1 = "toml1"
         key2 = [1, 2, 3]
-        """)
+        """
+    )
 
     toml_file_empty = ""
 
     toml_file_empty_section = "[section]\n"
 
     def test_section(self):
-        parser = configargparse.TomlConfigParser(['section'])
+        parser = configargparse.TomlConfigParser(["section"])
         f = StringIO(self.toml_file)
-        self.assertEqual(parser.parse(f), {'key1': 'toml1', 'key2': 'toml2'})
+        self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": "toml2"})
 
     def test_no_sections(self):
         parser = configargparse.TomlConfigParser([])
@@ -427,18 +432,19 @@ class TestTomlConfigParser(TestCase):
         self.assertEqual(parser.parse(f), {})
 
     def test_empty_section(self):
-        parser = configargparse.TomlConfigParser(['section'])
+        parser = configargparse.TomlConfigParser(["section"])
         f = StringIO(self.toml_file_empty_section)
         self.assertEqual(parser.parse(f), {})
 
     def test_empty(self):
-        parser = configargparse.TomlConfigParser(['section'])
+        parser = configargparse.TomlConfigParser(["section"])
         f = StringIO(self.toml_file_empty)
         self.assertEqual(parser.parse(f), {})
 
     def test_advanced(self):
-        parser = configargparse.TomlConfigParser(['tool.section'])
+        parser = configargparse.TomlConfigParser(["tool.section"])
         f = StringIO(self.toml_file_advanced)
         # Note the integers get converted to strings
-        self.assertEqual(dict(parser.parse(f)), {'key1': "toml1", 'key2': ['1', '2', '3']})
-
+        self.assertEqual(
+            dict(parser.parse(f)), {"key1": "toml1", "key2": ["1", "2", "3"]}
+        )
