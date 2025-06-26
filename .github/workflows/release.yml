@@ -3,11 +3,12 @@ name: release
 permissions:
   contents: write
 
+# Only trigger when a tag is pushed to the master branch
 on:
   push:
     tags:
       - 'v*.*'
-    branches-ignore: [ '!master' ]
+    branches-ignore: [ '**', '!master' ]
 
 jobs:
   build:
