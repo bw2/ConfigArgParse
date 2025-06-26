@@ -1,10 +1,13 @@
 name: release
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: [ master ]
     tags:
-      - 'v.+'
+      - 'v*.*'
 
 jobs:
   build:
@@ -32,7 +35,6 @@ jobs:
       - name: Confirm the module version from the .whl file
         id: get-whl-version
         run: |
-          id=$(echo ${{github.event.client_payload.value}} | cut -d- -f2)
           pip install pkginfo
           version=$(
             python -c 'from pkginfo import Wheel; import sys; print(Wheel(sys.argv[1]).version)' \
@@ -40,15 +42,17 @@ jobs:
           )
           printf '::set-output name=version::%s\n' "$version"
 
-      - name: Create Release
+      - name: Create new draft release
         id: create_release
-        uses: actions/create-release@v1
+        uses: actions/action-gh-release@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          tag_name: ${{ steps.get-whl-version.outputs.version }}
-          release_name: Release ${{ steps.get-whl-version.outputs.version }}
+          draft: true
+          files: dist/*
+          fail_on_unmatched_files: true
+          make_latest: true
+
+          name: Release ${{ steps.get-whl-version.outputs.version }}
           body: |
             Auto release. See Git log for details.
-          draft: false
           prerelease: false
