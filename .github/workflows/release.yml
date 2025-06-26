@@ -29,6 +29,7 @@ jobs:
 
       - name: Python module build
         run: |
+          python -m pip install --upgrade pip setuptools wheel build
           rm -rf dist
           python -m build
 
