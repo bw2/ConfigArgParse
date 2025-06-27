@@ -1805,7 +1805,7 @@ class TestTomlConfigParser(unittest.TestCase):
         parser = configargparse.TomlConfigParser(["tool.section"])
         self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": ["1", "2", "3"]})
 
-    @unittest.skipIf(sys.version_info == (3, 6), "3.6 doesn't support fail")
+    @unittest.skipIf(sys.version_info[:2] == (3, 6), "3.6 doesn't support fail")
     def test_fails_str_read(self):
         f = self.write_toml_file(
             """[tool.section]\nkey1 = "toml1"
