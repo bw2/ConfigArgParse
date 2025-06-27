@@ -83,6 +83,7 @@ install_requires = []
 tests_require = [
     "black",
     "mock",
+    "toml",
     "PyYAML",
     "pytest",
     "pytest-cov",
