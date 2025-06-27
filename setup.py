@@ -81,11 +81,12 @@ if command not in ["test", "coverage"]:
 
 install_requires = []
 tests_require = [
-    "tomli; python_version < '3.11'",
+    "black",
     "mock",
     "PyYAML",
     "pytest",
     "pytest-cov",
+    "tomli; python_version < '3.11'",
 ]
 
 
