@@ -1,0 +1,12 @@
+[run]
+source = .
+relative_files = true
+omit =
+    setup.py
+
+[report]
+skip_covered = false
+show_missing = true
+
+[html]
+show_contexts = true
