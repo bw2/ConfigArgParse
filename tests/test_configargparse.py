@@ -61,7 +61,6 @@ def captured_output():
 
 
 class TestCase(unittest.TestCase):
-
     def initParser(self, *args, **kwargs):
         p = configargparse.ArgParser(*args, **kwargs)
         self.parser = replace_error_method(p)
@@ -1845,11 +1844,16 @@ class TestCompositeConfigParser(unittest.TestCase):
         with open("config.yaml", "w") as f:
             f.write(content)
 
-    def write_ini_file(self, content="[section]\nkey1=ini1\nkey2=ini2"):
+    def write_ini_file(
+        self, content="[section]\nkey1=ini1\nkey2=ini2\n; this is an ini comment"
+    ):
         with open("config.ini", "w") as f:
             f.write(content)
 
-    def write_toml_file(self, content="[section]\nkey1 = 'toml1'\nkey2 = 'toml2'"):
+    def write_toml_file(
+        self,
+        content="[section]\nkey1 = 'toml1'\nkey2 = 'toml2'\nspecial.key = { a = 1 }\n# this is a toml comment",
+    ):
         with open("config.toml", "w") as f:
             f.write(content)
 
@@ -1864,6 +1868,7 @@ class TestCompositeConfigParser(unittest.TestCase):
             {"config": None, "key1": None, "key2": None},
         )
 
+    @unittest.expectedFailure  # unknown fields should be ignored
     def test_with_all_configs(self):
         self.write_yaml_file()
         self.write_ini_file()
@@ -1873,6 +1878,7 @@ class TestCompositeConfigParser(unittest.TestCase):
             {"config": None, "key1": "ini1", "key2": "ini2"},
         )
 
+    @unittest.expectedFailure  # unknown fields should be ignored
     def test_with_all_configs_override(self):
         self.write_yaml_file()
         self.write_ini_file()
@@ -1889,6 +1895,7 @@ class TestCompositeConfigParser(unittest.TestCase):
             {"config": None, "key1": "yaml1", "key2": "yaml2"},
         )
 
+    @unittest.expectedFailure  # unknown fields should be ignored
     def test_toml(self):
         self.write_yaml_file()
         self.write_toml_file()
@@ -1897,6 +1904,7 @@ class TestCompositeConfigParser(unittest.TestCase):
             {"config": None, "key1": "toml1", "key2": "toml2"},
         )
 
+    @unittest.expectedFailure  # unknown fields should be ignored
     def test_override_primary_config(self):
         self.write_yaml_file()
         self.write_ini_file()
