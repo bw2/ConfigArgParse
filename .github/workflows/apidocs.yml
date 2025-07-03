@@ -12,6 +12,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@master
+      - with:
+          fetch-depth: 0
+          fetch-tags: true
+
+
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
