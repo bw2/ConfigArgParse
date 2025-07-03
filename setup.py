@@ -8,6 +8,7 @@ def parse_toml_min(filename):
     """
     Hack to parse pyproject.toml and not duplicate the data inside it.
     """
+
     def set_in_tree(tree, path, k, v):
         d = tree
         for p in path:
@@ -29,13 +30,15 @@ def parse_toml_min(filename):
                 pass
         if val.startswith("{") and val.endswith("}"):
             # TOML inline tables use = not : so replace only at key boundaries
-            s = re.sub(r'(\w+)\s*=', r'"\1":', val)
+            s = re.sub(r"(\w+)\s*=", r'"\1":', val)
             try:
                 return ast.literal_eval(s)
             except Exception:
                 pass
         # If it's quoted, remove quotes
-        if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+        if (val.startswith('"') and val.endswith('"')) or (
+            val.startswith("'") and val.endswith("'")
+        ):
             return val[1:-1]
         # Try int/float/bare string
         try:
