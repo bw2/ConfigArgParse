@@ -1,7 +1,8 @@
 # TODO: Delete this file after we remove python 3.6 support and use pyproject.toml directly
-from setuptools import setup
 import ast
 import re
+from contextlib import closing
+from setuptools import setup
 
 
 def parse_toml_min(filename):
@@ -82,7 +83,7 @@ setup(
     name=toml_data["project"]["name"],
     version=toml_data["project"]["version"],
     description=toml_data["project"]["description"],
-    long_description=toml_data["project"]["readme"],
+    long_description=closing(open(toml_data["project"]["readme"])).__enter__().read(),
     url=toml_data["project"]["urls"]["Homepage"],
     py_modules=toml_data["tool"]["setuptools"]["py-modules"],
     include_package_data=toml_data["tool"]["setuptools"]["include-package-data"],
