@@ -38,7 +38,9 @@ Homepage = "https://github.com/bw2/ConfigArgParse"
 [project.optional-dependencies]
 yaml = ["PyYAML"]
 test = [
+    "black",
     "mock",
+    "toml",
     "PyYAML",
     "pytest",
     "pytest-cov",
