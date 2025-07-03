@@ -1381,7 +1381,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 stream = self._config_file_open_func(user_config_file)
             except Exception as e:
                 if len(e.args) == 2:  # OSError
-                    _, msg = e.args
+                    errno, msg = e.args
+                    del errno
                 else:
                     msg = str(e)
                 # close previously opened config files
@@ -1422,6 +1423,7 @@ class ArgumentParser(argparse.ArgumentParser):
             source = source_key_to_display_value_map[source[0]] % tuple(source[1:])
             r.write(source)
             for key, (action, value) in settings.items():
+                del action
                 if key:
                     r.write("  {:<19}{}\n".format(key + ":", value))
                 else:
