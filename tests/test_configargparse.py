@@ -8,9 +8,10 @@ import sys
 import tempfile
 import types
 import unittest
-import textwrap
-from io import StringIO
 from unittest import mock
+import textwrap
+
+from io import BytesIO, StringIO
 
 if sys.version_info >= (3, 10):
     OPTIONAL_ARGS_STRING = "options"
