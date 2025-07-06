@@ -17,7 +17,7 @@ jobs:
       pages: write
 
     steps:
-      - uses: actions/checkout@4
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
       - name: Set up Python 3.8
