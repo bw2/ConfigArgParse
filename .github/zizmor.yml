@@ -1,5 +1,6 @@
 rules:
   unpinned-uses:
+    ignore: []
     config:
       policies:
         actions/*: ref-pin

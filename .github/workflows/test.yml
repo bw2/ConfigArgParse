@@ -7,11 +7,16 @@ on:
       - '*'
   pull_request:
 
+# Set minimal permissions by default
+permissions: {}
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-python@v5
         with:
@@ -50,6 +55,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Python ${{ matrix.python-version }}
         if: ${{ !matrix.use-docker }}
@@ -94,6 +101,8 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-python@v5
         with:
@@ -140,6 +149,8 @@ jobs:
         id-token: write
       steps:
         - uses: actions/checkout@v4
+          with:
+            persist-credentials: false
 
         - name: Set up Python 3.12
           uses: actions/setup-python@v5
