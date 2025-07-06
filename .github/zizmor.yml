@@ -3,3 +3,4 @@ rules:
     config:
       policies:
         actions/*: ref-pin
+        pypa/gh-action-pypi-publish: ref-pin
