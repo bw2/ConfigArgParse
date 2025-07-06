@@ -21,7 +21,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip black zizmor
           black . --check
-          find .github/workflows -name '*.yaml' | xargs zizmor --config .github/zizmor.yaml
+          find .github/workflows -name '*.yaml' | xargs zizmor --config .github/zizmor.yml
 
   test:
     name: ${{ matrix.os }} py${{ matrix.python-version }} ${{ matrix.use-docker && '(docker)' || '' }}
