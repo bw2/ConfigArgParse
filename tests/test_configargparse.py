@@ -1438,7 +1438,9 @@ class TestConfigFileParsers(TestCase):
                 parsed_obj = p.parse(StringIO(test["line"]))
                 parsed_obj = dict(parsed_obj)
                 expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(parsed_obj, expected, msg="Line %r" % (test["line"]))
+                self.assertDictEqual(
+                    parsed_obj, expected, msg="Line %r" % (test["line"])
+                )
 
     def testDefaultConfigFileParser_QuotedValues(self):
         p = configargparse.DefaultConfigFileParser()
@@ -1483,7 +1485,9 @@ class TestConfigFileParsers(TestCase):
                 parsed_obj = p.parse(StringIO(test["line"]))
                 parsed_obj = dict(parsed_obj)
                 expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(parsed_obj, expected, msg="Line %r" % (test["line"]))
+                self.assertDictEqual(
+                    parsed_obj, expected, msg="Line %r" % (test["line"])
+                )
 
     def testDefaultConfigFileParser_BlankValues(self):
         p = configargparse.DefaultConfigFileParser()
@@ -1509,7 +1513,9 @@ class TestConfigFileParsers(TestCase):
                 parsed_obj = p.parse(StringIO(test["line"]))
                 parsed_obj = dict(parsed_obj)
                 expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(parsed_obj, expected, msg="Line %r" % (test["line"]))
+                self.assertDictEqual(
+                    parsed_obj, expected, msg="Line %r" % (test["line"])
+                )
 
     def testDefaultConfigFileParser_UnspecifiedValues(self):
         p = configargparse.DefaultConfigFileParser()
@@ -1527,7 +1533,9 @@ class TestConfigFileParsers(TestCase):
                 parsed_obj = p.parse(StringIO(test["line"]))
                 parsed_obj = dict(parsed_obj)
                 expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(parsed_obj, expected, msg="Line %r" % (test["line"]))
+                self.assertDictEqual(
+                    parsed_obj, expected, msg="Line %r" % (test["line"])
+                )
 
     def testDefaultConfigFileParser_ColonEqualSignValue(self):
         p = configargparse.DefaultConfigFileParser()
@@ -1565,7 +1573,9 @@ class TestConfigFileParsers(TestCase):
                 parsed_obj = p.parse(StringIO(test["line"]))
                 parsed_obj = dict(parsed_obj)
                 expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(parsed_obj, expected, msg="Line %r" % (test["line"]))
+                self.assertDictEqual(
+                    parsed_obj, expected, msg="Line %r" % (test["line"])
+                )
 
     def testDefaultConfigFileParser_ValuesWithComments(self):
         p = configargparse.DefaultConfigFileParser()
@@ -1613,7 +1623,9 @@ class TestConfigFileParsers(TestCase):
                 parsed_obj = p.parse(StringIO(test["line"]))
                 parsed_obj = dict(parsed_obj)
                 expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(parsed_obj, expected, msg="Line %r" % (test["line"]))
+                self.assertDictEqual(
+                    parsed_obj, expected, msg="Line %r" % (test["line"])
+                )
 
     def testDefaultConfigFileParser_NegativeValues(self):
         p = configargparse.DefaultConfigFileParser()
@@ -1633,7 +1645,9 @@ class TestConfigFileParsers(TestCase):
                 parsed_obj = p.parse(StringIO(test["line"]))
                 parsed_obj = dict(parsed_obj)
                 expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(parsed_obj, expected, msg="Line %r" % (test["line"]))
+                self.assertDictEqual(
+                    parsed_obj, expected, msg="Line %r" % (test["line"])
+                )
 
     def testDefaultConfigFileParser_KeySyntax(self):
         p = configargparse.DefaultConfigFileParser()
@@ -1677,7 +1691,9 @@ class TestConfigFileParsers(TestCase):
                 parsed_obj = p.parse(StringIO(test["line"]))
                 parsed_obj = dict(parsed_obj)
                 expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(parsed_obj, expected, msg="Line %r" % (test["line"]))
+                self.assertDictEqual(
+                    parsed_obj, expected, msg="Line %r" % (test["line"])
+                )
 
     def testYAMLConfigFileParser_Basic(self):
         try:
