@@ -14,11 +14,8 @@ project_version="$(python3 setup.py -V)"
 
 # Figure commit ref
 git_sha="$(git rev-parse HEAD)"
-if ! git describe --exact-match --tags > /dev/null 2>&1 ; then
-    is_tag=false
-else
+if git describe --exact-match --tags > /dev/null 2>&1 ; then
     git_sha="$(git describe --exact-match --tags)"
-    is_tag=true
 fi
 
 # Init output folder
@@ -29,7 +26,7 @@ mkdir -p "${docs_folder}"
 # We generate the docs for the argparse module too, such that we can document 
 # the methods inherited from argparse.ArgumentParser, not only the methods that configargparse overrides.
 # And it help to have a better vision of the whole thing also.
-curl https://raw.githubusercontent.com/python/cpython/3.9/Lib/argparse.py > ./argparse.py
+curl https://raw.githubusercontent.com/python/cpython/3.13/Lib/argparse.py > ./argparse.py
 echo "__docformat__ = 'restructuredtext'" >> ./argparse.py
 # Delete the file when the script exits
 trap "rm -f ./argparse.py" EXIT
@@ -44,6 +41,6 @@ pydoctor \
     --project-base-dir=.\
     --docformat=google \
     --html-output="${docs_folder}" \
-    ./argparse.py ./configargparse.py || true 
+    ./argparse.py ./configargparse.py || true
 
 echo "API docs generated in ${docs_folder}"
