@@ -60,7 +60,6 @@ def captured_output():
 
 
 class TestCase(unittest.TestCase):
-
     def initParser(self, *args, **kwargs):
         p = configargparse.ArgParser(*args, **kwargs)
         self.parser = replace_error_method(p)
