@@ -27,6 +27,8 @@ logger.level = logging.DEBUG
 stream_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stream_handler)
 
+IS_PY36 = sys.version_info[:2] == (3, 6)
+
 
 def replace_error_method(arg_parser):
     """Swap out arg_parser's error(..) method so that instead of calling
@@ -1750,7 +1752,6 @@ class TestConfigFileParsers(TestCase):
 
 
 class TestTomlConfigParser(unittest.TestCase):
-
     def write_toml_file(self, content, obj=BytesIO):
         f = obj()
         dedent = lambda x: x
@@ -1804,7 +1805,7 @@ class TestTomlConfigParser(unittest.TestCase):
         parser = configargparse.TomlConfigParser(["tool.section"])
         self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": ["1", "2", "3"]})
 
-    @unittest.skipIf(sys.version_info[:2] == (3, 6), "3.6 doesn't support fail")
+    @unittest.skipIf(IS_PY36, "3.6 does not fail on bad parse")
     def test_fails_str_read(self):
         f = self.write_toml_file(
             """[tool.section]\nkey1 = "toml1"
