@@ -447,7 +447,7 @@ def parse_toml_section_name(section_name):
 
     The following names are all valid:
 
-    .. code-block:: python
+    python::
 
         "a.b.c"            # this is best practice -> returns ("a", "b", "c")
         " d.e.f "          # same as [d.e.f] -> returns ("d", "e", "f")
