@@ -106,7 +106,7 @@ class ConfigFileParser(object):
         one of: "yes", "no", "on", "off", "true", "false". Otherwise an error will be raised.
 
         Args:
-            stream: A config file input stream (such as an open file object).
+            stream (IO): A config file input stream (such as an open file object).
 
         Returns:
             OrderedDict: Items where the keys are strings and the
