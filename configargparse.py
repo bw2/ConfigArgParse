@@ -106,7 +106,7 @@ class ConfigFileParser(object):
         one of: "yes", "no", "on", "off", "true", "false". Otherwise an error will be raised.
 
         Args:
-            stream (IO): A config file input stream (such as an open file object).
+            stream (io.IOBase): A config file input stream (such as an open file object).
 
         Returns:
             OrderedDict: Items where the keys are strings and the
@@ -1347,7 +1347,7 @@ class ArgumentParser(argparse.ArgumentParser):
             command_line_args: List of all args
 
         Returns:
-            list[IO]: open config files
+            list[io.IOBase]: open config files
         """
         # open any default config files
         config_files = []
