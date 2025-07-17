@@ -1347,7 +1347,7 @@ class ArgumentParser(argparse.ArgumentParser):
             command_line_args: List of all args
 
         Returns:
-            list: open config files
+            list[IO]: open config files
         """
         # open any default config files
         config_files = []
