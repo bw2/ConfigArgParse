@@ -23,8 +23,8 @@ jobs:
       - name: Black
         run: black . --check
 
-      - name: PyDoctor
-        run: pydoctor ./configargparse.py --intersphinx=https://docs.python.org/3/objects.inv --docformat=google
+      - name: Pydoctor
+        run: pydoctor ./configargparse.py --intersphinx=https://docs.python.org/3/objects.inv --docformat=google -W
 
   test:
     name: ${{ matrix.os }} py${{ matrix.python-version }} ${{ matrix.use-docker && '(docker)' || '' }}
