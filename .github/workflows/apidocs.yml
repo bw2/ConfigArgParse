@@ -26,10 +26,10 @@ jobs:
           python-version: 3.8
 
       - name: Install requirements for documentation generation
-        run: python -m pip install --upgrade pip setuptools wheel tox
+        run: python -m pip install --upgrade pip pydoctor
 
       - name: Generate API documentation with pydoctor
-        run: tox -e apidocs
+        run: ./apidocs.sh
 
       - name: Push API documentation to Github Pages
         uses: peaceiris/actions-gh-pages@373f7f263a76c20808c831209c920827a82a2847 # v3.9.3
