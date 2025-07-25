@@ -1,131 +1,97 @@
-import logging
-import os
-import sys
+# TODO: Delete this file after we remove python 3.6 support and use pyproject.toml directly
+import ast
+import re
+from contextlib import closing
+from setuptools import setup
 
 
-try:
-    from setuptools import setup
-except ImportError:
-    print("WARNING: setuptools not installed. Will try using distutils instead..")
-    from distutils.core import setup
+def parse_toml_min(filename):
+    """
+    Hack to parse pyproject.toml and not duplicate the data inside it.
+    """
 
+    def set_in_tree(tree, path, k, v):
+        d = tree
+        for p in path:
+            d = d.setdefault(p, {})
+        d[k] = v
 
-def launch_http_server(directory):
-    assert os.path.isdir(directory)
-
-    try:
-        try:
-            from SimpleHTTPServer import SimpleHTTPRequestHandler
-        except ImportError:
-            from http.server import SimpleHTTPRequestHandler
-
-        try:
-            import SocketServer
-        except ImportError:
-            import socketserver as SocketServer
-
-        import socket
-
-        for port in [80] + list(range(8000, 8100)):
+    def parse_value(val):
+        val = val.strip()
+        if val == "true":
+            return True
+        if val == "false":
+            return False
+        if val == "[]":
+            return []
+        if val.startswith("[") and val.endswith("]"):
             try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.bind(("localhost", port))
-                s.close()
-            except socket.error as e:
-                logging.debug("Can't use port %d: %s" % (port, e.strerror))
-                continue
+                return ast.literal_eval(val)
+            except Exception:
+                pass
+        if val.startswith("{") and val.endswith("}"):
+            # TOML inline tables use = not : so replace only at key boundaries
+            s = re.sub(r"(\w+)\s*=", r'"\1":', val)
+            try:
+                return ast.literal_eval(s)
+            except Exception:
+                pass
+        # If it's quoted, remove quotes
+        if (val.startswith('"') and val.endswith('"')) or (
+            val.startswith("'") and val.endswith("'")
+        ):
+            return val[1:-1]
+        # Try int/float/bare string
+        try:
+            return ast.literal_eval(val)
+        except Exception:
+            return val
 
-            print(
-                "HTML coverage report now available at http://{}{}".format(
-                    socket.gethostname(), (":%s" % port) if port != 80 else ""
-                )
-            )
+    tree = {}
+    cur = []
+    with open(filename) as f:
+        lines = list(f)
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        i += 1
+        if not line or line.startswith("#"):
+            continue
+        m = re.match(r"\[(.+)\]", line)
+        if m:
+            cur = m.group(1).split(".")
+            continue
+        if "=" in line:
+            k, v = map(str.strip, line.split("=", 1))
+            # Handle multi-line array
+            if v.startswith("[") and not v.endswith("]"):
+                array_lines = [v]
+                while i < len(lines):
+                    next_line = lines[i].strip()
+                    array_lines.append(next_line)
+                    i += 1
+                    if next_line.endswith("]"):
+                        break
+                v = " ".join(array_lines)
+            set_in_tree(tree, cur, k, parse_value(v))
+    return tree
 
-            os.chdir(directory)
-            SocketServer.TCPServer(("", port), SimpleHTTPRequestHandler).serve_forever()
-        else:
-            logging.debug("All network port. ")
-    except Exception as e:
-        logging.error(
-            "ERROR: while starting an HTTP server to serve "
-            "the coverage report: %s" % e
-        )
 
-
-command = sys.argv[-1]
-if command == "publish":
-    os.system("rm -rf dist")
-    os.system("python3 setup.py sdist")
-    os.system("python3 setup.py bdist_wheel")
-    os.system(
-        "twine check dist/*"
-    )  # check for formatting or other issues that would cause twine upload to error out
-    os.system("twine upload dist/*whl dist/*gz")
-    sys.exit()
-elif command == "coverage":
-    try:
-        import coverage
-    except:
-        sys.exit("coverage.py not installed (pip install --user coverage)")
-    setup_py_path = os.path.abspath(__file__)
-    os.system("coverage run --source=configargparse " + setup_py_path + " test")
-    os.system("coverage report")
-    os.system("coverage html")
-    print("Done computing coverage")
-    launch_http_server(directory="htmlcov")
-    sys.exit()
-
-long_description = ""
-if command not in ["test", "coverage"]:
-    long_description = open("README.rst").read()
-
-install_requires = []
-tests_require = [
-    "black",
-    "mock",
-    "toml",
-    "PyYAML",
-    "pytest",
-    "pytest-cov",
-    "pytest-subtests",
-]
-
+toml_data = parse_toml_min("pyproject.toml")
 
 setup(
-    name="ConfigArgParse",
-    version="1.7.1",
-    description="A drop-in replacement for argparse that allows options to "
-    "also be set via config files and/or environment variables.",
-    long_description=long_description,
-    url="https://github.com/bw2/ConfigArgParse",
-    py_modules=["configargparse"],
-    include_package_data=True,
-    license="MIT",
-    keywords="options, argparse, ConfigArgParse, config, environment variables, "
-    "envvars, ENV, environment, optparse, YAML, INI",
-    classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
-        "Natural Language :: English",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-        "Programming Language :: Python :: 3.13",
-        "Programming Language :: Python :: Implementation :: CPython",
-        "Programming Language :: Python :: Implementation :: PyPy",
-    ],
+    name=toml_data["project"]["name"],
+    version=toml_data["project"]["version"],
+    description=toml_data["project"]["description"],
+    long_description=closing(open(toml_data["project"]["readme"])).__enter__().read(),
+    url=toml_data["project"]["urls"]["Homepage"],
+    py_modules=toml_data["tool"]["setuptools"]["py-modules"],
+    include_package_data=toml_data["tool"]["setuptools"]["include-package-data"],
+    license=toml_data["project"]["license"]["text"],
+    keywords=" ".join(toml_data["project"]["keywords"]),
+    classifiers=toml_data["project"]["classifiers"],
     test_suite="tests",
-    python_requires=">=3.6",
-    install_requires=install_requires,
-    tests_require=tests_require,
-    extras_require={
-        "yaml": ["PyYAML"],
-        "test": tests_require,
-    },
+    python_requires=toml_data["project"]["requires-python"],
+    tests_require=toml_data["project"]["optional-dependencies"]["test"],
+    extras_require=toml_data["project"]["optional-dependencies"],
 )
