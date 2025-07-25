@@ -87,6 +87,7 @@ tests_require = [
     "PyYAML",
     "pytest",
     "pytest-cov",
+    "pytest-subtests",
 ]
 
 
