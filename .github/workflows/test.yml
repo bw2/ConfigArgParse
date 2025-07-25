@@ -107,20 +107,17 @@ jobs:
         with:
           path: downloaded_artifacts
 
-      - name: Clean up temporary artifacts
-        uses: geekyeggo/delete-artifact@f275313e70c08f6120db482d7a6b98377786765b # v5.1.0
-        with:
-          name: coverage-*
-
       - name: Install dependencies
         run: pip install coverage
 
       - name: Combine coverage.py
         run: |
+          cp -r downloaded_artifacts all_coverage
           coverage combine $(find downloaded_artifacts/ -type f | xargs)
           coverage xml
           coverage html
           coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
+          cp -r all_coverage htmlcov/all_coverage
           cp coverage.xml htmlcov/coverage.xml
           cp .coverage htmlcov/.coverage
 
@@ -133,6 +130,11 @@ jobs:
           path: htmlcov
           # Retention days for main branch is 90 days, for other branches is 1 day
           retention-days: ${{ github.ref == 'refs/heads/master' && 90 || 1 }}
+
+      - name: Clean up temporary artifacts
+        uses: geekyeggo/delete-artifact@f275313e70c08f6120db482d7a6b98377786765b # v5.1.0
+        with:
+          name: coverage-*
 
   release:
       needs: [test, coverage]
