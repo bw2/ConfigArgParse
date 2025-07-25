@@ -21,10 +21,14 @@ jobs:
         with:
           python-version: 3.13
 
-      - name: Run linters
-        run: |
-          python -m pip install --upgrade pip black
-          black . --check
+      - name: Install linters
+        run: python -m pip install --upgrade pip black pydoctor
+
+      - name: Black
+        run: black . --check
+
+      - name: Pydoctor
+        run: pydoctor ./configargparse.py --intersphinx=https://docs.python.org/3/objects.inv --docformat=google -W
 
   test:
     name: ${{ matrix.os }} py${{ matrix.python-version }} ${{ matrix.use-docker && '(docker)' || '' }}
