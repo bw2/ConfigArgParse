@@ -86,6 +86,7 @@ tests_require = [
     "PyYAML",
     "pytest",
     "pytest-cov",
+    "pytest-subtests",
     "tomli; python_version < '3.11'",
 ]
 

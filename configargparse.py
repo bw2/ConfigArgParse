@@ -6,6 +6,7 @@ A drop-in replacement for `argparse` that allows options to also be set via conf
 
 import argparse
 import ast
+import configparser
 import csv
 import functools
 import json
@@ -246,9 +247,6 @@ class ConfigparserConfigFileParser(ConfigFileParser):
 
     def parse(self, stream):
         # see ConfigFileParser.parse docstring
-        import configparser
-        from ast import literal_eval
-
         # parse with configparser to allow multi-line values
         config = configparser.ConfigParser(
             delimiters=("=", ":"),
@@ -273,7 +271,7 @@ class ConfigparserConfigFileParser(ConfigFileParser):
                     # ensure not a dict with a list value
                     prelist_string = multiLine2SingleLine.split("[")[0]
                     if "{" not in prelist_string:
-                        result[k] = literal_eval(multiLine2SingleLine)
+                        result[k] = ast.literal_eval(multiLine2SingleLine)
                     else:
                         result[k] = multiLine2SingleLine
                 else:
@@ -282,9 +280,6 @@ class ConfigparserConfigFileParser(ConfigFileParser):
 
     def serialize(self, items):
         # see ConfigFileParser.serialize docstring
-        import configparser
-        import io
-
         config = configparser.ConfigParser(
             allow_no_value=False,
             inline_comment_prefixes=("#",),
@@ -293,7 +288,7 @@ class ConfigparserConfigFileParser(ConfigFileParser):
         )
         items = {"DEFAULT": items}
         config.read_dict(items)
-        stream = io.StringIO()
+        stream = StringIO()
         config.write(stream)
         stream.seek(0)
         return stream.read()
@@ -617,8 +612,6 @@ class IniConfigParser(ConfigFileParser):
     def parse(self, stream):
         """Parses the keys and values from an INI config file."""
         # parse with configparser to allow multi-line values
-        import configparser
-
         config = configparser.ConfigParser()
         try:
             config.read_string(stream.read())
