@@ -1097,6 +1097,23 @@ class ArgumentParser(argparse.ArgumentParser):
         self.write_config_file(namespace, output_file_paths, exit_after=True)
         return namespace, unknown_args
 
+    def get_source_to_settings_dict(self):
+        """
+        If called after `parse_args()` or `parse_known_args()`, returns a dict that contains up to 4 keys corresponding
+        to where a given option's value is coming from:
+        - "command_line"
+        - "environment_variables"
+        - "config_file"
+        - "defaults"
+        Each such key, will be mapped to another dictionary containing the options set via that method. Here the key
+        will be the option name, and the value will be a 2-tuple of the form (`argparse.Action` obj, `str` value).
+
+        Returns:
+            dict[str, dict[str, tuple[argparse.Action, str]]]: source to settings dict
+        """
+        # _source_to_settings is set in parse_known_args().
+        return self._source_to_settings  # type:ignore[attribute-error]
+
     def write_config_file(self, parsed_namespace, output_file_paths, exit_after=False):
         """Write the given settings to output files.
 
@@ -1354,7 +1371,8 @@ class ArgumentParser(argparse.ArgumentParser):
             # Otherwise it sys.exits(..) if, for example, config file
             # is_required=True and user doesn't provide it.
             def error_method(self, message):
-                del message
+                # This line doesn't do anything, and is only here to satisfy linters.
+                del message # See discussion in PR #330
 
             arg_parser.error = types.MethodType(error_method, arg_parser)
 
@@ -1374,8 +1392,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 stream = self._config_file_open_func(user_config_file)
             except Exception as e:
                 if len(e.args) == 2:  # OSError
-                    errno, msg = e.args
-                    del errno
+                    _, msg = e.args
                 else:
                     msg = str(e)
                 # close previously opened config files
@@ -1415,8 +1432,7 @@ class ArgumentParser(argparse.ArgumentParser):
             source = source.split("|")
             source = source_key_to_display_value_map[source[0]] % tuple(source[1:])
             r.write(source)
-            for key, (action, value) in settings.items():
-                del action
+            for key, (_, value) in settings.items():
                 if key:
                     r.write("  {:<19}{}\n".format(key + ":", value))
                 else:
