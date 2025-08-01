@@ -14,11 +14,8 @@ project_version="$(python3 setup.py -V)"
 
 # Figure commit ref
 git_sha="$(git rev-parse HEAD)"
-if ! git describe --exact-match --tags > /dev/null 2>&1 ; then
-    is_tag=false
-else
+if git describe --exact-match --tags > /dev/null 2>&1 ; then
     git_sha="$(git describe --exact-match --tags)"
-    is_tag=true
 fi
 
 # Init output folder
@@ -44,6 +41,6 @@ pydoctor \
     --project-base-dir=.\
     --docformat=google \
     --html-output="${docs_folder}" \
-    ./argparse.py ./configargparse.py || true 
+    ./argparse.py ./configargparse.py || true
 
 echo "API docs generated in ${docs_folder}"
