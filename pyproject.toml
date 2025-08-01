@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=41"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ConfigArgParse"
+version = "1.7.1"
+description = "A drop-in replacement for argparse that allows options to also be set via config files and/or environment variables."
+readme = "README.rst"
+license = {text = "MIT"}
+requires-python = ">=3.6"
+keywords = [
+    "options", "argparse", "ConfigArgParse", "config", "environment variables",
+    "envvars", "ENV", "environment", "optparse", "YAML", "INI"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy"
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/bw2/ConfigArgParse"
+
+[project.optional-dependencies]
+yaml = ["PyYAML"]
+test = [
+    "black",
+    "mock",
+    "toml",
+    "PyYAML",
+    "pytest",
+    "pytest-cov",
+    "pytest-subtests",
+]
+
+[tool.setuptools]
+py-modules = ["configargparse"]
+include-package-data = true
