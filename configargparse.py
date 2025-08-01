@@ -517,10 +517,13 @@ class TomlConfigParser(ConfigFileParser):
     def parse(self, stream):
         """Parses the keys and values from a TOML config file."""
         # parse with configparser to allow multi-line values
-        import toml
+        try:
+            import tomllib
+        except ImportError:
+            import tomli as tomllib
 
         try:
-            config = toml.load(stream)
+            config = tomllib.load(stream)
         except Exception as e:
             raise ConfigFileParserException("Couldn't parse TOML file: %s" % e)
 
