@@ -1111,7 +1111,7 @@ class ArgumentParser(argparse.ArgumentParser):
         Returns:
             dict[str, dict[str, tuple[argparse.Action, str]]]: source to settings dict
         """
-        # _source_to_settings is set in parse_know_args().
+        # _source_to_settings is set in parse_known_args().
         return self._source_to_settings  # type:ignore[attribute-error]
 
     def write_config_file(self, parsed_namespace, output_file_paths, exit_after=False):
@@ -1371,7 +1371,8 @@ class ArgumentParser(argparse.ArgumentParser):
             # Otherwise it sys.exits(..) if, for example, config file
             # is_required=True and user doesn't provide it.
             def error_method(self, message):
-                pass
+                # This line doesn't do anything, and is only here to satisfy linters.
+                del message # See discussion in PR #330
 
             arg_parser.error = types.MethodType(error_method, arg_parser)
 
@@ -1391,7 +1392,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 stream = self._config_file_open_func(user_config_file)
             except Exception as e:
                 if len(e.args) == 2:  # OSError
-                    errno, msg = e.args
+                    _, msg = e.args
                 else:
                     msg = str(e)
                 # close previously opened config files
@@ -1431,7 +1432,7 @@ class ArgumentParser(argparse.ArgumentParser):
             source = source.split("|")
             source = source_key_to_display_value_map[source[0]] % tuple(source[1:])
             r.write(source)
-            for key, (action, value) in settings.items():
+            for key, (_, value) in settings.items():
                 if key:
                     r.write("  {:<19}{}\n".format(key + ":", value))
                 else:
