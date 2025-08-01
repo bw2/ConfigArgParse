@@ -655,7 +655,7 @@ class IniConfigParser(ConfigFileParser):
                             raise ConfigFileParserException(str(e)) from e
                     else:
                         result[k] = v
-        return result
+        return convert_all_to_str(result)
 
     def get_syntax_description(self):
         msg = (
@@ -669,6 +669,15 @@ class IniConfigParser(ConfigFileParser):
                 "each non-empty line will be converted to a list item."
             )
         return msg
+
+
+def convert_all_to_str(data):
+    if isinstance(data, list):
+        return [convert_all_to_str(item) for item in data]
+    elif isinstance(data, dict):
+        return {k: convert_all_to_str(v) for k, v in data.items()}
+    else:
+        return str(data)
 
 
 class CompositeConfigParser(ConfigFileParser):
@@ -690,7 +699,7 @@ class CompositeConfigParser(ConfigFileParser):
         errors = []
         for p in self.parsers:
             try:
-                return p.parse(stream)  # type: ignore[no-any-return]
+                return convert_all_to_str(p.parse(stream))  # type: ignore[no-any-return]
             except Exception as e:
                 stream.seek(0)
                 errors.append(e)
@@ -1007,7 +1016,9 @@ class ArgumentParser(argparse.ArgumentParser):
         # parse each config file
         for stream in reversed(config_streams):
             try:
-                config_items = self._config_file_parser.parse(stream)
+                config_items = convert_all_to_str(
+                    self._config_file_parser.parse(stream)
+                )
             except ConfigFileParserException as e:
                 self.error(str(e))
             finally:

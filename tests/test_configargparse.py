@@ -1944,6 +1944,471 @@ class TestCompositeConfigParser(unittest.TestCase):
             self.parser.parse_args([])
 
 
+class TestNewlyAddedParsersInVersion_1_5_5(TestCase):
+    def test_unquote_str(self) -> None:
+
+        assert configargparse.unquote_str("string") == "string"
+        assert configargparse.unquote_str('"string') == '"string'
+        assert configargparse.unquote_str('string"') == 'string"'
+        assert configargparse.unquote_str('"string"') == "string"
+        assert configargparse.unquote_str("'string'") == "string"
+        assert configargparse.unquote_str('"""string"""') == "string"
+        assert configargparse.unquote_str("'''string'''") == "string"
+        assert configargparse.unquote_str('"""\nstring"""') == "\nstring"
+        assert configargparse.unquote_str("'''string\n'''") == "string\n"
+        assert configargparse.unquote_str('"""\nstring  \n"""') == "\nstring  \n"
+        assert configargparse.unquote_str("'''\n  string\n'''") == "\n  string\n"
+
+        assert configargparse.unquote_str("'''string") == "'''string"
+        assert configargparse.unquote_str("string'''") == "string'''"
+        assert configargparse.unquote_str('"""string') == '"""string'
+        assert configargparse.unquote_str('string"""') == 'string"""'
+        assert configargparse.unquote_str('"""str"""ing"""') == '"""str"""ing"""'
+        assert configargparse.unquote_str("str'ing") == "str'ing"
+        assert configargparse.unquote_str('""""value""""') == '""""value""""'
+
+    def test_parse_toml_section_keys(self) -> None:
+        assert configargparse.parse_toml_section_name("tool.pydoctor") == (
+            "tool",
+            "pydoctor",
+        )
+        assert configargparse.parse_toml_section_name(" tool.pydoctor ") == (
+            "tool",
+            "pydoctor",
+        )
+        assert configargparse.parse_toml_section_name(' "tool".pydoctor ') == (
+            "tool",
+            "pydoctor",
+        )
+        assert configargparse.parse_toml_section_name(' tool."pydoctor" ') == (
+            "tool",
+            "pydoctor",
+        )
+
+    def test_IniConfigParser(self):
+        # Not supported by configparser (currently raises error)
+        # {'line': 'key value',      ('key', 'value', None)},
+        # {'line': 'key  value',     ('key', 'value', None)},
+        # {'line': ' key    value ',  ('key', 'value', None)}
+        # {'line': 'key ',           ('key', 'true', None)},
+        # {'line': 'key',            ('key', 'true', None)},
+        # {'line': 'key  ',          ('key', 'true', None)},
+        # {'line': ' key     ',      ('key', 'true', None)},
+
+        p = configargparse.IniConfigParser(["soft"], False)
+
+        for line, expected in get_IniConfigParser_cases():
+            with self.subTest(line=line):
+                try:
+                    parsed_obj = p.parse(StringIO("[soft]\n" + line))
+                except Exception as e:
+                    raise AssertionError(
+                        "Line %r, error: %s" % (line, str(e))
+                    ) from e
+                else:
+                    parsed_obj = dict(parsed_obj)
+                    assert parsed_obj == expected, "Line %r" % (line)
+
+    def test_IniConfigParser_multiline_text_to_list(self):
+
+        p = configargparse.IniConfigParser(["soft"], True)
+
+        for line, expected in get_IniConfigParser_multiline_text_to_list_cases():
+            with self.subTest(line=line):
+                try:
+                    parsed_obj = p.parse(StringIO("[soft]\n" + line))
+                except Exception as e:
+                    raise AssertionError(
+                        "Line %r, error: %s" % (line, str(e))
+                    ) from e
+                else:
+                    parsed_obj = dict(parsed_obj)
+                    assert parsed_obj == expected, "Line %r" % (line)
+
+    def test_TomlConfigParser(self):
+
+        p = configargparse.TomlConfigParser(["soft"])
+
+        for line, expected in get_TomlConfigParser_cases():
+            with self.subTest(line=line):
+                try:
+                    parsed_obj = p.parse(StringIO("[soft]\n" + line))
+                except Exception as e:
+                    raise AssertionError(
+                        "Line %r, error: %s" % (line, str(e))
+                    ) from e
+                else:
+                    parsed_obj = dict(parsed_obj)
+                    assert parsed_obj == expected, "Line %r" % (line)
+
+    def test_CompositeConfigParser(self):
+        p = configargparse.CompositeConfigParser(
+            [
+                configargparse.TomlConfigParser(["soft"]),
+                configargparse.IniConfigParser(["soft"], True),
+            ]
+        )
+
+        for line, expected in (
+            *get_TomlConfigParser_cases(),
+            *get_IniConfigParser_multiline_text_to_list_cases(),
+        ):
+            with self.subTest(line=line):
+                try:
+                    parsed_obj = p.parse(StringIO("[soft]\n" + line))
+                except Exception as e:
+                    raise AssertionError(
+                        "Line %r, error: %s" % (line, str(e))
+                    ) from e
+                else:
+                    parsed_obj = dict(parsed_obj)
+                    assert parsed_obj == expected, "Line %r" % (line)
+
+
+INI_SIMPLE_STRINGS = [
+    (
+        "key = value # not_a_comment # not_a_comment",
+        {"key": "value # not_a_comment # not_a_comment"},
+    ),  # that's normal behaviour for configparser
+    (
+        "key=value#not_a_comment ",
+        {"key": "value#not_a_comment"},
+    ),
+    ("key=value", {"key": "value"}),
+    ("key =value", {"key": "value"}),
+    ("key= value", {"key": "value"}),
+    ("key = value", {"key": "value"}),
+    ("key  =  value", {"key": "value"}),
+    (" key  =  value ", {"key": "value"}),
+    ("key:value", {"key": "value"}),
+    ("key :value", {"key": "value"}),
+    ("key: value", {"key": "value"}),
+    ("key : value", {"key": "value"}),
+    ("key  :  value", {"key": "value"}),
+    (" key  :  value ", {"key": "value"}),
+]
+
+INI_QUOTES_CORNER_CASES = [
+    ('key="', {"key": '"'}),
+    ('key  =  "', {"key": '"'}),
+    (' key  =  " ', {"key": '"'}),
+    (
+        'key = ""value""',
+        {"key": '""value""'},
+    ),  # Not a valid python, so we get the original value, which is normal
+    ("key = ''value''", {"key": "''value''"}),  # Idem
+]
+
+INI_QUOTED_STRINGS = [
+    ('key="value"', {"key": "value"}),
+    ('key  =  "value"', {"key": "value"}),
+    (' key  =  "value" ', {"key": "value"}),
+    ('key=" value "', {"key": " value "}),
+    ('key  =  " value "', {"key": " value "}),
+    (' key  =  " value " ', {"key": " value "}),
+    ("key='value'", {"key": "value"}),
+    ("key  =  'value'", {"key": "value"}),
+    (" key  =  'value' ", {"key": "value"}),
+    ("key=' value '", {"key": " value "}),
+    ("key  =  ' value '", {"key": " value "}),
+    (" key  =  ' value ' ", {"key": " value "}),
+    ("key = '\"value\"'", {"key": '"value"'}),
+    ("key = \"'value'\"", {"key": "'value'"}),
+]
+
+INI_LOOKS_LIKE_QUOTED_STRINGS = [
+    ('key="value', {"key": '"value'}),
+    ('key  =  "value', {"key": '"value'}),
+    (' key  =  "value ', {"key": '"value'}),
+    ('key=value"', {"key": 'value"'}),
+    ('key  =  value"', {"key": 'value"'}),
+    (' key  =  value " ', {"key": 'value "'}),
+    ("key='value", {"key": "'value"}),
+    ("key  =  'value", {"key": "'value"}),
+    (" key  =  'value ", {"key": "'value"}),
+    ("key=value'", {"key": "value'"}),
+    ("key  =  value'", {"key": "value'"}),
+    (" key  =  value ' ", {"key": "value '"}),
+]
+
+INI_BLANK_LINES = [
+    ("key=", {}),
+    ("key =", {}),
+    ("key= ", {}),
+    ("key = ", {}),
+    ("key  =  ", {}),
+    (" key  =   ", {}),
+    ("key:", {}),
+    ("key :", {}),
+    ("key: ", {}),
+    ("key : ", {}),
+    ("key  :  ", {}),
+    (" key  :   ", {}),
+]
+
+INI_EQUAL_SIGN_VALUE = [
+    ("key=:", {"key": ":"}),
+    ("key =:", {"key": ":"}),
+    ("key= :", {"key": ":"}),
+    ("key = :", {"key": ":"}),
+    ("key  =  :", {"key": ":"}),
+    (" key  =  : ", {"key": ":"}),
+    ("key:=", {"key": "="}),
+    ("key :=", {"key": "="}),
+    ("key: =", {"key": "="}),
+    ("key : =", {"key": "="}),
+    ("key  :  =", {"key": "="}),
+    (" key  :  = ", {"key": "="}),
+    ("key==", {"key": "="}),
+    ("key ==", {"key": "="}),
+    ("key= =", {"key": "="}),
+    ("key = =", {"key": "="}),
+    ("key  =  =", {"key": "="}),
+    (" key  =  = ", {"key": "="}),
+    ("key::", {"key": ":"}),
+    ("key ::", {"key": ":"}),
+    ("key: :", {"key": ":"}),
+    ("key : :", {"key": ":"}),
+    ("key  :  :", {"key": ":"}),
+    (" key  :  : ", {"key": ":"}),
+]
+
+INI_NEGATIVE_VALUES = [
+    ("key = -10", {"key": "-10"}),
+    ("key : -10", {"key": "-10"}),
+    # ('key -10', {'key': '-10'}), # Not supported
+    ('key = "-10"', {"key": "-10"}),
+    ("key  =  '-10'", {"key": "-10"}),
+    ("key=-10", {"key": "-10"}),
+]
+
+INI_KEY_SYNTAX_EMPTY = [
+    ("key_underscore=", {}),
+    ("_key_underscore=", {}),
+    ("key_underscore_=", {}),
+    ("key-dash=", {}),
+    ("key@word=", {}),
+    ("key$word=", {}),
+    ("key.word=", {}),
+]
+
+INI_KEY_SYNTAX = [
+    ("key_underscore = value", {"key_underscore": "value"}),
+    # ('key_underscore', ('key_underscore': 'true'}, # Not supported
+    ("_key_underscore = value", {"_key_underscore": "value"}),
+    # ('_key_underscore',('_key_underscore': 'true'}, # Idem
+    ("key_underscore_ = value", {"key_underscore_": "value"}),
+    # ('key_underscore_',('key_underscore_': 'true'}, Idem
+    ("key-dash = value", {"key-dash": "value"}),
+    # ('key-dash',       ('key-dash': 'true'}, # Idem
+    ("key@word = value", {"key@word": "value"}),
+    # ('key@word',       ('key@word': 'true'}, Idem
+    ("key$word = value", {"key$word": "value"}),
+    # ('key$word',       ('key$word': 'true'}, Idem
+    ("key.word = value", {"key.word": "value"}),
+    # ('key.word',       ('key.word': 'true'}, Idem
+]
+
+INI_LITERAL_LIST = [
+    ("key = [1,2,3]", {"key": ["1", "2", "3"]}),
+    ("key = []", {"key": []}),
+    (
+        'key = ["hello", "world", ]',
+        {"key": ["hello", "world"]},
+    ),
+    (
+        "key = ['hello', 'world', ]",
+        {"key": ["hello", "world"]},
+    ),
+    ("key =    [1,2,3]      ", {"key": ["1", "2", "3"]}),
+    ("key = [\n   ]    \n", {"key": []}),
+    (
+        'key = [\n    "hello", "world", ]    \n\n\n\n',
+        {"key": ["hello", "world"]},
+    ),
+    (
+        "key = [\n\n    'hello', \n    'world', ]",
+        {"key": ["hello", "world"]},
+    ),
+    (
+        r'key = "[\"hello\", \"world\", ]"',
+        {"key": '["hello", "world", ]'},
+    ),
+]
+
+INI_TRIPPLE_QUOTED_STRINGS = [
+    ('key="""value"""', {"key": "value"}),
+    ('key  =  """value"""', {"key": "value"}),
+    (' key  =  """value""" ', {"key": "value"}),
+    ('key=""" value """', {"key": " value "}),
+    ('key  =  """ value """', {"key": " value "}),
+    (' key  =  """ value """ ', {"key": " value "}),
+    ("key='''value'''", {"key": "value"}),
+    ("key  =  '''value'''", {"key": "value"}),
+    (" key  =  '''value''' ", {"key": "value"}),
+    ("key=''' value '''", {"key": " value "}),
+    ("key  =  ''' value '''", {"key": " value "}),
+    (" key  =  ''' value ''' ", {"key": " value "}),
+    ("key = '''\"value\"'''", {"key": '"value"'}),
+    ('key = """\'value\'"""', {"key": "'value'"}),
+    ('key = """\\"value\\""""', {"key": '"value"'}),
+]
+
+# These test does not pass with TOML (even if toml support tripple quoted strings) because indentation
+# is lost while parsing the config with configparser. The behaviour is basically the same as
+# running textwrap.dedent() on the text.
+INI_TRIPPLE_QUOTED_STRINGS_NOT_COMPATIABLE_WITH_TOML = [
+    (
+        'key = """"value\\""""',
+        {"key": '"value"'},
+    ),  # This is valid for ast.literal_eval but not for TOML.
+    ('key = """"value" """', {"key": '"value" '}),  # Idem.
+    (
+        "key = ''''value\\''''",
+        {"key": "'value'"},
+    ),  # The rest of the test cases are not passing for TOML,
+    # we get the indented string instead, anyway, it's not onus to test TOML.
+    ('key="""\n    value\n    """', {"key": "\nvalue\n"}),
+    ('key  =  """\n    value\n    """', {"key": "\nvalue\n"}),
+    (
+        ' key  =  """\n    value\n    """ ',
+        {"key": "\nvalue\n"},
+    ),
+    ("key='''\n    value\n    '''", {"key": "\nvalue\n"}),
+    ("key  =  '''\n    value\n    '''", {"key": "\nvalue\n"}),
+    (
+        " key  =  '''\n    value\n    ''' ",
+        {"key": "\nvalue\n"},
+    ),
+    ("key= '''\n    \"\"\"\n    '''", {"key": '\n"""\n'}),
+    (
+        "key  =  '''\n    \"\"\"\"\"\n    '''",
+        {"key": '\n"""""\n'},
+    ),
+    (" key  =  '''\n    \"\"\n    ''' ", {"key": '\n""\n'}),
+    (
+        "key = '''\n    \"value\"\n    '''",
+        {"key": '\n"value"\n'},
+    ),
+    (
+        'key = """\n    \'value\'\n    """',
+        {"key": "\n'value'\n"},
+    ),
+    (
+        'key = """"\n    value\\"\n    """',
+        {"key": '"\nvalue"\n'},
+    ),
+    (
+        'key = """\n    \\"value\\"\n    """',
+        {"key": '\n"value"\n'},
+    ),
+    (
+        'key = """\n    "value"    \n     """',
+        {"key": '\n"value"\n'},
+    ),  # trailing white spaces are removed by configparser
+    (
+        "key = '''\n    'value\\'\n    '''",
+        {"key": "\n'value'\n"},
+    ),
+]
+
+INI_LOOKS_LIKE_TRIPPLE_QUOTED_STRINGS = [
+    ('key= """', {"key": '"""'}),
+    ('key  =  """""', {"key": '"""""'}),
+    (' key  =  """" ', {'key': '""""'}), #'key': '""""'
+    (
+        'key = """"value""""',
+        {'key': '"value"'},
+    ),  # Not a valid python, so we get the original value, which is normal
+    ("key = ''''value''''", {"key": "'value'"}),  # Idem
+    ('key="""value', {"key": '"""value'}),
+    ('key  =  """value', {"key": '"""value'}),
+    (' key  =  """value ', {"key": '"""value'}),
+    ('key=value"""', {"key": 'value"""'}),
+    ('key  =  value"""', {"key": 'value"""'}),
+    (' key  =  value """ ', {"key": 'value """'}),
+    ("key='''value", {"key": "'''value"}),
+    ("key  =  '''value", {"key": "'''value"}),
+    (" key  =  '''value ", {"key": "'''value"}),
+    ("key=value'''", {"key": "value'''"}),
+    ("key  =  value'''", {"key": "value'''"}),
+    (" key  =  value ''' ", {"key": "value '''"}),
+]
+
+INI_BLANK_LINES_QUOTED = [
+    ('key=""', {"key": ""}),
+    ('key =""', {"key": ""}),
+    ('key= ""', {"key": ""}),
+    ('key = ""', {"key": ""}),
+    ("key  =  ''", {"key": ""}),
+    (" key  =''   ", {"key": ""}),
+]
+
+INI_BLANK_LINES_QUOTED_COLONS = [
+    ("key:''", {"key": ""}),
+    ("key :''", {"key": ""}),
+    ("key: ''", {"key": ""}),
+    ("key : ''", {"key": ""}),
+    ("key  :''  ", {"key": ""}),
+    (' key  :  "" ', {"key": ""}),
+]
+
+INI_MULTILINE_STRING_LIST = [
+    ("key = \n hello\n hoho", {"key": ["hello", "hoho"]}),
+    ("key = hello\n hoho", {"key": ["hello", "hoho"]}),
+    (
+        "key : \"hello\"\n 'hoho'",
+        {"key": ['hello', "hoho"]},
+    ),  # quotes are kept when converting multine strings to list.
+    ("key : \n hello\n hoho\n", {"key": ["hello", "hoho"]}),
+    (
+        "key = \n hello\n hoho\n \n\n ",
+        {"key": ["hello", "hoho"]},
+    ),
+    (
+        "key = \n hello\n;comment\n\n hoho\n \n\n ",
+        {"key": ["hello", "hoho"]},
+    ),
+]
+
+
+def get_IniConfigParser_cases():
+    return (
+        INI_SIMPLE_STRINGS
+        + INI_QUOTED_STRINGS
+        + INI_BLANK_LINES
+        + INI_NEGATIVE_VALUES
+        + INI_BLANK_LINES_QUOTED
+        + INI_BLANK_LINES_QUOTED_COLONS
+        + INI_KEY_SYNTAX
+        + INI_KEY_SYNTAX_EMPTY
+        + INI_LITERAL_LIST
+        + INI_TRIPPLE_QUOTED_STRINGS
+        + INI_LOOKS_LIKE_TRIPPLE_QUOTED_STRINGS
+        + INI_QUOTES_CORNER_CASES
+        + INI_LOOKS_LIKE_QUOTED_STRINGS
+    )
+
+
+def get_IniConfigParser_multiline_text_to_list_cases():
+    cases = get_IniConfigParser_cases()
+    for case in (
+        INI_BLANK_LINES + INI_KEY_SYNTAX_EMPTY
+    ):  # when multiline_text_to_list is enabled blank lines are simply ignored.
+        cases.remove(case)
+    cases.extend(INI_MULTILINE_STRING_LIST)
+    return cases
+
+
+def get_TomlConfigParser_cases():
+    return (
+        INI_QUOTED_STRINGS
+        + INI_BLANK_LINES_QUOTED
+        + INI_LITERAL_LIST
+        + INI_TRIPPLE_QUOTED_STRINGS
+    )
+
+
 ################################################################################
 # since configargparse should work as a drop-in replacement for argparse
 # in all situations, run argparse unittests on configargparse by modifying
