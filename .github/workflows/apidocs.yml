@@ -31,7 +31,7 @@ jobs:
         run: ./apidocs.sh
 
       - name: Push API documentation to Github Pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e   # v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./apidocs
