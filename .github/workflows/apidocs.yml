@@ -9,6 +9,9 @@ on:
 jobs:
   deploy:
     runs-on: macos-latest
+    permissions:
+      contents: read
+      pages: write
 
     steps:
       - uses: actions/checkout@master
