@@ -81,9 +81,13 @@ if command not in ["test", "coverage"]:
 
 install_requires = []
 tests_require = [
+    "black",
     "mock",
+    "toml",
     "PyYAML",
     "pytest",
+    "pytest-cov",
+    "pytest-subtests",
 ]
 
 

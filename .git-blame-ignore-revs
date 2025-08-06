@@ -1,0 +1,7 @@
+# .git-blame-ignore-revs used to ignore SHAs from git blame
+# applied automatically in Github, use the command
+# `git config blame.ignoreRevsFile .git-blame-ignore-revs` to config git to
+# use it as well
+
+# black format
+0962f7378ceec1218e30489352df4c80533d4cb8
