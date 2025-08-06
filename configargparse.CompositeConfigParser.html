@@ -541,14 +541,14 @@
         </div>
 
         <div class="extrasDocstring">
-          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">CompositeConfigParser</span>(<a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/925f4c9997a8bb3cc28ec4f9bd11fa8c4368731e/configargparse.py#L674" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.CompositeConfigParser.__init__">CompositeConfigParser(config_parser_types)</a></code></p>
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">CompositeConfigParser</span>(<a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L675" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.CompositeConfigParser.__init__">CompositeConfigParser(config_parser_types)</a></code></p>
           <p><a href="classIndex.html#configargparse.CompositeConfigParser">View In Hierarchy</a></p>
         </div>
 
         <div class="moduleDocstring">
-          <div><p>Createa a config parser composed by others `ConfigFileParser`s.</p>
+          <div><p>Create a config parser composed by other ConfigFileParser instances.</p>
 <p>The composite parser will successively try to parse the file with each parser,
-until it succeeds, else raise execption with all encountered errors.</p>
+until it succeeds, else raise exception with all encountered errors.</p>
 </div>
         </div>
 
@@ -616,7 +616,7 @@ until it succeeds, else raise execption with all encountered errors.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__call__</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/925f4c9997a8bb3cc28ec4f9bd11fa8c4368731e/configargparse.py#L686">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L687">
       
       (source)
     </a>
@@ -643,7 +643,7 @@ until it succeeds, else raise execption with all encountered errors.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__init__</span><span class="function-signature">(self, config_parser_types)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/925f4c9997a8bb3cc28ec4f9bd11fa8c4368731e/configargparse.py#L682">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L683">
       
       (source)
     </a>
@@ -670,7 +670,7 @@ until it succeeds, else raise execption with all encountered errors.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_syntax_description</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/925f4c9997a8bb3cc28ec4f9bd11fa8c4368731e/configargparse.py#L701">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L702">
       
       (source)
     </a>
@@ -697,7 +697,7 @@ until it succeeds, else raise execption with all encountered errors.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">parse</span><span class="function-signature">(self, stream)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/925f4c9997a8bb3cc28ec4f9bd11fa8c4368731e/configargparse.py#L689">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L690">
       
       (source)
     </a>
@@ -713,7 +713,7 @@ until it succeeds, else raise execption with all encountered errors.</p>
 <p>NOTE: For keys that were specified to configargparse as
 action="store_true" or "store_false", the config file value must be
 one of: "yes", "no", "on", "off", "true", "false". Otherwise an error will be raised.</p>
-<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">stream:</span><code>IO</code></td><td class="fieldArgDesc">A config file input stream (such as an open file object).</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/collections.html#collections.OrderedDict" class="intersphinx-link">OrderedDict</a></code></td><td class="fieldArgDesc">Items where the keys are strings and the
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">stream:</span><code><a href="https://docs.python.org/3/library/io.html#io.IOBase" class="intersphinx-link">io.IOBase</a></code></td><td class="fieldArgDesc">A config file input stream (such as an open file object).</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/collections.html#collections.OrderedDict" class="intersphinx-link">OrderedDict</a></code></td><td class="fieldArgDesc">Items where the keys are strings and the
 values are either strings or lists (eg. to support config file
 formats like YAML which allow lists).</td></tr></table></div>
   </div>
@@ -729,7 +729,7 @@ formats like YAML which allow lists).</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">parsers</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/925f4c9997a8bb3cc28ec4f9bd11fa8c4368731e/configargparse.py#L684">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L685">
       
       (source)
     </a>
@@ -756,7 +756,7 @@ formats like YAML which allow lists).</td></tr></table></div>
   <div class="container-fluid">
     <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7.1</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    24.11.2 at 2025-07-25 13:18:40.
+    24.11.2 at 2025-08-06 02:05:29.
   </div>
 
   <!-- Search related scripts needs to be loaded at the end of HTML 

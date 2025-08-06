@@ -541,15 +541,15 @@
         </div>
 
         <div class="extrasDocstring">
-          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">TomlConfigParser</span>(<a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/925f4c9997a8bb3cc28ec4f9bd11fa8c4368731e/configargparse.py#L477" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.TomlConfigParser.__init__">TomlConfigParser(sections)</a></code></p>
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">TomlConfigParser</span>(<a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L477" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.TomlConfigParser.__init__">TomlConfigParser(sections)</a></code></p>
           <p><a href="classIndex.html#configargparse.TomlConfigParser">View In Hierarchy</a></p>
         </div>
 
         <div class="moduleDocstring">
           <div><p>Create a TOML parser bounded to the list of provided sections.</p>
-<dl class="rst-docutils">
-<dt>Example::</dt>
-<dd><p class="rst-first"># this is a comment
+<p>Example:</p>
+<pre class="rst-literal-block">
+# this is a comment
 [tool.my-software] # TOML section table.
 # how to specify a key-value pair
 format-string = "restructuredtext" # strings must be quoted
@@ -558,21 +558,18 @@ warnings-as-errors = true
 # how to set an arg which has action="count" or type=int
 verbosity = 1
 # how to specify a list arg (eg. arg which has action="append")
-repeatable-option = ["<a class="rst-external rst-reference" href="https://docs.python.org/3/objects.inv" target="_top">https://docs.python.org/3/objects.inv</a>",</p>
-<blockquote>
-"<a class="rst-external rst-reference" href="https://twistedmatrix.com/documents/current/api/objects.inv" target="_top">https://twistedmatrix.com/documents/current/api/objects.inv</a>"]</blockquote>
-<p># how to specify a multiline text:
-multi-line-text = '''</p>
-<blockquote class="rst-last">
-Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc.
-Maecenas quis dapibus leo, a pellentesque leo.
-'''</blockquote>
-</dd>
-</dl>
+repeatable-option = ["https://docs.python.org/3/objects.inv",
+                     "https://twistedmatrix.com/documents/current/api/objects.inv"]
+# how to specify a multiline text:
+multi-line-text = '''
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+    Vivamus tortor odio, dignissim non ornare non, laoreet quis nunc.
+    Maecenas quis dapibus leo, a pellentesque leo.
+    '''
+</pre>
 <p>Note that the config file fragment above is also valid for the <code><a href="configargparse.IniConfigParser.html" class="internal-link" title="configargparse.IniConfigParser">IniConfigParser</a></code> class and would be parsed the same manner.
 Thought, any valid TOML config file will not be necessarly parsable with <code><a href="configargparse.IniConfigParser.html" class="internal-link" title="configargparse.IniConfigParser">IniConfigParser</a></code> (INI files must be rigorously indented whereas TOML files).</p>
-<p>See the `TOML specification &lt;&gt;`_ for details.</p>
+<p>See the <a class="rst-external rst-reference" href="https://toml.io/en/" target="_top">TOML specification</a> for details.</p>
 </div>
         </div>
 
@@ -640,7 +637,7 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__call__</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/925f4c9997a8bb3cc28ec4f9bd11fa8c4368731e/configargparse.py#L513">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L514">
       
       (source)
     </a>
@@ -667,7 +664,7 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__init__</span><span class="function-signature">(self, sections)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/925f4c9997a8bb3cc28ec4f9bd11fa8c4368731e/configargparse.py#L506">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L507">
       
       (source)
     </a>
@@ -694,7 +691,7 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_syntax_description</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/925f4c9997a8bb3cc28ec4f9bd11fa8c4368731e/configargparse.py#L546">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L547">
       
       (source)
     </a>
@@ -721,7 +718,7 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
     
     
     <span class="py-keyword">def</span> <span class="py-defname">parse</span><span class="function-signature">(self, stream)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/925f4c9997a8bb3cc28ec4f9bd11fa8c4368731e/configargparse.py#L516">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L517">
       
       (source)
     </a>
@@ -747,7 +744,7 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
   <div class="functionHeader">
     
     <span class="py-defname">sections</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/925f4c9997a8bb3cc28ec4f9bd11fa8c4368731e/configargparse.py#L511">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L512">
       
       (source)
     </a>
@@ -774,7 +771,7 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
   <div class="container-fluid">
     <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7.1</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    24.11.2 at 2025-07-25 13:18:40.
+    24.11.2 at 2025-08-06 02:05:29.
   </div>
 
   <!-- Search related scripts needs to be loaded at the end of HTML 
