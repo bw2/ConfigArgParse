@@ -1348,18 +1348,20 @@ class TestMisc(TestCase):
         """Test that nargs=REMAINDER works correctly with config files.
         Regression test for issue #285."""
         # Create a config file
-        config_file = tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".cfg"
-        )
+        config_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".cfg")
         config_file.write("config_file_option=value_from_config\n")
         config_file.flush()
         config_file.close()
 
         try:
             self.initParser()
-            self.parser.add_argument("--config", is_config_file=True, default=config_file.name)
+            self.parser.add_argument(
+                "--config", is_config_file=True, default=config_file.name
+            )
             self.parser.add_argument("--config_file_option", nargs="*", default=None)
-            self.parser.add_argument("remainder_option", nargs=argparse.REMAINDER, default=None)
+            self.parser.add_argument(
+                "remainder_option", nargs=argparse.REMAINDER, default=None
+            )
 
             # Test that REMAINDER doesn't swallow config file args
             ns = self.parse(args=["test"])
@@ -1387,8 +1389,12 @@ class TestMisc(TestCase):
 
         try:
             self.initParser()
-            self.parser.add_argument("--config", is_config_file=True, default=config_file.name)
-            self.parser.add_argument("--test-opt", nargs=2, default=["default1", "default2"])
+            self.parser.add_argument(
+                "--config", is_config_file=True, default=config_file.name
+            )
+            self.parser.add_argument(
+                "--test-opt", nargs=2, default=["default1", "default2"]
+            )
 
             # Empty config value should be ignored, default should be used
             ns = self.parse(args=[])
@@ -1399,8 +1405,9 @@ class TestMisc(TestCase):
 
         # Test 2: Empty environment variable
         self.initParser()
-        self.parser.add_argument("--test-opt", nargs=2, env_var="TEST_OPT",
-                                 default=["default1", "default2"])
+        self.parser.add_argument(
+            "--test-opt", nargs=2, env_var="TEST_OPT", default=["default1", "default2"]
+        )
 
         old_env = os.environ.get("TEST_OPT")
         try:
