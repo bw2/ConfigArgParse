@@ -968,10 +968,18 @@ class ArgumentParser(argparse.ArgumentParser):
                         value = [elem.strip() for elem in value[1:-1].split(",")]
             env_var_args += self.convert_item_to_command_line_arg(action, key, value)
 
-        if nargs:
-            args = args + env_var_args
+        # Insert env var args before the first optional arg (starts with -)
+        # to preserve -- separator and positional args that come after it.
+        # If nargs is True, we still need to respect the -- separator.
+        insertion_index = 0
+        for i, arg in enumerate(args):
+            if arg.startswith(tuple(self.prefix_chars)):
+                insertion_index = i
+                break
         else:
-            args = env_var_args + args
+            # No optional args found, append to end
+            insertion_index = len(args)
+        args = args[:insertion_index] + env_var_args + args[insertion_index:]
 
         if env_var_args:
             self._source_to_settings[_ENV_VAR_SOURCE_KEY] = OrderedDict(
@@ -1054,10 +1062,18 @@ class ArgumentParser(argparse.ArgumentParser):
                     ):
                         nargs = True
 
-            if nargs:
-                args = args + config_args
+            # Insert config args before the first optional arg (starts with -)
+            # to preserve -- separator and positional args that come after it.
+            # If nargs is True, we still need to respect the -- separator.
+            insertion_index = 0
+            for i, arg in enumerate(args):
+                if arg.startswith(tuple(self.prefix_chars)):
+                    insertion_index = i
+                    break
             else:
-                args = config_args + args
+                # No optional args found, append to end
+                insertion_index = len(args)
+            args = args[:insertion_index] + config_args + args[insertion_index:]
 
         # save default settings for use by print_values()
         default_settings = OrderedDict()

@@ -433,22 +433,35 @@ Aliases
 ~~~~~~~
 
 The configargparse.ArgumentParser API inherits its class and method
-names from argparse and also provides the following shorter names for
+names from argparse and also provides the following shorter alias names for
 convenience:
 
--  p = configargparse.get_arg_parser()  # get global singleton instance
--  p = configargparse.get_parser()
--  p = configargparse.ArgParser()  # create a new instance
--  p = configargparse.Parser()
--  p.add_arg(..)
--  p.add(..)
--  options = p.parse(..)
+**Class Aliases:**
 
-HelpFormatters:
+- ``ArgParser`` = ``ArgumentParser`` (create a new instance)
+- ``Parser`` = ``ArgumentParser``
 
-- RawFormatter = RawDescriptionHelpFormatter
-- DefaultsFormatter = ArgumentDefaultsHelpFormatter
-- DefaultsRawFormatter = ArgumentDefaultsRawHelpFormatter
+**Method Aliases:**
+
+- ``p.add(..)`` = ``p.add_argument(..)``
+- ``p.add_arg(..)`` = ``p.add_argument(..)``
+- ``p.parse(..)`` = ``p.parse_args(..)``
+- ``p.parse_known(..)`` = ``p.parse_known_args(..)``
+
+**Function Aliases (for global singleton):**
+
+- ``configargparse.get_arg_parser()`` = ``configargparse.get_argument_parser()``
+- ``configargparse.get_parser()`` = ``configargparse.get_argument_parser()``
+- ``configargparse.getArgumentParser()`` = ``configargparse.get_argument_parser()``
+- ``configargparse.getArgParser()`` = ``configargparse.get_argument_parser()``
+- ``configargparse.getParser()`` = ``configargparse.get_argument_parser()``
+- ``configargparse.initArgumentParser()`` = ``configargparse.init_argument_parser()``
+
+**HelpFormatter Aliases:**
+
+- ``RawFormatter`` = ``RawDescriptionHelpFormatter``
+- ``DefaultsFormatter`` = ``ArgumentDefaultsHelpFormatter``
+- ``DefaultsRawFormatter`` = ``ArgumentDefaultsRawHelpFormatter``
 
 API Documentation
 ~~~~~~~~~~~~~~~~~

@@ -1344,6 +1344,53 @@ class TestMisc(TestCase):
             args="-g file.txt",
         )
 
+    def testDoubleDashSeparator(self):
+        """Test that -- separator correctly separates optional from positional args
+        when config file or env vars are used. Regression test for issue #298."""
+        # Create a config file with list option
+        config_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".conf")
+        config_file.write("list = [1, 2, 3]\n")
+        config_file.flush()
+
+        try:
+            # Test with config file
+            self.initParser(args_for_setting_config_path=["-c", "--config"])
+            self.parser.add_argument("--list", action="append")
+            self.parser.add_argument("positional_arg", nargs="*")
+
+            # Parse with -- separator
+            ns = self.parse(args=f"-c {config_file.name} -- foo bar")
+
+            # Positional args should only contain 'foo' and 'bar'
+            # NOT the config file values '1', '2', '3'
+            self.assertEqual(ns.positional_arg, ["foo", "bar"])
+            self.assertEqual(ns.list, ["1", "2", "3"])
+
+            # Test without -- separator (config file args should be inserted correctly)
+            ns = self.parse(args=f"-c {config_file.name} foo bar")
+            self.assertEqual(ns.positional_arg, ["foo", "bar"])
+            self.assertEqual(ns.list, ["1", "2", "3"])
+
+            # Test with env var and -- separator
+            self.initParser()
+            self.parser.add_argument("--list", action="append", env_var="MY_LIST")
+            self.parser.add_argument("positional_arg", nargs="*")
+
+            old_env = os.environ.get("MY_LIST")
+            try:
+                os.environ["MY_LIST"] = "[1,2,3]"
+                ns = self.parse(args="-- foo bar")
+                self.assertEqual(ns.positional_arg, ["foo", "bar"])
+                self.assertEqual(ns.list, ["1", "2", "3"])
+            finally:
+                if old_env is not None:
+                    os.environ["MY_LIST"] = old_env
+                elif "MY_LIST" in os.environ:
+                    del os.environ["MY_LIST"]
+
+        finally:
+            os.unlink(config_file.name)
+
 
 class TestConfigFileParsers(TestCase):
     """Test ConfigFileParser subclasses in isolation"""
