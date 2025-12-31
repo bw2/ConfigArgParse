@@ -956,6 +956,10 @@ class ArgumentParser(argparse.ArgumentParser):
         for action in actions_with_env_var_values:
             key = action.env_var
             value = env_vars[key]
+            # Skip empty string env vars for args with nargs to match YAML behavior
+            # where empty values are treated as None/not present (see issue #296)
+            if value == "" and action.nargs:
+                continue
             # Make list-string into list.
             if action.nargs or isinstance(action, argparse._AppendAction):
                 nargs = True
@@ -968,10 +972,24 @@ class ArgumentParser(argparse.ArgumentParser):
                         value = [elem.strip() for elem in value[1:-1].split(",")]
             env_var_args += self.convert_item_to_command_line_arg(action, key, value)
 
-        if nargs:
-            args = args + env_var_args
+        # Insert env var args before the first optional arg (starts with -)
+        # to preserve -- separator and positional args that come after it.
+        insertion_index = 0
+        for i, arg in enumerate(args):
+            if arg.startswith(tuple(self.prefix_chars)):
+                insertion_index = i
+                break
         else:
-            args = env_var_args + args
+            # No optional args found. Check if any positional arg uses REMAINDER.
+            # If so, prepend config args to avoid them being consumed by REMAINDER.
+            # Otherwise, append to end (original behavior) to avoid issues with
+            # nargs="+" consuming positional args.
+            has_remainder = any(
+                a.is_positional_arg and a.nargs == argparse.REMAINDER
+                for a in self._actions
+            )
+            insertion_index = 0 if has_remainder else len(args)
+        args = args[:insertion_index] + env_var_args + args[insertion_index:]
 
         if env_var_args:
             self._source_to_settings[_ENV_VAR_SOURCE_KEY] = OrderedDict(
@@ -1039,6 +1057,11 @@ class ArgumentParser(argparse.ArgumentParser):
                         )
                     )
 
+                # Skip empty string values for args with nargs to match YAML behavior
+                # where empty values are treated as None/not present (see issue #296)
+                if value == "" and action and action.nargs:
+                    continue
+
                 if not discard_this_key:
                     config_args += self.convert_item_to_command_line_arg(
                         action, key, value
@@ -1054,10 +1077,24 @@ class ArgumentParser(argparse.ArgumentParser):
                     ):
                         nargs = True
 
-            if nargs:
-                args = args + config_args
+            # Insert config args before the first optional arg (starts with -)
+            # to preserve -- separator and positional args that come after it.
+            insertion_index = 0
+            for i, arg in enumerate(args):
+                if arg.startswith(tuple(self.prefix_chars)):
+                    insertion_index = i
+                    break
             else:
-                args = config_args + args
+                # No optional args found. Check if any positional arg uses REMAINDER.
+                # If so, prepend config args to avoid them being consumed by REMAINDER.
+                # Otherwise, append to end (original behavior) to avoid issues with
+                # nargs="+" consuming positional args.
+                has_remainder = any(
+                    a.is_positional_arg and a.nargs == argparse.REMAINDER
+                    for a in self._actions
+                )
+                insertion_index = 0 if has_remainder else len(args)
+            args = args[:insertion_index] + config_args + args[insertion_index:]
 
         # save default settings for use by print_values()
         default_settings = OrderedDict()

@@ -1344,6 +1344,76 @@ class TestMisc(TestCase):
             args="-g file.txt",
         )
 
+    def testRemainderWithConfigFile(self):
+        """Test that nargs=REMAINDER works correctly with config files.
+        Regression test for issue #285."""
+        # Create a config file
+        config_file = tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".cfg"
+        )
+        config_file.write("config_file_option=value_from_config\n")
+        config_file.flush()
+        config_file.close()
+
+        try:
+            self.initParser()
+            self.parser.add_argument("--config", is_config_file=True, default=config_file.name)
+            self.parser.add_argument("--config_file_option", nargs="*", default=None)
+            self.parser.add_argument("remainder_option", nargs=argparse.REMAINDER, default=None)
+
+            # Test that REMAINDER doesn't swallow config file args
+            ns = self.parse(args=["test"])
+            self.assertEqual(ns.remainder_option, ["test"])
+            self.assertEqual(ns.config_file_option, ["value_from_config"])
+
+            # Test with multiple remainder args
+            ns = self.parse(args=["test", "arg1", "arg2"])
+            self.assertEqual(ns.remainder_option, ["test", "arg1", "arg2"])
+            self.assertEqual(ns.config_file_option, ["value_from_config"])
+
+        finally:
+            os.unlink(config_file.name)
+
+    def testEmptyValuesIgnored(self):
+        """Test that empty string values from config files and env vars are ignored.
+        Regression test for issue #296."""
+        # Test 1: Empty value in config file
+        config_file = tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".conf"
+        )
+        config_file.write("test-opt=\n")  # Empty value
+        config_file.flush()
+        config_file.close()
+
+        try:
+            self.initParser()
+            self.parser.add_argument("--config", is_config_file=True, default=config_file.name)
+            self.parser.add_argument("--test-opt", nargs=2, default=["default1", "default2"])
+
+            # Empty config value should be ignored, default should be used
+            ns = self.parse(args=[])
+            self.assertEqual(ns.test_opt, ["default1", "default2"])
+
+        finally:
+            os.unlink(config_file.name)
+
+        # Test 2: Empty environment variable
+        self.initParser()
+        self.parser.add_argument("--test-opt", nargs=2, env_var="TEST_OPT",
+                                 default=["default1", "default2"])
+
+        old_env = os.environ.get("TEST_OPT")
+        try:
+            os.environ["TEST_OPT"] = ""  # Empty env var
+            # Empty env var should be ignored, default should be used
+            ns = self.parse(args=[])
+            self.assertEqual(ns.test_opt, ["default1", "default2"])
+        finally:
+            if old_env is not None:
+                os.environ["TEST_OPT"] = old_env
+            elif "TEST_OPT" in os.environ:
+                del os.environ["TEST_OPT"]
+
 
 class TestConfigFileParsers(TestCase):
     """Test ConfigFileParser subclasses in isolation"""
