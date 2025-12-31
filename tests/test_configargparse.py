@@ -1353,6 +1353,7 @@ class TestMisc(TestCase):
         )
         config_file.write("list = [1, 2, 3]\n")
         config_file.flush()
+        config_file.close()  # Close file to avoid Windows file locking issues
 
         try:
             # Test with config file
