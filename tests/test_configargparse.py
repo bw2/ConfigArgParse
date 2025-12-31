@@ -1348,7 +1348,9 @@ class TestMisc(TestCase):
         """Test that -- separator correctly separates optional from positional args
         when config file or env vars are used. Regression test for issue #298."""
         # Create a config file with list option
-        config_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".conf")
+        config_file = tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".conf"
+        )
         config_file.write("list = [1, 2, 3]\n")
         config_file.flush()
 
