@@ -50,7 +50,7 @@ pip install ConfigArgParse
 - extensible (`ConfigFileParser` can be subclassed to define a new
   config file format)
 - unittested by running the unittests that came with argparse but on
-  configargparse, and using tox to test with Python 3.5+
+  configargparse
 
 ## Example
 
