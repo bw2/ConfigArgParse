@@ -558,7 +558,6 @@ class TomlConfigParser(ConfigFileParser):
                         pass
                     else:
                         result[key] = str(value)
-                break
 
         return result
 
