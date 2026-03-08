@@ -1363,6 +1363,210 @@ class TestMisc(TestCase):
             args="-g file.txt",
         )
 
+    def testDoubleDashSeparator(self):
+        """Test that -- separator correctly separates optional from positional args
+        when config file or env vars are used. Regression test for issue #298."""
+        config_file = tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".conf"
+        )
+        config_file.write("list = [1, 2, 3]\n")
+        config_file.flush()
+        config_file.close()
+
+        try:
+            # Test with config file and -- separator
+            self.initParser(args_for_setting_config_path=["-c", "--config"])
+            self.parser.add_argument("--list", action="append")
+            self.parser.add_argument("positional_arg", nargs="*")
+
+            ns = self.parse(args="-c %s -- foo bar" % config_file.name)
+            self.assertEqual(ns.positional_arg, ["foo", "bar"])
+            self.assertEqual(ns.list, ["1", "2", "3"])
+
+            # Test without -- separator
+            ns = self.parse(args="-c %s foo bar" % config_file.name)
+            self.assertEqual(ns.positional_arg, ["foo", "bar"])
+            self.assertEqual(ns.list, ["1", "2", "3"])
+
+            # Test with env var and -- separator
+            self.initParser()
+            self.parser.add_argument("--list", action="append", env_var="MY_LIST")
+            self.parser.add_argument("positional_arg", nargs="*")
+
+            old_env = os.environ.get("MY_LIST")
+            try:
+                os.environ["MY_LIST"] = "[1,2,3]"
+                ns = self.parse(args="-- foo bar")
+                self.assertEqual(ns.positional_arg, ["foo", "bar"])
+                self.assertEqual(ns.list, ["1", "2", "3"])
+            finally:
+                if old_env is not None:
+                    os.environ["MY_LIST"] = old_env
+                elif "MY_LIST" in os.environ:
+                    del os.environ["MY_LIST"]
+        finally:
+            os.unlink(config_file.name)
+
+    def testRemainderWithConfigFile(self):
+        """Test that nargs=REMAINDER works correctly with config files.
+        Regression test for issue #285."""
+        config_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".cfg")
+        config_file.write("config_file_option=value_from_config\n")
+        config_file.flush()
+        config_file.close()
+
+        try:
+            self.initParser()
+            self.parser.add_argument(
+                "--config", is_config_file=True, default=config_file.name
+            )
+            self.parser.add_argument("--config_file_option", nargs="*", default=None)
+            self.parser.add_argument(
+                "remainder_option", nargs=argparse.REMAINDER, default=None
+            )
+
+            ns = self.parse(args=["test"])
+            self.assertEqual(ns.remainder_option, ["test"])
+            self.assertEqual(ns.config_file_option, ["value_from_config"])
+
+            ns = self.parse(args=["test", "arg1", "arg2"])
+            self.assertEqual(ns.remainder_option, ["test", "arg1", "arg2"])
+            self.assertEqual(ns.config_file_option, ["value_from_config"])
+        finally:
+            os.unlink(config_file.name)
+
+    def testEmptyValuesIgnored(self):
+        """Test that empty string values from config files and env vars are ignored
+        for args with nargs. Regression test for issue #296."""
+        # Test empty value in config file
+        config_file = tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".conf"
+        )
+        config_file.write("test-opt=\n")
+        config_file.flush()
+        config_file.close()
+
+        try:
+            self.initParser()
+            self.parser.add_argument(
+                "--config", is_config_file=True, default=config_file.name
+            )
+            self.parser.add_argument(
+                "--test-opt", nargs=2, default=["default1", "default2"]
+            )
+
+            ns = self.parse(args=[])
+            self.assertEqual(ns.test_opt, ["default1", "default2"])
+        finally:
+            os.unlink(config_file.name)
+
+        # Test empty environment variable
+        self.initParser()
+        self.parser.add_argument(
+            "--test-opt", nargs=2, env_var="TEST_OPT", default=["default1", "default2"]
+        )
+
+        old_env = os.environ.get("TEST_OPT")
+        try:
+            os.environ["TEST_OPT"] = ""
+            ns = self.parse(args=[])
+            self.assertEqual(ns.test_opt, ["default1", "default2"])
+        finally:
+            if old_env is not None:
+                os.environ["TEST_OPT"] = old_env
+            elif "TEST_OPT" in os.environ:
+                del os.environ["TEST_OPT"]
+
+    def testConfigArgOrderWithOptsOnCli(self):
+        """Test that config args with nargs/append are parsed correctly when
+        optional args are already on the command line."""
+        config_file = tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".conf"
+        )
+        config_file.write("from_config = [x, y]\n")
+        config_file.flush()
+        config_file.close()
+
+        try:
+            self.initParser()
+            self.parser.add_argument(
+                "--config", is_config_file=True, default=config_file.name
+            )
+            self.parser.add_argument("--from_config", action="append")
+            self.parser.add_argument("--cli_opt")
+            self.parser.add_argument("positional", nargs="*")
+
+            ns = self.parse(args="--cli_opt val pos1 pos2")
+            self.assertEqual(ns.positional, ["pos1", "pos2"])
+            self.assertEqual(ns.cli_opt, "val")
+            self.assertEqual(ns.from_config, ["x", "y"])
+        finally:
+            os.unlink(config_file.name)
+
+    def testConfigArgOrderNoOptsOnCli(self):
+        """Test that config args are parsed correctly when no optional args
+        are on the command line (only positional args)."""
+        config_file = tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".conf"
+        )
+        config_file.write("flag\n")
+        config_file.flush()
+        config_file.close()
+
+        try:
+            self.initParser()
+            self.parser.add_argument(
+                "--config", is_config_file=True, default=config_file.name
+            )
+            self.parser.add_argument("--flag", action="store_true")
+            self.parser.add_argument("positional")
+
+            ns = self.parse(args="mypos")
+            self.assertEqual(ns.positional, "mypos")
+            self.assertTrue(ns.flag)
+        finally:
+            os.unlink(config_file.name)
+
+    def testEnvVarArgOrderWithOptsOnCli(self):
+        """Test that env var args with nargs/append are parsed correctly when
+        optional args are already on the command line."""
+        self.initParser()
+        self.parser.add_argument("--from_env", action="append", env_var="FROM_ENV")
+        self.parser.add_argument("--cli_opt")
+        self.parser.add_argument("positional", nargs="*")
+
+        old_env = os.environ.get("FROM_ENV")
+        try:
+            os.environ["FROM_ENV"] = "[a,b]"
+            ns = self.parse(args="--cli_opt val pos1 pos2")
+            self.assertEqual(ns.positional, ["pos1", "pos2"])
+            self.assertEqual(ns.cli_opt, "val")
+            self.assertEqual(ns.from_env, ["a", "b"])
+        finally:
+            if old_env is not None:
+                os.environ["FROM_ENV"] = old_env
+            elif "FROM_ENV" in os.environ:
+                del os.environ["FROM_ENV"]
+
+    def testEnvVarArgOrderNoOptsOnCli(self):
+        """Test that env var args are parsed correctly when no optional args
+        are on the command line (only positional args)."""
+        self.initParser()
+        self.parser.add_argument("--flag", action="store_true", env_var="MY_FLAG")
+        self.parser.add_argument("positional")
+
+        old_env = os.environ.get("MY_FLAG")
+        try:
+            os.environ["MY_FLAG"] = "true"
+            ns = self.parse(args="mypos")
+            self.assertEqual(ns.positional, "mypos")
+            self.assertTrue(ns.flag)
+        finally:
+            if old_env is not None:
+                os.environ["MY_FLAG"] = old_env
+            elif "MY_FLAG" in os.environ:
+                del os.environ["MY_FLAG"]
+
 
 class TestConfigFileParsers(TestCase):
     """Test ConfigFileParser subclasses in isolation"""
