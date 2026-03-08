@@ -47,5 +47,6 @@ docs/_build
 
 # IDEs
 .idea
+.claude
 
 .eggs/
