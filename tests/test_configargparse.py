@@ -1,4 +1,5 @@
 import argparse
+from collections import OrderedDict
 import configargparse
 from contextlib import contextmanager
 import inspect
@@ -17,6 +18,12 @@ if sys.version_info >= (3, 10):
     OPTIONAL_ARGS_STRING = "options"
 else:
     OPTIONAL_ARGS_STRING = "optional arguments"
+
+# In Python 3.13+, short option metavars are no longer repeated
+if sys.version_info >= (3, 13):
+    SHORT_OPT_METAVAR = ""  # e.g., "-g, --my-cfg-file MY_CFG_FILE"
+else:
+    SHORT_OPT_METAVAR = "(?: {metavar})?"  # e.g., "-g MY_CFG_FILE, --my-cfg-file MY_CFG_FILE" or "-g, --my-cfg-file MY_CFG_FILE"
 
 # set COLUMNS to get expected wrapping
 os.environ["COLUMNS"] = "80"
@@ -315,6 +322,9 @@ class TestBasicUseCases(TestCase):
         )
 
         if not use_groups:
+            short_g = SHORT_OPT_METAVAR.format(metavar="MY_CFG_FILE")
+            short_d = SHORT_OPT_METAVAR.format(metavar="DBSNP")
+            short_f = SHORT_OPT_METAVAR.format(metavar="FRMT")
             self.assertRegex(
                 self.format_help(),
                 "usage: .* \\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?"
@@ -325,13 +335,16 @@ class TestBasicUseCases(TestCase):
                 "  -h, --help \\s+ show this help message and exit\n"
                 "  --genome GENOME \\s+ Path to genome file\n"
                 "  -v\n"
-                "  -g(?: MY_CFG_FILE)?, --my-cfg-file MY_CFG_FILE\n"
-                "  -d(?: DBSNP)?, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n"
-                "  -f(?: FRMT)?, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n"
+                f"  -g{short_g}, --my-cfg-file MY_CFG_FILE\n"
+                f"  -d{short_d}, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n"
+                f"  -f{short_f}, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n"
                 % OPTIONAL_ARGS_STRING
                 + 7 * r"(.+\s*)",
             )
         else:
+            short_g = SHORT_OPT_METAVAR.format(metavar="MY_CFG_FILE")
+            short_d = SHORT_OPT_METAVAR.format(metavar="DBSNP")
+            short_f = SHORT_OPT_METAVAR.format(metavar="FRMT")
             self.assertRegex(
                 self.format_help(),
                 "usage: .* \\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?"
@@ -343,10 +356,10 @@ class TestBasicUseCases(TestCase):
                 "g1:\n"
                 "  --genome GENOME \\s+ Path to genome file\n"
                 "  -v\n"
-                "  -g(?: MY_CFG_FILE)?, --my-cfg-file MY_CFG_FILE\n\n"
+                f"  -g{short_g}, --my-cfg-file MY_CFG_FILE\n\n"
                 "g2:\n"
-                "  -d(?: DBSNP)?, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n"
-                "  -f(?: FRMT)?, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n"
+                f"  -d{short_d}, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n"
+                f"  -f{short_f}, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n"
                 % OPTIONAL_ARGS_STRING
                 + 7 * r"(.+\s*)",
             )
@@ -469,15 +482,18 @@ class TestBasicUseCases(TestCase):
             "  --format: \\s+ BED\n",
         )
 
+        short_f1 = SHORT_OPT_METAVAR.format(metavar="TYPE1_CFG_FILE")
+        short_f2 = SHORT_OPT_METAVAR.format(metavar="TYPE2_CFG_FILE")
+        short_f = SHORT_OPT_METAVAR.format(metavar="FRMT")
         self.assertRegex(
             self.format_help(),
             r"usage: .* \[-h\] --genome GENOME \[-v\]\s+\(-f1 TYPE1_CFG_FILE \|"
             r"\s+-f2 TYPE2_CFG_FILE\)\s+\(-f FRMT \| -b\)\n\n"
             "%s:\n"
             "  -h, --help            show this help message and exit\n"
-            "  -f1(?: TYPE1_CFG_FILE)?, --type1-cfg-file TYPE1_CFG_FILE\n"
-            "  -f2(?: TYPE2_CFG_FILE)?, --type2-cfg-file TYPE2_CFG_FILE\n"
-            "  -f(?: FRMT)?, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n"
+            f"  -f1{short_f1}, --type1-cfg-file TYPE1_CFG_FILE\n"
+            f"  -f2{short_f2}, --type2-cfg-file TYPE2_CFG_FILE\n"
+            f"  -f{short_f}, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n"
             "  -b, --bam\\s+\\[env var: BAM_FORMAT\\]\n\n"
             "group1:\n"
             "  --genome GENOME       Path to genome file\n"
@@ -1054,12 +1070,13 @@ class TestMisc(TestCase):
         ns = self.parse("-c " + temp_cfg2.name)
         self.assertEqual(ns.genome, "hg20")
 
+        short_c = SHORT_OPT_METAVAR.format(metavar="CONFIG_FILE")
         self.assertRegex(
             self.format_help(),
             r"usage: .* \[-h\] -c CONFIG_FILE --genome GENOME\n\n"
             r"%s:\n"
             r"  -h, --help\s+ show this help message and exit\n"
-            r"  -c(?: CONFIG_FILE)?, --config CONFIG_FILE\s+ my config file\n"
+            rf"  -c{short_c}, --config CONFIG_FILE\s+ my config file\n"
             r"  --genome GENOME\s+ Path to genome file\n\n" % OPTIONAL_ARGS_STRING
             + 5 * r"(.+\s*)",
         )
@@ -1123,14 +1140,16 @@ class TestMisc(TestCase):
         self.add_arg("--arg1", help="Arg1 help text", required=True)
         self.add_arg("--flag", help="Flag help text", action="store_true")
 
+        short_c = SHORT_OPT_METAVAR.format(metavar="CONFIG_FILE")
+        short_w = SHORT_OPT_METAVAR.format(metavar="CONFIG_OUTPUT_PATH")
         self.assertRegex(
             self.format_help(),
             r"usage: .* \[-h\] -c CONFIG_FILE\s+"
             r"\[-w CONFIG_OUTPUT_PATH\]\s* --arg1\s+ARG1\s*\[--flag\]\s*"
             "%s:\\s*"
             "-h, --help \\s* show this help message and exit "
-            r"-c(?: CONFIG_FILE)?, --config CONFIG_FILE\s+my config file "
-            r"-w(?: CONFIG_OUTPUT_PATH)?, --write-config CONFIG_OUTPUT_PATH takes "
+            rf"-c{short_c}, --config CONFIG_FILE\s+my config file "
+            rf"-w{short_w}, --write-config CONFIG_OUTPUT_PATH takes "
             r"the current command line args and writes them "
             r"out to a config file at the given path, then exits "
             r"--arg1 ARG1 Arg1 help text "
@@ -1784,24 +1803,20 @@ class TestTomlConfigParser(unittest.TestCase):
         return f
 
     def test_section(self):
-        f = self.write_toml_file(
-            """
+        f = self.write_toml_file("""
             [section]
             key1 = 'toml1'
             key2 = 'toml2'
-            """
-        )
+            """)
         parser = configargparse.TomlConfigParser(["section"])
         self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": "toml2"})
 
     def test_no_sections(self):
-        f = self.write_toml_file(
-            """
+        f = self.write_toml_file("""
             [section]
             key1 = 'toml1'
             key2 = 'toml2'
-            """
-        )
+            """)
         parser = configargparse.TomlConfigParser([])
         self.assertEqual(parser.parse(f), {})
 
@@ -1817,25 +1832,115 @@ class TestTomlConfigParser(unittest.TestCase):
 
     @unittest.expectedFailure  # Ints should be strings
     def test_advanced(self):
-        f = self.write_toml_file(
-            """
+        f = self.write_toml_file("""
             [tool.section]
             key1 = "toml1"
             key2 = [1, 2, 3]
-            """
-        )
+            """)
         parser = configargparse.TomlConfigParser(["tool.section"])
         self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": ["1", "2", "3"]})
 
-    def test_fails_binary_read(self):
+    @unittest.skipIf(
+        sys.version_info < (3, 11),
+        "Binary mode only supported with tomllib (Python 3.11+)",
+    )
+    def test_binary_read_works(self):
+        # Binary mode now works with tomllib (Python 3.11+)
         f = self.write_toml_file(
             b"""[tool.section]\nkey1 = "toml1"
             """,
             obj=BytesIO,
         )
         parser = configargparse.TomlConfigParser(["tool.section"])
+        # Should successfully parse binary stream
+        self.assertEqual(parser.parse(f), {"key1": "toml1"})
+
+    @unittest.skipIf(
+        sys.version_info >= (3, 11),
+        "On Python 3.11+, tomllib handles binary; this tests the toml package fallback",
+    )
+    def test_binary_read_fails_without_tomllib(self):
+        # Without tomllib (Python < 3.11), binary streams should fail
+        f = self.write_toml_file(
+            b"""[section]\nkey1 = "toml1"\n""",
+            obj=BytesIO,
+        )
+        parser = configargparse.TomlConfigParser(["section"])
         with self.assertRaises(configargparse.ConfigFileParserException):
             parser.parse(f)
+
+    def test_serialize_with_section(self):
+        parser = configargparse.TomlConfigParser(["section"])
+        try:
+            import toml
+        except ImportError:
+            self.skipTest("toml package not installed")
+        items = OrderedDict([("key1", "val1"), ("key2", "val2")])
+        result = parser.serialize(items)
+        # Verify round-trip: parse the serialized output
+        parsed = parser.parse(StringIO(result))
+        self.assertEqual(parsed, {"key1": "val1", "key2": "val2"})
+
+    def test_serialize_nested_section(self):
+        parser = configargparse.TomlConfigParser(["tool.section"])
+        try:
+            import toml
+        except ImportError:
+            self.skipTest("toml package not installed")
+        items = OrderedDict([("key1", "val1")])
+        result = parser.serialize(items)
+        parsed = parser.parse(StringIO(result))
+        self.assertEqual(parsed, {"key1": "val1"})
+
+    def test_serialize_no_sections(self):
+        parser = configargparse.TomlConfigParser([])
+        try:
+            import toml
+        except ImportError:
+            self.skipTest("toml package not installed")
+        items = OrderedDict([("key1", "val1")])
+        result = parser.serialize(items)
+        self.assertIn("key1", result)
+
+    def test_serialize_without_toml_package(self):
+        parser = configargparse.TomlConfigParser(["section"])
+        items = OrderedDict([("key1", "val1")])
+        # Mock tomllib import succeeding but toml import failing
+        import unittest.mock as mock
+
+        with mock.patch.dict(sys.modules, {"toml": None}):
+            with self.assertRaises(configargparse.ConfigFileParserException):
+                parser.serialize(items)
+
+
+class TestIniConfigParserSerialize(unittest.TestCase):
+    def test_serialize_basic(self):
+        parser = configargparse.IniConfigParser(["section"], False)
+        items = OrderedDict([("key1", "val1"), ("key2", "val2")])
+        result = parser.serialize(items)
+        # Verify round-trip
+        parsed = parser.parse(StringIO(result))
+        self.assertEqual(parsed, {"key1": "val1", "key2": "val2"})
+
+    def test_serialize_list_as_python_syntax(self):
+        parser = configargparse.IniConfigParser(["section"], False)
+        items = OrderedDict([("key1", ["a", "b", "c"])])
+        result = parser.serialize(items)
+        parsed = parser.parse(StringIO(result))
+        self.assertEqual(parsed, {"key1": ["a", "b", "c"]})
+
+    def test_serialize_list_multiline(self):
+        parser = configargparse.IniConfigParser(["section"], True)
+        items = OrderedDict([("key1", ["a", "b", "c"])])
+        result = parser.serialize(items)
+        # Should use multiline format
+        self.assertIn("\n", result.split("key1")[1])
+
+    def test_serialize_default_section(self):
+        parser = configargparse.IniConfigParser([], False)
+        items = OrderedDict([("key1", "val1")])
+        result = parser.serialize(items)
+        self.assertIn("key1", result)
 
 
 class TestCompositeConfigParser(unittest.TestCase):
@@ -1942,6 +2047,24 @@ class TestCompositeConfigParser(unittest.TestCase):
         self.write_toml_file_extra()
         with self.assertRaises(SystemExit):
             self.parser.parse_args([])
+
+    def test_composite_serialize_delegates_to_first_parser(self):
+        composite = configargparse.CompositeConfigParser(
+            [
+                configargparse.IniConfigParser(["section"], False),
+                configargparse.DefaultConfigFileParser,
+            ]
+        )()
+        items = OrderedDict([("key1", "val1"), ("key2", "val2")])
+        result = composite.serialize(items)
+        # Should use INI format (first parser)
+        self.assertIn("[section]", result)
+        self.assertIn("key1 = val1", result)
+
+    def test_composite_serialize_empty_parsers(self):
+        composite = configargparse.CompositeConfigParser([])()
+        with self.assertRaises(configargparse.ConfigFileParserException):
+            composite.serialize(OrderedDict())
 
 
 ################################################################################
