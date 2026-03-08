@@ -19,7 +19,6 @@ from collections import OrderedDict
 import textwrap
 from io import StringIO
 
-
 ACTION_TYPES_THAT_DONT_NEED_A_VALUE = [
     argparse._StoreTrueAction,
     argparse._StoreFalseAction,
@@ -516,13 +515,27 @@ class TomlConfigParser(ConfigFileParser):
 
     def parse(self, stream):
         """Parses the keys and values from a TOML config file."""
-        # parse with configparser to allow multi-line values
-        import toml
-
+        # Use tomllib (Python 3.11+) if available, otherwise fall back to toml package
         try:
-            config = toml.load(stream)
-        except Exception as e:
-            raise ConfigFileParserException("Couldn't parse TOML file: %s" % e)
+            import tomllib
+
+            # tomllib.load() requires binary mode, so use loads() for stream compatibility
+            try:
+                content = stream.read()
+                # If content is bytes, decode it; if string, use as-is
+                if isinstance(content, bytes):
+                    content = content.decode("utf-8")
+                config = tomllib.loads(content)
+            except Exception as e:
+                raise ConfigFileParserException("Couldn't parse TOML file: %s" % e)
+        except ImportError:
+            # Fall back to toml package (supports text mode)
+            import toml
+
+            try:
+                config = toml.load(stream)
+            except Exception as e:
+                raise ConfigFileParserException("Couldn't parse TOML file: %s" % e)
 
         # convert to dict and filter based on section names
         result = OrderedDict()
@@ -549,6 +562,40 @@ class TomlConfigParser(ConfigFileParser):
             "Config file syntax is Tom's Obvious, Minimal Language. "
             "See https://github.com/toml-lang/toml/blob/v0.5.0/README.md for details."
         )
+
+    def serialize(self, items):
+        """Serialize items to TOML format with section support.
+
+        Note: Requires the 'toml' package for serialization (pip install toml).
+        Python 3.11's tomllib only supports reading, not writing.
+        """
+        # lazy-import to avoid dependency unless class is used
+        try:
+            import toml
+        except ImportError:
+            raise ConfigFileParserException(
+                "The 'toml' package is required for TOML serialization. "
+                "Install it with: pip install toml"
+            )
+
+        # Put items in the first configured section
+        if not self.sections:
+            # No sections configured, serialize as flat TOML
+            return toml.dumps(dict(items))
+
+        # Create nested dict structure for section
+        section_name = self.sections[0]
+        sections = parse_toml_section_name(section_name)
+
+        # Build nested dict from section path
+        result = {}
+        current = result
+        for i, section in enumerate(sections[:-1]):
+            current[section] = {}
+            current = current[section]
+        current[sections[-1]] = dict(items)
+
+        return toml.dumps(result)
 
 
 class IniConfigParser(ConfigFileParser):
@@ -598,7 +645,7 @@ class IniConfigParser(ConfigFileParser):
     def __init__(self, sections, split_ml_text_to_list):
         """
         :param sections: The section names bounded to the new parser.
-        :param split_ml_text_to_list: Wether to convert multiline strings to list
+        :param split_ml_text_to_list: Whether to convert multiline strings to list
         """
         super().__init__()
         self.sections = sections
@@ -671,6 +718,37 @@ class IniConfigParser(ConfigFileParser):
             )
         return msg
 
+    def serialize(self, items):
+        """Serialize items to INI format with section support."""
+        config = configparser.ConfigParser()
+
+        # Use the first configured section
+        section_name = self.sections[0] if self.sections else "DEFAULT"
+
+        # Add section if not DEFAULT
+        if section_name != "DEFAULT" and section_name != configparser.DEFAULTSECT:
+            config.add_section(section_name)
+
+        # Add items to the section
+        for key, value in items.items():
+            if isinstance(value, list):
+                # Handle lists
+                if self.split_ml_text_to_list:
+                    # Multi-line format
+                    config.set(
+                        section_name, key, "\n" + "\n".join(str(v) for v in value)
+                    )
+                else:
+                    # Python list syntax
+                    config.set(section_name, key, str(value))
+            else:
+                config.set(section_name, key, str(value))
+
+        stream = StringIO()
+        config.write(stream)
+        stream.seek(0)
+        return stream.read()
+
 
 class CompositeConfigParser(ConfigFileParser):
     """
@@ -689,12 +767,22 @@ class CompositeConfigParser(ConfigFileParser):
 
     def parse(self, stream):
         errors = []
-        for p in self.parsers:
+        for i, p in enumerate(self.parsers):
             try:
                 return p.parse(stream)  # type: ignore[no-any-return]
             except Exception as e:
-                stream.seek(0)
                 errors.append(e)
+                # Try to seek back to beginning for next parser
+                # If this is not the last parser and seek fails, we can't continue
+                if i < len(self.parsers) - 1:
+                    try:
+                        stream.seek(0)
+                    except (AttributeError, OSError):
+                        # Stream doesn't support seeking
+                        raise ConfigFileParserException(
+                            f"Error parsing config with {p.__class__.__name__}: {e}. "
+                            f"Cannot try additional parsers because stream is not seekable."
+                        ) from e
         raise ConfigFileParserException(
             f"Error parsing config: {', '.join(repr(str(e)) for e in errors)}"
         )
@@ -714,6 +802,15 @@ class CompositeConfigParser(ConfigFileParser):
         for i, parser in enumerate(self.parsers):
             msg += f"[{i+1}] {guess_format_name(parser.__class__.__name__)}: {parser.get_syntax_description()} \n"
         return msg
+
+    def serialize(self, items):
+        """Serialize items using the first parser in the composite."""
+        if not self.parsers:
+            raise ConfigFileParserException(
+                "No parsers configured in CompositeConfigParser"
+            )
+        # Use the first parser to serialize
+        return self.parsers[0].serialize(items)  # type: ignore[no-any-return]
 
 
 # used while parsing args to keep track of where they came from
@@ -844,7 +941,8 @@ class ArgumentParser(argparse.ArgumentParser):
                 is_write_out_config_file_arg=True,
             )
 
-        # TODO: delete me!
+        # Workaround for Python < 3.9: exit_on_error parameter was added in 3.9
+        # This can be removed when minimum Python version is raised to 3.9+
         if sys.version_info < (3, 9):
             self.exit_on_error = True
 
@@ -1113,7 +1211,7 @@ class ArgumentParser(argparse.ArgumentParser):
             dict[str, dict[str, tuple[argparse.Action, str]]]: source to settings dict
         """
         # _source_to_settings is set in parse_know_args().
-        return self._source_to_settings  # type:ignore[attribute-error]
+        return self._source_to_settings  # type: ignore[attribute-error]
 
     def write_config_file(self, parsed_namespace, output_file_paths, exit_after=False):
         """Write the given settings to output files.
@@ -1258,9 +1356,7 @@ class ArgumentParser(argparse.ArgumentParser):
                     # --no-foo
                     args.append(action.option_strings[1])
             elif isinstance(action, argparse._CountAction):
-                for arg in args:
-                    if any([arg.startswith(s) for s in action.option_strings]):
-                        value = 0
+                # For count actions, repeat the flag the number of times specified
                 args += [action.option_strings[0]] * int(value)
             else:
                 self.error(
@@ -1428,7 +1524,7 @@ class ArgumentParser(argparse.ArgumentParser):
         for (
             source,
             settings,
-        ) in self._source_to_settings.items():  # type:ignore[argument-error]
+        ) in self._source_to_settings.items():  # type: ignore[argument-error]
             source = source.split("|")
             source = source_key_to_display_value_map[source[0]] % tuple(source[1:])
             r.write(source)
@@ -1599,8 +1695,9 @@ def already_on_command_line(
     )
 
 
-# TODO: Update to latest version of pydoctor when https://github.com/twisted/pydoctor/pull/414 has been merged
-# such that the alises can be documented automatically.
+# NOTE: Aliases below are not auto-documented. This could be improved by updating
+# to latest version of pydoctor when https://github.com/twisted/pydoctor/pull/414
+# has been merged, which would allow aliases to be documented automatically.
 
 # wrap ArgumentParser's add_argument(..) method with the one above
 argparse._ActionsContainer.original_add_argument_method = (
