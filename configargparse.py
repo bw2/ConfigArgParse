@@ -850,12 +850,11 @@ class ArgumentParser(argparse.ArgumentParser):
     def _find_insertion_index(self, args):
         """Find the right index to insert config/env var args into the command line.
 
-        Handles three cases:
-        1. If '--' separator exists, insert before it so injected args don't
-           end up in the positional-only region.
-        2. If any positional arg uses REMAINDER and there are no optional args
-           on the command line, prepend (index 0) so REMAINDER doesn't swallow them.
-        3. Otherwise insert before the first optional arg, or append if none.
+        Handles three cases: if '--' separator exists, insert before it so
+        injected args don't end up in the positional-only region. If any
+        positional arg uses REMAINDER and there are no optional args on the
+        command line, prepend so REMAINDER doesn't swallow them. Otherwise
+        insert before the first optional arg, or append if none.
         """
         if "--" in args:
             return args.index("--")
