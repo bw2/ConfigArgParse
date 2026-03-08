@@ -1458,6 +1458,96 @@ class TestMisc(TestCase):
             elif "TEST_OPT" in os.environ:
                 del os.environ["TEST_OPT"]
 
+    def testConfigArgOrderWithOptsOnCli(self):
+        """Test that config args with nargs/append are parsed correctly when
+        optional args are already on the command line."""
+        config_file = tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".conf"
+        )
+        config_file.write("from_config = [x, y]\n")
+        config_file.flush()
+        config_file.close()
+
+        try:
+            self.initParser()
+            self.parser.add_argument(
+                "--config", is_config_file=True, default=config_file.name
+            )
+            self.parser.add_argument("--from_config", action="append")
+            self.parser.add_argument("--cli_opt")
+            self.parser.add_argument("positional", nargs="*")
+
+            ns = self.parse(args="--cli_opt val pos1 pos2")
+            self.assertEqual(ns.positional, ["pos1", "pos2"])
+            self.assertEqual(ns.cli_opt, "val")
+            self.assertEqual(ns.from_config, ["x", "y"])
+        finally:
+            os.unlink(config_file.name)
+
+    def testConfigArgOrderNoOptsOnCli(self):
+        """Test that config args are parsed correctly when no optional args
+        are on the command line (only positional args)."""
+        config_file = tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".conf"
+        )
+        config_file.write("flag\n")
+        config_file.flush()
+        config_file.close()
+
+        try:
+            self.initParser()
+            self.parser.add_argument(
+                "--config", is_config_file=True, default=config_file.name
+            )
+            self.parser.add_argument("--flag", action="store_true")
+            self.parser.add_argument("positional")
+
+            ns = self.parse(args="mypos")
+            self.assertEqual(ns.positional, "mypos")
+            self.assertTrue(ns.flag)
+        finally:
+            os.unlink(config_file.name)
+
+    def testEnvVarArgOrderWithOptsOnCli(self):
+        """Test that env var args with nargs/append are parsed correctly when
+        optional args are already on the command line."""
+        self.initParser()
+        self.parser.add_argument("--from_env", action="append", env_var="FROM_ENV")
+        self.parser.add_argument("--cli_opt")
+        self.parser.add_argument("positional", nargs="*")
+
+        old_env = os.environ.get("FROM_ENV")
+        try:
+            os.environ["FROM_ENV"] = "[a,b]"
+            ns = self.parse(args="--cli_opt val pos1 pos2")
+            self.assertEqual(ns.positional, ["pos1", "pos2"])
+            self.assertEqual(ns.cli_opt, "val")
+            self.assertEqual(ns.from_env, ["a", "b"])
+        finally:
+            if old_env is not None:
+                os.environ["FROM_ENV"] = old_env
+            elif "FROM_ENV" in os.environ:
+                del os.environ["FROM_ENV"]
+
+    def testEnvVarArgOrderNoOptsOnCli(self):
+        """Test that env var args are parsed correctly when no optional args
+        are on the command line (only positional args)."""
+        self.initParser()
+        self.parser.add_argument("--flag", action="store_true", env_var="MY_FLAG")
+        self.parser.add_argument("positional")
+
+        old_env = os.environ.get("MY_FLAG")
+        try:
+            os.environ["MY_FLAG"] = "true"
+            ns = self.parse(args="mypos")
+            self.assertEqual(ns.positional, "mypos")
+            self.assertTrue(ns.flag)
+        finally:
+            if old_env is not None:
+                os.environ["MY_FLAG"] = old_env
+            elif "MY_FLAG" in os.environ:
+                del os.environ["MY_FLAG"]
+
 
 class TestConfigFileParsers(TestCase):
     """Test ConfigFileParser subclasses in isolation"""
