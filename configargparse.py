@@ -202,8 +202,6 @@ class DefaultConfigFileParser(ConfigFileParser):
                     except Exception as e:
                         # for backward compatibility with legacy format (eg. where config value is [a, b, c] instead of proper json ["a", "b", "c"]
                         value = [elem.strip() for elem in value[1:-1].split(",")]
-                if comment:
-                    comment = comment.strip()[1:].strip()
                 items[key] = value
             else:
                 raise ConfigFileParserException(
@@ -270,7 +268,14 @@ class ConfigparserConfigFileParser(ConfigFileParser):
                     # ensure not a dict with a list value
                     prelist_string = multiLine2SingleLine.split("[")[0]
                     if "{" not in prelist_string:
-                        result[k] = ast.literal_eval(multiLine2SingleLine)
+                        try:
+                            result[k] = ast.literal_eval(multiLine2SingleLine)
+                        except (ValueError, SyntaxError) as e:
+                            raise ConfigFileParserException(
+                                "Error evaluating list: "
+                                + str(e)
+                                + ". Put quotes around your text if it's meant to be a string."
+                            ) from e
                     else:
                         result[k] = multiLine2SingleLine
                 else:
@@ -677,7 +682,7 @@ class IniConfigParser(ConfigFileParser):
                 if strip_v.startswith("[") and strip_v.endswith("]"):
                     try:
                         result[k] = ast.literal_eval(strip_v)
-                    except ValueError as e:
+                    except (ValueError, SyntaxError) as e:
                         # error evaluating object
                         raise ConfigFileParserException(
                             "Error evaluating list: "
