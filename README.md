@@ -158,11 +158,17 @@ Only command line args that have a long version (eg. one that starts with '--')
 can be set in a config file. For example, "--color" can be set by putting
 "color=green" in a config file. The config file syntax depends on the constructor
 arg: `config_file_parser_class` which can be set to one of the provided
-classes: `DefaultConfigFileParser`, `YAMLConfigFileParser`,
-`ConfigparserConfigFileParser` or to your own subclass of the
-`ConfigFileParser` abstract class.
+classes: 
+- `DefaultConfigFileParser`
+- `YAMLConfigFileParser`
+- `ConfigparserConfigFileParser`
+- `IniConfigParser`
+- `TomlConfigParser`
+- `CompositeConfigParser`
+  
+or to your own subclass of the `ConfigFileParser` abstract class.
 
-*DefaultConfigFileParser* - the full range of valid syntax is:
+#### *DefaultConfigFileParser* - the full range of valid syntax is:
 
 ```yaml
 # this is a comment
@@ -187,7 +193,7 @@ fruit = [apple, orange, lemon]
 indexes = [1, 12, 35 , 40]
 ```
 
-*YAMLConfigFileParser* - allows a subset of YAML syntax (http://goo.gl/VgT2DU)
+#### *YAMLConfigFileParser* - allows a subset of YAML syntax (http://goo.gl/VgT2DU)
 
 ```yaml
 # a comment
@@ -202,7 +208,8 @@ colors:
   - blue
 ```
 
-*ConfigparserConfigFileParser* - allows a subset of python's configparser
+#### *ConfigparserConfigFileParser* - allows a subset of python's configparser
+
 module syntax (https://docs.python.org/3.7/library/configparser.html). In
 particular the following configparser options are set:
 
@@ -253,7 +260,7 @@ parser.add_argument('--system1_settings', type=yaml.safe_load)
 args = parser.parse_args() # now args.system1 is a valid python dict
 ```
 
-*IniConfigParser* - INI parser with support for sections.
+#### *IniConfigParser* - INI parser with support for sections.
 
 This parser somewhat resembles `ConfigparserConfigFileParser`. It uses configparser and applies the same kind of processing to
 values written with python list syntax.
@@ -321,7 +328,7 @@ parser = configargparse.ArgParser(
 ...
 ```
 
-*TomlConfigParser* - TOML parser with support for sections.
+#### *TomlConfigParser* - TOML parser with support for sections.
 
 [TOML](https://github.com/toml-lang/toml/blob/main/toml.md) parser. This config parser can be used to integrate with `pyproject.toml` files.
 
@@ -358,7 +365,7 @@ parser = configargparse.ArgParser(
 ...
 ```
 
-*CompositeConfigParser* - Create a config parser to understand multiple formats.
+#### *CompositeConfigParser* - parses more than one config file format.
 
 This parser will successively try to parse the file with each parser, until it succeeds,
 else fail showing all encountered error messages.
