@@ -13,6 +13,10 @@ ConfigArgParse
     :alt: Downloads per week
     :target: https://pepy.tech/project/configargparse
 
+.. image:: https://github.com/bw2/ConfigArgParse/actions/workflows/test.yml/badge.svg?branch=master
+    :alt: Build status
+    :target: https://github.com/bw2/ConfigArgParse/actions/workflows/test.yml
+
 .. image:: https://img.shields.io/badge/-API_Documentation-blue
     :alt: API Documentation
     :target: https://bw2.github.io/ConfigArgParse/
