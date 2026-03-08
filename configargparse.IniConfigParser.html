@@ -165,24 +165,21 @@
             </div>
         
 
-    </li>
-</ul> 
-
-        <div class="childrenKindTitle">Inherited Methods</div>
-        <ul>
-    
-    <li class="">
+    </li><li class="">
         
         
         
 
         
-            <div class="itemName"><code><a href="configargparse.ConfigFileParser.html#serialize" class="internal-link" title="configargparse.ConfigFileParser.serialize">serialize</a></code>
+            <div class="itemName"><code><a href="#serialize" class="internal-link" title="configargparse.IniConfigParser.serialize">serialize</a></code>
             </div>
         
 
     </li>
 </ul> 
+
+        
+         
 
         <div class="childrenKindTitle">Attributes</div>
         <ul>
@@ -551,7 +548,7 @@
         </div>
 
         <div class="extrasDocstring">
-          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">IniConfigParser</span>(<a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L554" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.IniConfigParser.__init__">IniConfigParser(sections, split_ml_text_to_list)</a></code></p>
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">IniConfigParser</span>(<a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L601" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.IniConfigParser.__init__">IniConfigParser(sections, split_ml_text_to_list)</a></code></p>
           <p><a href="classIndex.html#configargparse.IniConfigParser">View In Hierarchy</a></p>
         </div>
 
@@ -600,7 +597,7 @@ multi-line-text = '''
         </div>
 
         <div id="splitTables">
-          <table class="children sortable" id="id82">
+          <table class="children sortable" id="id81">
   
   
   <tr class="method">
@@ -623,6 +620,11 @@ multi-line-text = '''
     <td>Method</td>
     <td><code><a href="#parse" class="internal-link" title="configargparse.IniConfigParser.parse">parse</a></code></td>
     <td>Parses the keys and values from an INI config file.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#serialize" class="internal-link" title="configargparse.IniConfigParser.serialize">serialize</a></code></td>
+    <td>Serialize items to INI format with section support.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
@@ -636,20 +638,6 @@ multi-line-text = '''
   </tr>
 </table>
           
-            <p class="inheritedFrom">
-              Inherited from <code><a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a></code>:
-            </p>
-            <table class="children sortable" id="id83">
-  
-  
-  <tr class="basemethod">
-    
-    <td>Method</td>
-    <td><code><a href="configargparse.ConfigFileParser.html#serialize" class="internal-link" title="configargparse.ConfigFileParser.serialize">serialize</a></code></td>
-    <td>Does the inverse of config parsing by taking parsed values and converting them back to a string representing config file contents.</td>
-  </tr>
-</table>
-            
 
             
         </div>
@@ -668,7 +656,7 @@ multi-line-text = '''
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__call__</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L607">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L654">
       
       (source)
     </a>
@@ -695,7 +683,7 @@ multi-line-text = '''
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__init__</span><span class="function-signature">(self, sections, split_ml_text_to_list)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L598">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L645">
       
       (source)
     </a>
@@ -707,7 +695,7 @@ multi-line-text = '''
   </div>
   <div class="docstring functionBody">
     
-    <div><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">sections</span></td><td class="fieldArgDesc">The section names bounded to the new parser.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">split<wbr></wbr>_ml<wbr></wbr>_text<wbr></wbr>_to<wbr></wbr>_list</span></td><td class="fieldArgDesc">Wether to convert multiline strings to list</td></tr></table></div>
+    <div><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">sections</span></td><td class="fieldArgDesc">The section names bounded to the new parser.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">split<wbr></wbr>_ml<wbr></wbr>_text<wbr></wbr>_to<wbr></wbr>_list</span></td><td class="fieldArgDesc">Whether to convert multiline strings to list</td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -722,7 +710,7 @@ multi-line-text = '''
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_syntax_description</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L661">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L708">
       
       (source)
     </a>
@@ -749,7 +737,7 @@ multi-line-text = '''
     
     
     <span class="py-keyword">def</span> <span class="py-defname">parse</span><span class="function-signature">(self, stream)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L610">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L657">
       
       (source)
     </a>
@@ -763,6 +751,33 @@ multi-line-text = '''
     <div class="interfaceinfo">overrides <code><a href="configargparse.ConfigFileParser.html#parse" class="internal-link">configargparse.ConfigFileParser.parse</a></code></div>
     <div><p>Parses the keys and values from an INI config file.</p></div>
   </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.IniConfigParser.serialize">
+    
+  </a>
+  <a name="serialize">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span> <span class="py-defname">serialize</span><span class="function-signature">(self, items)</span>:
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L721">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#serialize" title="configargparse.IniConfigParser.serialize">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="configargparse.ConfigFileParser.html#serialize" class="internal-link">configargparse.ConfigFileParser.serialize</a></code></div>
+    <div><p>Serialize items to INI format with section support.</p></div>
+  </div>
 </div><div class="baseinstancevariable">
   
   
@@ -775,7 +790,7 @@ multi-line-text = '''
   <div class="functionHeader">
     
     <span class="py-defname">sections</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L604">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L651">
       
       (source)
     </a>
@@ -802,7 +817,7 @@ multi-line-text = '''
   <div class="functionHeader">
     
     <span class="py-defname">split_ml_text_to_list</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L605">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L652">
       
       (source)
     </a>
@@ -829,7 +844,7 @@ multi-line-text = '''
   <div class="container-fluid">
     <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7.1</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    24.11.2 at 2025-08-06 02:05:29.
+    24.11.2 at 2026-03-08 05:38:07.
   </div>
 
   <!-- Search related scripts needs to be loaded at the end of HTML 

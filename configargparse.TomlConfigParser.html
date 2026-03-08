@@ -165,24 +165,21 @@
             </div>
         
 
-    </li>
-</ul> 
-
-        <div class="childrenKindTitle">Inherited Methods</div>
-        <ul>
-    
-    <li class="">
+    </li><li class="">
         
         
         
 
         
-            <div class="itemName"><code><a href="configargparse.ConfigFileParser.html#serialize" class="internal-link" title="configargparse.ConfigFileParser.serialize">serialize</a></code>
+            <div class="itemName"><code><a href="#serialize" class="internal-link" title="configargparse.TomlConfigParser.serialize">serialize</a></code>
             </div>
         
 
     </li>
 </ul> 
+
+        
+         
 
         <div class="childrenKindTitle">Attributes</div>
         <ul>
@@ -541,7 +538,7 @@
         </div>
 
         <div class="extrasDocstring">
-          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">TomlConfigParser</span>(<a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L477" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.TomlConfigParser.__init__">TomlConfigParser(sections)</a></code></p>
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">TomlConfigParser</span>(<a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L476" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.TomlConfigParser.__init__">TomlConfigParser(sections)</a></code></p>
           <p><a href="classIndex.html#configargparse.TomlConfigParser">View In Hierarchy</a></p>
         </div>
 
@@ -597,6 +594,11 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
     <td>Method</td>
     <td><code><a href="#parse" class="internal-link" title="configargparse.TomlConfigParser.parse">parse</a></code></td>
     <td>Parses the keys and values from a TOML config file.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#serialize" class="internal-link" title="configargparse.TomlConfigParser.serialize">serialize</a></code></td>
+    <td>Serialize items to TOML format with section support.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
@@ -605,20 +607,6 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
   </tr>
 </table>
           
-            <p class="inheritedFrom">
-              Inherited from <code><a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a></code>:
-            </p>
-            <table class="children sortable" id="id81">
-  
-  
-  <tr class="basemethod">
-    
-    <td>Method</td>
-    <td><code><a href="configargparse.ConfigFileParser.html#serialize" class="internal-link" title="configargparse.ConfigFileParser.serialize">serialize</a></code></td>
-    <td>Does the inverse of config parsing by taking parsed values and converting them back to a string representing config file contents.</td>
-  </tr>
-</table>
-            
 
             
         </div>
@@ -637,7 +625,7 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__call__</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L514">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L513">
       
       (source)
     </a>
@@ -664,7 +652,7 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__init__</span><span class="function-signature">(self, sections)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L507">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L506">
       
       (source)
     </a>
@@ -691,7 +679,7 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_syntax_description</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L547">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L560">
       
       (source)
     </a>
@@ -718,7 +706,7 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
     
     
     <span class="py-keyword">def</span> <span class="py-defname">parse</span><span class="function-signature">(self, stream)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L517">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L516">
       
       (source)
     </a>
@@ -732,6 +720,36 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
     <div class="interfaceinfo">overrides <code><a href="configargparse.ConfigFileParser.html#parse" class="internal-link">configargparse.ConfigFileParser.parse</a></code></div>
     <div><p>Parses the keys and values from a TOML config file.</p></div>
   </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.TomlConfigParser.serialize">
+    
+  </a>
+  <a name="serialize">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span> <span class="py-defname">serialize</span><span class="function-signature">(self, items)</span>:
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L566">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#serialize" title="configargparse.TomlConfigParser.serialize">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="configargparse.ConfigFileParser.html#serialize" class="internal-link">configargparse.ConfigFileParser.serialize</a></code></div>
+    <div><p>Serialize items to TOML format with section support.</p>
+<p>Note: Requires the 'toml' package for serialization (pip install toml).
+Python 3.11's tomllib only supports reading, not writing.</p>
+</div>
+  </div>
 </div><div class="baseinstancevariable">
   
   
@@ -744,7 +762,7 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
   <div class="functionHeader">
     
     <span class="py-defname">sections</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L512">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L511">
       
       (source)
     </a>
@@ -771,7 +789,7 @@ Thought, any valid TOML config file will not be necessarly parsable with <code><
   <div class="container-fluid">
     <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7.1</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    24.11.2 at 2025-08-06 02:05:29.
+    24.11.2 at 2026-03-08 05:38:07.
   </div>
 
   <!-- Search related scripts needs to be loaded at the end of HTML 

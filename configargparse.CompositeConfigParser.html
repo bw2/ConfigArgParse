@@ -165,24 +165,21 @@
             </div>
         
 
-    </li>
-</ul> 
-
-        <div class="childrenKindTitle">Inherited Methods</div>
-        <ul>
-    
-    <li class="">
+    </li><li class="">
         
         
         
 
         
-            <div class="itemName"><code><a href="configargparse.ConfigFileParser.html#serialize" class="internal-link" title="configargparse.ConfigFileParser.serialize">serialize</a></code>
+            <div class="itemName"><code><a href="#serialize" class="internal-link" title="configargparse.CompositeConfigParser.serialize">serialize</a></code>
             </div>
         
 
     </li>
 </ul> 
+
+        
+         
 
         <div class="childrenKindTitle">Attributes</div>
         <ul>
@@ -541,7 +538,7 @@
         </div>
 
         <div class="extrasDocstring">
-          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">CompositeConfigParser</span>(<a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L675" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.CompositeConfigParser.__init__">CompositeConfigParser(config_parser_types)</a></code></p>
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">CompositeConfigParser</span>(<a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L753" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.CompositeConfigParser.__init__">CompositeConfigParser(config_parser_types)</a></code></p>
           <p><a href="classIndex.html#configargparse.CompositeConfigParser">View In Hierarchy</a></p>
         </div>
 
@@ -553,7 +550,7 @@ until it succeeds, else raise exception with all encountered errors.</p>
         </div>
 
         <div id="splitTables">
-          <table class="children sortable" id="id84">
+          <table class="children sortable" id="id82">
   
   
   <tr class="method">
@@ -576,6 +573,11 @@ until it succeeds, else raise exception with all encountered errors.</p>
     <td>Method</td>
     <td><code><a href="#parse" class="internal-link" title="configargparse.CompositeConfigParser.parse">parse</a></code></td>
     <td>Parses the keys and values from a config file.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#serialize" class="internal-link" title="configargparse.CompositeConfigParser.serialize">serialize</a></code></td>
+    <td>Serialize items using the first parser in the composite.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
@@ -584,20 +586,6 @@ until it succeeds, else raise exception with all encountered errors.</p>
   </tr>
 </table>
           
-            <p class="inheritedFrom">
-              Inherited from <code><a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a></code>:
-            </p>
-            <table class="children sortable" id="id85">
-  
-  
-  <tr class="basemethod">
-    
-    <td>Method</td>
-    <td><code><a href="configargparse.ConfigFileParser.html#serialize" class="internal-link" title="configargparse.ConfigFileParser.serialize">serialize</a></code></td>
-    <td>Does the inverse of config parsing by taking parsed values and converting them back to a string representing config file contents.</td>
-  </tr>
-</table>
-            
 
             
         </div>
@@ -616,7 +604,7 @@ until it succeeds, else raise exception with all encountered errors.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__call__</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L687">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L765">
       
       (source)
     </a>
@@ -643,7 +631,7 @@ until it succeeds, else raise exception with all encountered errors.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__init__</span><span class="function-signature">(self, config_parser_types)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L683">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L761">
       
       (source)
     </a>
@@ -670,7 +658,7 @@ until it succeeds, else raise exception with all encountered errors.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_syntax_description</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L702">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L790">
       
       (source)
     </a>
@@ -697,7 +685,7 @@ until it succeeds, else raise exception with all encountered errors.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">parse</span><span class="function-signature">(self, stream)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L690">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L768">
       
       (source)
     </a>
@@ -717,6 +705,33 @@ one of: "yes", "no", "on", "off", "true", "false". Otherwise an error will be ra
 values are either strings or lists (eg. to support config file
 formats like YAML which allow lists).</td></tr></table></div>
   </div>
+</div><div class="basemethod">
+  
+  
+  <a name="configargparse.CompositeConfigParser.serialize">
+    
+  </a>
+  <a name="serialize">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span> <span class="py-defname">serialize</span><span class="function-signature">(self, items)</span>:
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L806">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#serialize" title="configargparse.CompositeConfigParser.serialize">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    <div class="interfaceinfo">overrides <code><a href="configargparse.ConfigFileParser.html#serialize" class="internal-link">configargparse.ConfigFileParser.serialize</a></code></div>
+    <div><p>Serialize items using the first parser in the composite.</p></div>
+  </div>
 </div><div class="baseinstancevariable">
   
   
@@ -729,7 +744,7 @@ formats like YAML which allow lists).</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">parsers</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/a9e04010938de15161603c335d24ec8a0fff006b/configargparse.py#L685">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/907cd63a34b00ace8c38dcbd6c8947fc0c81599b/configargparse.py#L763">
       
       (source)
     </a>
@@ -756,7 +771,7 @@ formats like YAML which allow lists).</td></tr></table></div>
   <div class="container-fluid">
     <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7.1</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    24.11.2 at 2025-08-06 02:05:29.
+    24.11.2 at 2026-03-08 05:38:07.
   </div>
 
   <!-- Search related scripts needs to be loaded at the end of HTML 
