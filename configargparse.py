@@ -19,7 +19,6 @@ from collections import OrderedDict
 import textwrap
 from io import StringIO
 
-
 ACTION_TYPES_THAT_DONT_NEED_A_VALUE = [
     argparse._StoreTrueAction,
     argparse._StoreFalseAction,
@@ -848,6 +847,32 @@ class ArgumentParser(argparse.ArgumentParser):
         if sys.version_info < (3, 9):
             self.exit_on_error = True
 
+    def _find_insertion_index(self, args):
+        """Find the right index to insert config/env var args into the command line.
+
+        Handles three cases:
+        1. If '--' separator exists, insert before it so injected args don't
+           end up in the positional-only region.
+        2. If any positional arg uses REMAINDER and there are no optional args
+           on the command line, prepend (index 0) so REMAINDER doesn't swallow them.
+        3. Otherwise insert before the first optional arg, or append if none.
+        """
+        if "--" in args:
+            return args.index("--")
+        first_opt = None
+        for i, arg in enumerate(args):
+            if arg.startswith(tuple(self.prefix_chars)):
+                first_opt = i
+                break
+        if first_opt is not None:
+            return first_opt
+        # No optional args on command line
+        if any(
+            a.is_positional_arg and a.nargs == argparse.REMAINDER for a in self._actions
+        ):
+            return 0
+        return len(args)
+
     def parse_args(
         self, args=None, namespace=None, config_file_contents=None, env_vars=os.environ
     ):
@@ -944,7 +969,6 @@ class ArgumentParser(argparse.ArgumentParser):
 
         # add env var settings to the commandline that aren't there already
         env_var_args = []
-        nargs = False
         actions_with_env_var_values = [
             a
             for a in self._actions
@@ -956,9 +980,12 @@ class ArgumentParser(argparse.ArgumentParser):
         for action in actions_with_env_var_values:
             key = action.env_var
             value = env_vars[key]
+            # Skip empty string env vars for args with nargs to match YAML behavior
+            # where empty values are treated as None/not present (see issue #296)
+            if value == "" and action.nargs:
+                continue
             # Make list-string into list.
             if action.nargs or isinstance(action, argparse._AppendAction):
-                nargs = True
                 if value.startswith("[") and value.endswith("]"):
                     # handle special case of k=[1,2,3] or other json-like syntax
                     try:
@@ -968,10 +995,8 @@ class ArgumentParser(argparse.ArgumentParser):
                         value = [elem.strip() for elem in value[1:-1].split(",")]
             env_var_args += self.convert_item_to_command_line_arg(action, key, value)
 
-        if nargs:
-            args = args + env_var_args
-        else:
-            args = env_var_args + args
+        idx = self._find_insertion_index(args)
+        args = args[:idx] + env_var_args + args[idx:]
 
         if env_var_args:
             self._source_to_settings[_ENV_VAR_SOURCE_KEY] = OrderedDict(
@@ -1017,7 +1042,6 @@ class ArgumentParser(argparse.ArgumentParser):
 
             # add each config item to the commandline unless it's there already
             config_args = []
-            nargs = False
             for key, value in config_items.items():
                 if key in known_config_keys:
                     action = known_config_keys[key]
@@ -1039,6 +1063,11 @@ class ArgumentParser(argparse.ArgumentParser):
                         )
                     )
 
+                # Skip empty string values for args with nargs to match YAML behavior
+                # where empty values are treated as None/not present (see issue #296)
+                if value == "" and action and action.nargs:
+                    continue
+
                 if not discard_this_key:
                     config_args += self.convert_item_to_command_line_arg(
                         action, key, value
@@ -1047,17 +1076,9 @@ class ArgumentParser(argparse.ArgumentParser):
                     if source_key not in self._source_to_settings:
                         self._source_to_settings[source_key] = OrderedDict()
                     self._source_to_settings[source_key][key] = (action, value)
-                    if (
-                        action
-                        and action.nargs
-                        or isinstance(action, argparse._AppendAction)
-                    ):
-                        nargs = True
 
-            if nargs:
-                args = args + config_args
-            else:
-                args = config_args + args
+            idx = self._find_insertion_index(args)
+            args = args[:idx] + config_args + args[idx:]
 
         # save default settings for use by print_values()
         default_settings = OrderedDict()
@@ -1113,7 +1134,7 @@ class ArgumentParser(argparse.ArgumentParser):
             dict[str, dict[str, tuple[argparse.Action, str]]]: source to settings dict
         """
         # _source_to_settings is set in parse_know_args().
-        return self._source_to_settings  # type:ignore[attribute-error]
+        return self._source_to_settings  # type: ignore[attribute-error]
 
     def write_config_file(self, parsed_namespace, output_file_paths, exit_after=False):
         """Write the given settings to output files.
@@ -1428,7 +1449,7 @@ class ArgumentParser(argparse.ArgumentParser):
         for (
             source,
             settings,
-        ) in self._source_to_settings.items():  # type:ignore[argument-error]
+        ) in self._source_to_settings.items():  # type: ignore[argument-error]
             source = source.split("|")
             source = source_key_to_display_value_map[source[0]] % tuple(source[1:])
             r.write(source)

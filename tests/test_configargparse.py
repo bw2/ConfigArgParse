@@ -1344,6 +1344,120 @@ class TestMisc(TestCase):
             args="-g file.txt",
         )
 
+    def testDoubleDashSeparator(self):
+        """Test that -- separator correctly separates optional from positional args
+        when config file or env vars are used. Regression test for issue #298."""
+        config_file = tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".conf"
+        )
+        config_file.write("list = [1, 2, 3]\n")
+        config_file.flush()
+        config_file.close()
+
+        try:
+            # Test with config file and -- separator
+            self.initParser(args_for_setting_config_path=["-c", "--config"])
+            self.parser.add_argument("--list", action="append")
+            self.parser.add_argument("positional_arg", nargs="*")
+
+            ns = self.parse(args="-c %s -- foo bar" % config_file.name)
+            self.assertEqual(ns.positional_arg, ["foo", "bar"])
+            self.assertEqual(ns.list, ["1", "2", "3"])
+
+            # Test without -- separator
+            ns = self.parse(args="-c %s foo bar" % config_file.name)
+            self.assertEqual(ns.positional_arg, ["foo", "bar"])
+            self.assertEqual(ns.list, ["1", "2", "3"])
+
+            # Test with env var and -- separator
+            self.initParser()
+            self.parser.add_argument("--list", action="append", env_var="MY_LIST")
+            self.parser.add_argument("positional_arg", nargs="*")
+
+            old_env = os.environ.get("MY_LIST")
+            try:
+                os.environ["MY_LIST"] = "[1,2,3]"
+                ns = self.parse(args="-- foo bar")
+                self.assertEqual(ns.positional_arg, ["foo", "bar"])
+                self.assertEqual(ns.list, ["1", "2", "3"])
+            finally:
+                if old_env is not None:
+                    os.environ["MY_LIST"] = old_env
+                elif "MY_LIST" in os.environ:
+                    del os.environ["MY_LIST"]
+        finally:
+            os.unlink(config_file.name)
+
+    def testRemainderWithConfigFile(self):
+        """Test that nargs=REMAINDER works correctly with config files.
+        Regression test for issue #285."""
+        config_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".cfg")
+        config_file.write("config_file_option=value_from_config\n")
+        config_file.flush()
+        config_file.close()
+
+        try:
+            self.initParser()
+            self.parser.add_argument(
+                "--config", is_config_file=True, default=config_file.name
+            )
+            self.parser.add_argument("--config_file_option", nargs="*", default=None)
+            self.parser.add_argument(
+                "remainder_option", nargs=argparse.REMAINDER, default=None
+            )
+
+            ns = self.parse(args=["test"])
+            self.assertEqual(ns.remainder_option, ["test"])
+            self.assertEqual(ns.config_file_option, ["value_from_config"])
+
+            ns = self.parse(args=["test", "arg1", "arg2"])
+            self.assertEqual(ns.remainder_option, ["test", "arg1", "arg2"])
+            self.assertEqual(ns.config_file_option, ["value_from_config"])
+        finally:
+            os.unlink(config_file.name)
+
+    def testEmptyValuesIgnored(self):
+        """Test that empty string values from config files and env vars are ignored
+        for args with nargs. Regression test for issue #296."""
+        # Test empty value in config file
+        config_file = tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".conf"
+        )
+        config_file.write("test-opt=\n")
+        config_file.flush()
+        config_file.close()
+
+        try:
+            self.initParser()
+            self.parser.add_argument(
+                "--config", is_config_file=True, default=config_file.name
+            )
+            self.parser.add_argument(
+                "--test-opt", nargs=2, default=["default1", "default2"]
+            )
+
+            ns = self.parse(args=[])
+            self.assertEqual(ns.test_opt, ["default1", "default2"])
+        finally:
+            os.unlink(config_file.name)
+
+        # Test empty environment variable
+        self.initParser()
+        self.parser.add_argument(
+            "--test-opt", nargs=2, env_var="TEST_OPT", default=["default1", "default2"]
+        )
+
+        old_env = os.environ.get("TEST_OPT")
+        try:
+            os.environ["TEST_OPT"] = ""
+            ns = self.parse(args=[])
+            self.assertEqual(ns.test_opt, ["default1", "default2"])
+        finally:
+            if old_env is not None:
+                os.environ["TEST_OPT"] = old_env
+            elif "TEST_OPT" in os.environ:
+                del os.environ["TEST_OPT"]
+
 
 class TestConfigFileParsers(TestCase):
     """Test ConfigFileParser subclasses in isolation"""
@@ -1784,24 +1898,20 @@ class TestTomlConfigParser(unittest.TestCase):
         return f
 
     def test_section(self):
-        f = self.write_toml_file(
-            """
+        f = self.write_toml_file("""
             [section]
             key1 = 'toml1'
             key2 = 'toml2'
-            """
-        )
+            """)
         parser = configargparse.TomlConfigParser(["section"])
         self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": "toml2"})
 
     def test_no_sections(self):
-        f = self.write_toml_file(
-            """
+        f = self.write_toml_file("""
             [section]
             key1 = 'toml1'
             key2 = 'toml2'
-            """
-        )
+            """)
         parser = configargparse.TomlConfigParser([])
         self.assertEqual(parser.parse(f), {})
 
@@ -1817,13 +1927,11 @@ class TestTomlConfigParser(unittest.TestCase):
 
     @unittest.expectedFailure  # Ints should be strings
     def test_advanced(self):
-        f = self.write_toml_file(
-            """
+        f = self.write_toml_file("""
             [tool.section]
             key1 = "toml1"
             key2 = [1, 2, 3]
-            """
-        )
+            """)
         parser = configargparse.TomlConfigParser(["tool.section"])
         self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": ["1", "2", "3"]})
 
