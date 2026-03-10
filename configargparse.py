@@ -950,16 +950,18 @@ class ArgumentParser(argparse.ArgumentParser):
         # parse the additional args
         if config_file_parser_class is None:
             self._config_file_parser = DefaultConfigFileParser()
-        else:
-            if not (isinstance(config_file_parser_class, type) and
-                    issubclass(config_file_parser_class, ConfigFileParser)):
-                raise TypeError(
-                    "config_file_parser_class must be a subclass of "
-                    "ConfigFileParser (such as DefaultConfigFileParser, "
-                    "YAMLConfigFileParser, etc.). "
-                    "Got: %r. Perhaps you meant to use formatter_class?" %
-                    (config_file_parser_class,))
+        elif isinstance(config_file_parser_class, ConfigFileParser):
+            self._config_file_parser = config_file_parser_class
+        elif (isinstance(config_file_parser_class, type) and
+              issubclass(config_file_parser_class, ConfigFileParser)):
             self._config_file_parser = config_file_parser_class()
+        else:
+            raise TypeError(
+                "config_file_parser_class must be a subclass of "
+                "ConfigFileParser (such as DefaultConfigFileParser, "
+                "YAMLConfigFileParser, etc.). "
+                "Got: %r. Perhaps you meant to use formatter_class?" %
+                (config_file_parser_class,))
 
         self._default_config_files = default_config_files
         self._ignore_unknown_config_file_keys = ignore_unknown_config_file_keys
