@@ -538,6 +538,35 @@ class TestBasicUseCases(TestCase):
         config_file1.close()
         config_file2.close()
 
+    def testSubParserEnvVar(self):
+        """Test that env vars work with subparsers (issue #350)."""
+        parser = configargparse.ArgumentParser(auto_env_var_prefix="")
+        parser.add_argument("--tenant", env_var="TENANT", required=True)
+        subparsers = parser.add_subparsers(dest="action")
+        appliance_parser = subparsers.add_parser("appliance")
+        appliance_parser.add_argument("--token", env_var="TOKEN", required=True)
+
+        # Test parent parser env var via env_vars param
+        ns = parser.parse_args(
+            args=["appliance", "--token", "test-token"],
+            env_vars={"TENANT": "test-tenant"},
+        )
+        self.assertEqual(ns.tenant, "test-tenant")
+        self.assertEqual(ns.token, "test-token")
+        self.assertEqual(ns.action, "appliance")
+
+        # Test both parent and subparser env vars via real os.environ
+        os.environ["TENANT"] = "test-tenant"
+        os.environ["TOKEN"] = "test-token"
+        try:
+            ns = parser.parse_args(args=["appliance"])
+            self.assertEqual(ns.tenant, "test-tenant")
+            self.assertEqual(ns.token, "test-token")
+            self.assertEqual(ns.action, "appliance")
+        finally:
+            del os.environ["TENANT"]
+            del os.environ["TOKEN"]
+
     def testAddArgsErrors(self):
         self.assertRaisesRegex(
             ValueError,
