@@ -953,14 +953,27 @@ class ArgumentParser(argparse.ArgumentParser):
     def _find_insertion_index(self, args):
         """Find the right index to insert config/env var args into the command line.
 
-        Handles three cases: if '--' separator exists, insert before it so
-        injected args don't end up in the positional-only region. If any
-        positional arg uses REMAINDER and there are no optional args on the
-        command line, prepend so REMAINDER doesn't swallow them. Otherwise
-        insert before the first optional arg, or append if none.
+        Inserts before the ``--`` separator if present, before a subparser
+        command so the parent parser sees injected args first, before the
+        first optional arg, or at position 0 when a REMAINDER positional
+        exists. Falls back to appending.
         """
         if "--" in args:
             return args.index("--")
+
+        # Find the first subcommand index, if any
+        subcmd_index = None
+        for action in self._actions:
+            if isinstance(action, argparse._SubParsersAction) and action.choices:
+                for i, arg in enumerate(args):
+                    if arg in action.choices:
+                        subcmd_index = i
+                        break
+                break
+
+        if subcmd_index is not None:
+            return subcmd_index
+
         first_opt = None
         for i, arg in enumerate(args):
             if arg.startswith(tuple(self.prefix_chars)):
@@ -968,11 +981,13 @@ class ArgumentParser(argparse.ArgumentParser):
                 break
         if first_opt is not None:
             return first_opt
+
         # No optional args on command line
         if any(
             a.is_positional_arg and a.nargs == argparse.REMAINDER for a in self._actions
         ):
             return 0
+
         return len(args)
 
     def parse_args(
