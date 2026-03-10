@@ -921,13 +921,13 @@ class ArgumentParser(argparse.ArgumentParser):
         ]:
             if not isinstance(value, (list, tuple)):
                 hint = " (e.g. ['%s'])" % value if isinstance(value, str) else ""
-                raise TypeError(
-                    "%s must be a list%s. Got: %r" % (name, hint, value))
+                raise TypeError("%s must be a list%s. Got: %r" % (name, hint, value))
 
         if not callable(config_file_open_func):
             raise TypeError(
                 "config_file_open_func must be callable. Got: %r"
-                % (config_file_open_func,))
+                % (config_file_open_func,)
+            )
 
         self._config_file_open_func = config_file_open_func
 
@@ -940,7 +940,8 @@ class ArgumentParser(argparse.ArgumentParser):
             if isinstance(fc, type) and not issubclass(fc, argparse.HelpFormatter):
                 msg = (
                     "formatter_class must be a subclass of "
-                    "argparse.HelpFormatter. Got: %r." % (fc,))
+                    "argparse.HelpFormatter. Got: %r." % (fc,)
+                )
                 if issubclass(fc, ConfigFileParser):
                     msg += " Perhaps you meant to use config_file_parser_class?"
                 raise TypeError(msg)
@@ -952,16 +953,18 @@ class ArgumentParser(argparse.ArgumentParser):
             self._config_file_parser = DefaultConfigFileParser()
         elif isinstance(config_file_parser_class, ConfigFileParser):
             self._config_file_parser = config_file_parser_class
-        elif (isinstance(config_file_parser_class, type) and
-              issubclass(config_file_parser_class, ConfigFileParser)):
+        elif isinstance(config_file_parser_class, type) and issubclass(
+            config_file_parser_class, ConfigFileParser
+        ):
             self._config_file_parser = config_file_parser_class()
         else:
             raise TypeError(
                 "config_file_parser_class must be a subclass of "
                 "ConfigFileParser (such as DefaultConfigFileParser, "
                 "YAMLConfigFileParser, etc.). "
-                "Got: %r. Perhaps you meant to use formatter_class?" %
-                (config_file_parser_class,))
+                "Got: %r. Perhaps you meant to use formatter_class?"
+                % (config_file_parser_class,)
+            )
 
         self._default_config_files = default_config_files
         self._ignore_unknown_config_file_keys = ignore_unknown_config_file_keys
