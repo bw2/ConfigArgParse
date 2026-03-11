@@ -92,7 +92,8 @@ tests_require = [
 
 setup(
     name="ConfigArgParse",
-    version="1.7.3",
+    use_scm_version={"version_scheme": "no-guess-dev"},
+    setup_requires=["setuptools_scm"],
     description="A drop-in replacement for argparse that allows options to "
     "also be set via config files and/or environment variables.",
     long_description=long_description,
