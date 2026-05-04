@@ -245,7 +245,7 @@ class TestBasicUseCases(TestCase):
             args="--genome hg19",
         )
         self.assertParseArgsRaises(
-            "Unable to open config file: file.txt. Error: No such file or director",
+            r"Unable to open config file: file\.txt\. Error: .*No such file or director",
             args="-g file.txt",
         )
 
@@ -1370,14 +1370,15 @@ class TestMisc(TestCase):
         self.assertDictEqual(vars(options), {})
 
     def testConfigOpenFuncError(self):
-        # test OSError
+        # test OSError -- str(OSError(errno, strerror)) formats as
+        # "[Errno N] strerror", so the full message is preserved.
         def error_func(path):
             raise OSError(9, "some error")
 
         self.initParser(config_file_open_func=error_func)
         self.parser.add_argument("-g", is_config_file=True)
         self.assertParseArgsRaises(
-            "Unable to open config file: file.txt. Error: some error",
+            r"Unable to open config file: file\.txt\. Error: \[Errno 9\] some error",
             args="-g file.txt",
         )
 
@@ -1389,6 +1390,22 @@ class TestMisc(TestCase):
         self.parser.add_argument("-g", is_config_file=True)
         self.assertParseArgsRaises(
             "Unable to open config file: file.txt. Error: custom error",
+            args="-g file.txt",
+        )
+
+        # test custom 2-arg exception -- both args must be preserved (X5
+        # regression: the previous len(e.args) == 2 OSError shortcut would
+        # silently drop the first arg).
+        class CustomTwoArgError(Exception):
+            pass
+
+        def error_func(path):
+            raise CustomTwoArgError("CODE", "human message")
+
+        self.initParser(config_file_open_func=error_func)
+        self.parser.add_argument("-g", is_config_file=True)
+        self.assertParseArgsRaises(
+            r"Unable to open config file: file\.txt\. Error: \('CODE', 'human message'\)",
             args="-g file.txt",
         )
 
@@ -2298,6 +2315,479 @@ class TestCompositeConfigParser(unittest.TestCase):
         composite = configargparse.CompositeConfigParser([])()
         with self.assertRaises(configargparse.ConfigFileParserException):
             composite.serialize(OrderedDict())
+
+
+class TestCallableDefaultConfigFiles(TestCase):
+    def testCallableReturningStringIO(self):
+        def loader():
+            return StringIO("genome=hg19\n")
+
+        self.initParser(default_config_files=[loader])
+        self.add_arg("--genome")
+        ns = self.parse("")
+        self.assertEqual(ns.genome, "hg19")
+
+    def testCallableReturningNoneRaises(self):
+        def empty_loader():
+            return None
+
+        self.initParser(default_config_files=[empty_loader])
+        self.add_arg("--genome")
+        with self.assertRaisesRegex(TypeError, r"empty_loader.*returned None"):
+            self.parse("")
+
+    def testCallableRaisingIsWrapped(self):
+        def boom_loader():
+            raise RuntimeError("boom")
+
+        self.initParser(default_config_files=[boom_loader])
+        self.add_arg("--genome")
+        with self.assertRaises(configargparse.ConfigFileParserException) as ctx:
+            self.parse("")
+        self.assertIn("boom_loader", str(ctx.exception))
+        self.assertIn("boom", str(ctx.exception))
+        self.assertIsInstance(ctx.exception.__cause__, RuntimeError)
+        self.assertEqual(str(ctx.exception.__cause__), "boom")
+
+    def testCallableRaisingMultiArgException(self):
+        # Wrapping must not depend on the original exception class accepting a
+        # single string arg. CalledProcessError requires (returncode, cmd) and
+        # would have crashed type(e)(...) before this fix.
+        import subprocess
+
+        def boom_loader():
+            raise subprocess.CalledProcessError(1, ["cmd"])
+
+        self.initParser(default_config_files=[boom_loader])
+        self.add_arg("--genome")
+        with self.assertRaises(configargparse.ConfigFileParserException) as ctx:
+            self.parse("")
+        self.assertIn("boom_loader", str(ctx.exception))
+        self.assertIsInstance(ctx.exception.__cause__, subprocess.CalledProcessError)
+
+    def testCallableStreamNameAssignmentFailsRaises(self):
+        closed = []
+
+        class NoNameStream:
+            __slots__ = ("_closed",)
+
+            def __init__(self_inner):
+                self_inner._closed = False
+
+            def read(self_inner):
+                return ""
+
+            def __iter__(self_inner):
+                return iter([])
+
+            def close(self_inner):
+                self_inner._closed = True
+                closed.append(self_inner)
+
+        # name lives in NoNameStream's __slots__-less namespace, so any attempt
+        # to assign `stream.name = ...` raises AttributeError.
+        def slot_loader():
+            return NoNameStream()
+
+        self.initParser(default_config_files=[slot_loader])
+        self.add_arg("--genome")
+        with self.assertRaises(configargparse.ConfigFileParserException) as ctx:
+            self.parse("")
+        self.assertIn("slot_loader", str(ctx.exception))
+        self.assertIn(".name attribute could not be set", str(ctx.exception))
+        self.assertIsInstance(ctx.exception.__cause__, AttributeError)
+        # The returned stream must still be closed by the parser even though
+        # the .name assignment failed.
+        self.assertEqual(len(closed), 1)
+        self.assertTrue(closed[0]._closed)
+
+    def testCallableInvokedEachParse(self):
+        calls = {"count": 0}
+
+        def loader():
+            calls["count"] += 1
+            return StringIO("genome=hg19\n")
+
+        self.initParser(default_config_files=[loader])
+        self.add_arg("--genome")
+        self.parse("")
+        self.parse("")
+        self.parse("")
+        self.assertEqual(calls["count"], 3)
+
+    def testCallableStreamIsClosed(self):
+        class TrackingStringIO(StringIO):
+            instances = []
+
+            def __init__(self_inner, *a, **kw):
+                super().__init__(*a, **kw)
+                self_inner.was_closed = False
+                TrackingStringIO.instances.append(self_inner)
+
+            def close(self_inner):
+                self_inner.was_closed = True
+                super().close()
+
+        def loader():
+            return TrackingStringIO("genome=hg19\n")
+
+        self.initParser(default_config_files=[loader])
+        self.add_arg("--genome")
+        self.parse("")
+        self.assertEqual(len(TrackingStringIO.instances), 1)
+        self.assertTrue(TrackingStringIO.instances[0].was_closed)
+
+    def testMixedStringsAndCallables(self):
+        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".ini")
+        temp_cfg.write("genome=from_file\n")
+        temp_cfg.flush()
+        temp_cfg.close()
+
+        def loader():
+            return StringIO("genome=from_callable\n")
+
+        # Later entries override earlier ones, so the callable wins.
+        self.initParser(default_config_files=[temp_cfg.name, loader])
+        self.add_arg("--genome")
+        ns = self.parse("")
+        self.assertEqual(ns.genome, "from_callable")
+
+        # Reverse order: the file should win.
+        self.initParser(default_config_files=[loader, temp_cfg.name])
+        self.add_arg("--genome")
+        ns = self.parse("")
+        self.assertEqual(ns.genome, "from_file")
+
+        os.unlink(temp_cfg.name)
+
+    def testCallableWithRealFile(self):
+        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".ini")
+        temp_cfg.write("genome=hg19\n")
+        temp_cfg.flush()
+        temp_cfg.close()
+
+        opened = []
+
+        def loader():
+            f = open(temp_cfg.name)
+            opened.append(f)
+            return f
+
+        self.initParser(default_config_files=[loader])
+        self.add_arg("--genome")
+        ns = self.parse("")
+        self.assertEqual(ns.genome, "hg19")
+        self.assertEqual(len(opened), 1)
+        self.assertTrue(opened[0].closed)
+
+        os.unlink(temp_cfg.name)
+
+    def testInvalidEntryType(self):
+        with self.assertRaisesRegex(TypeError, r"default_config_files\[0\]"):
+            configargparse.ArgParser(default_config_files=[123])
+
+        with self.assertRaisesRegex(TypeError, r"default_config_files\[1\]"):
+            configargparse.ArgParser(default_config_files=["ok.ini", 42])
+
+    def testFormatHelpRendersCallableName(self):
+        def my_loader():
+            return StringIO("")
+
+        self.initParser(default_config_files=[my_loader])
+        self.add_arg("--genome")
+        help_text = self.format_help()
+        self.assertIn("my_loader", help_text)
+        self.assertNotIn("<function", help_text)
+
+    def testPathLikeEntryAccepted(self):
+        import pathlib
+
+        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".ini")
+        temp_cfg.write("genome=hg19\n")
+        temp_cfg.flush()
+        temp_cfg.close()
+
+        self.initParser(default_config_files=[pathlib.Path(temp_cfg.name)])
+        self.add_arg("--genome")
+        ns = self.parse("")
+        self.assertEqual(ns.genome, "hg19")
+
+        os.unlink(temp_cfg.name)
+
+    def testTwoLambdasGetDistinctSourceKeys(self):
+        # Two lambdas both have __name__ == "<lambda>"; without disambiguation
+        # by index they'd merge into one source key in format_values output.
+        l1 = lambda: StringIO("genome=hg19\n")
+        l2 = lambda: StringIO("vcf=foo.vcf\n")
+
+        self.initParser(default_config_files=[l1, l2])
+        self.add_arg("--genome")
+        self.add_arg("--vcf")
+        self.parse("")
+        sources = self.parser.get_source_to_settings_dict()
+        config_file_sources = [
+            k for k in sources if k.startswith(configargparse._CONFIG_FILE_SOURCE_KEY)
+        ]
+        self.assertEqual(len(config_file_sources), 2)
+        # format_values should not crash either
+        self.parser.format_values()
+
+    def testEarlierStreamsClosedWhenLaterEntryFails(self):
+        opened = []
+
+        class TrackingStringIO(StringIO):
+            def __init__(self_inner, *a, **kw):
+                super().__init__(*a, **kw)
+                self_inner.was_closed = False
+                opened.append(self_inner)
+
+            def close(self_inner):
+                self_inner.was_closed = True
+                super().close()
+
+        def good_loader():
+            return TrackingStringIO("genome=hg19\n")
+
+        def bad_loader():
+            raise RuntimeError("nope")
+
+        self.initParser(default_config_files=[good_loader, bad_loader])
+        self.add_arg("--genome")
+        with self.assertRaises(configargparse.ConfigFileParserException):
+            self.parse("")
+        self.assertEqual(len(opened), 1)
+        self.assertTrue(opened[0].was_closed)
+
+    def testEarlierStreamsClosedWhenParserRaisesUnexpectedException(self):
+        # X5: a custom parser raising a non-ConfigFileParserException must not
+        # leak streams that were opened but not yet processed.
+        class BadParser(configargparse.ConfigFileParser):
+            def get_syntax_description(self):
+                return ""
+
+            def parse(self_inner, stream):
+                raise ValueError("parser bug")
+
+            def serialize(self_inner, items):
+                return ""
+
+        opened = []
+
+        class TrackingStringIO(StringIO):
+            def __init__(self_inner, *a, **kw):
+                super().__init__(*a, **kw)
+                self_inner.was_closed = False
+                opened.append(self_inner)
+
+            def close(self_inner):
+                self_inner.was_closed = True
+                super().close()
+
+        def loader_a():
+            return TrackingStringIO("genome=hg19\n")
+
+        def loader_b():
+            return TrackingStringIO("genome=hg20\n")
+
+        self.initParser(
+            default_config_files=[loader_a, loader_b],
+            config_file_parser_class=BadParser,
+        )
+        self.add_arg("--genome")
+        with self.assertRaises(ValueError):
+            self.parse("")
+        self.assertEqual(len(opened), 2)
+        self.assertTrue(all(s.was_closed for s in opened))
+
+    def testFormatValuesHandlesPipeInCallableName(self):
+        def loader():
+            s = StringIO("genome=hg19\n")
+            s.name = "weird|name|with|pipes"
+            return s
+
+        self.initParser(default_config_files=[loader])
+        self.add_arg("--genome")
+        self.parse("")
+        # Must not raise on pipe characters in the source name.
+        output = self.parser.format_values()
+        self.assertIn("weird|name|with|pipes", output)
+
+    def testPathLikeAndCallableEntryTreatedAsPath(self):
+        # An object that is both os.PathLike and callable should be treated as
+        # a path; the callable branch must not be taken first.
+        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".ini")
+        temp_cfg.write("genome=hg19\n")
+        temp_cfg.flush()
+        temp_cfg.close()
+
+        class CallablePath:
+            def __init__(self_inner, p):
+                self_inner._p = p
+
+            def __fspath__(self_inner):
+                return self_inner._p
+
+            def __call__(self_inner):
+                # Must NOT be called; if we end up here the dispatch is wrong
+                # and the test should fail loudly.
+                raise AssertionError(
+                    "callable branch taken for a PathLike+callable entry"
+                )
+
+        self.initParser(default_config_files=[CallablePath(temp_cfg.name)])
+        self.add_arg("--genome")
+        ns = self.parse("")
+        self.assertEqual(ns.genome, "hg19")
+
+        os.unlink(temp_cfg.name)
+
+    def testDefaultStreamsClosedWhenUserConfigPhaseRaises(self):
+        # X3: when an is_config_file_arg's type= callback raises during the
+        # inner argparse phase of _open_config_files, the default config
+        # streams already opened earlier must be closed.
+        opened = []
+
+        class TrackingStringIO(StringIO):
+            def __init__(self_inner, *a, **kw):
+                super().__init__(*a, **kw)
+                self_inner.was_closed = False
+                opened.append(self_inner)
+
+            def close(self_inner):
+                self_inner.was_closed = True
+                super().close()
+
+        def loader():
+            return TrackingStringIO("genome=hg19\n")
+
+        def bad_type(value):
+            raise RuntimeError("type exploded")
+
+        self.initParser(default_config_files=[loader])
+        self.add_arg("--genome")
+        self.add_arg("--config", is_config_file_arg=True, type=bad_type)
+
+        with self.assertRaises(RuntimeError):
+            self.parse(["--config", "anything"])
+
+        self.assertEqual(len(opened), 1)
+        self.assertTrue(opened[0].was_closed)
+
+    def testTwoCallableStreamsWithSameNameDoNotCollide(self):
+        # X1: even if two callables both return streams whose .name attribute
+        # is set to the same string, they must remain distinct sources.
+        def loader_a():
+            s = StringIO("genome=hg19\n")
+            s.name = "shared"
+            return s
+
+        def loader_b():
+            s = StringIO("vcf=foo.vcf\n")
+            s.name = "shared"
+            return s
+
+        self.initParser(default_config_files=[loader_a, loader_b])
+        self.add_arg("--genome")
+        self.add_arg("--vcf")
+        self.parse("")
+        sources = self.parser.get_source_to_settings_dict()
+        config_file_sources = [
+            k for k in sources if k.startswith(configargparse._CONFIG_FILE_SOURCE_KEY)
+        ]
+        self.assertEqual(len(config_file_sources), 2)
+
+    def testCallableStreamNameMatchingGeneratedFormatDoesNotCollide(self):
+        # X4: a callable whose returned stream's .name happens to match the
+        # library's generated "<entry_label>[<i>]" pattern must not collide
+        # with another callable that would otherwise generate the same name.
+        def loader_with_clashing_name():
+            s = StringIO("genome=hg19\n")
+            s.name = "loader[1]"  # matches what the lib would generate
+            return s
+
+        def loader():  # __name__ == "loader"; at index 1
+            return StringIO("vcf=foo.vcf\n")
+
+        self.initParser(default_config_files=[loader_with_clashing_name, loader])
+        self.add_arg("--genome")
+        self.add_arg("--vcf")
+        self.parse("")
+        sources = self.parser.get_source_to_settings_dict()
+        config_file_sources = [
+            k for k in sources if k.startswith(configargparse._CONFIG_FILE_SOURCE_KEY)
+        ]
+        self.assertEqual(len(config_file_sources), 2)
+
+    def testStreamClosedExactlyOnceOnSuccess(self):
+        # X2: on a successful parse, each stream's close() must be called
+        # exactly once (the previous design called it twice — once in the
+        # per-stream finally and once in the outer cleanup finally).
+        close_calls = []
+
+        class CountingStringIO(StringIO):
+            def close(self_inner):
+                close_calls.append(self_inner)
+                super().close()
+
+        def loader():
+            return CountingStringIO("genome=hg19\n")
+
+        self.initParser(default_config_files=[loader])
+        self.add_arg("--genome")
+        self.parse("")
+        self.assertEqual(len(close_calls), 1)
+
+    def testFormatHelpShowsPathForPathLikeAndCallable(self):
+        # X3: an entry that's both PathLike and callable is treated as a path
+        # at runtime; format_help must label it the same way (not as
+        # <callable>).
+        class CallablePath:
+            def __init__(self_inner, p):
+                self_inner._p = p
+
+            def __fspath__(self_inner):
+                return self_inner._p
+
+            def __call__(self_inner):
+                raise AssertionError("should not be called")
+
+        self.initParser(default_config_files=[CallablePath("/tmp/example.ini")])
+        self.add_arg("--genome")
+        help_text = self.format_help()
+        self.assertIn("/tmp/example.ini", help_text)
+        self.assertNotIn("<callable>", help_text)
+
+    def testFormatHelpHandlesBytesReturningPathLike(self):
+        # PEP 519 allows __fspath__() to return bytes. format_help must not
+        # crash when joining bytes path entries with str strings.
+        class BytesPath:
+            def __fspath__(self_inner):
+                return b"/tmp/bytes-example.ini"
+
+        self.initParser(default_config_files=[BytesPath()])
+        self.add_arg("--genome")
+        # Just must not raise; the path gets rendered (subject to textwrap,
+        # so we check only for stable substrings).
+        help_text = self.format_help()
+        # textwrap may insert a newline mid-path, so check fragments only
+        self.assertIn("/tmp/bytes", help_text.replace("\n", ""))
+        self.assertIn("example.ini", help_text)
+
+    def testFormatHelpHandlesMalformedPathLike(self):
+        # A PathLike whose __fspath__ returns something other than str/bytes
+        # would cause os.fspath() to raise TypeError. format_help must not
+        # crash on invalid input — fall back to repr().
+        class BrokenPath:
+            def __fspath__(self_inner):
+                return None
+
+        self.initParser(default_config_files=[BrokenPath()])
+        self.add_arg("--genome")
+        # Must not raise. Output should at least not contain a Python
+        # traceback marker; we just confirm it produces some text.
+        help_text = self.format_help()
+        self.assertIsInstance(help_text, str)
+        self.assertGreater(len(help_text), 0)
 
 
 ################################################################################
