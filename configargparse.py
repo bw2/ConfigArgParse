@@ -932,11 +932,11 @@ class ArgumentParser(argparse.ArgumentParser):
                 raise TypeError("%s must be a list%s. Got: %r" % (name, hint, value))
 
         for i, entry in enumerate(default_config_files):
-            if not (isinstance(entry, (str, os.PathLike)) or callable(entry)):
+            if not (isinstance(entry, (str, bytes, os.PathLike)) or callable(entry)):
                 raise TypeError(
-                    "default_config_files[%d] must be a string or os.PathLike "
-                    "path, or a callable that returns an open file-like "
-                    "object. Got: %r" % (i, entry)
+                    "default_config_files[%d] must be a string, bytes, or "
+                    "os.PathLike path, or a callable that returns an open "
+                    "file-like object. Got: %r" % (i, entry)
                 )
 
         if not callable(config_file_open_func):
