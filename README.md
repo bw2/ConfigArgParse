@@ -16,8 +16,8 @@ Python's command line parsing modules such as argparse have very limited
 support for config files and environment variables, so this module
 extends argparse to add these features.
 
-**API docs:** https://bw2.github.io/ConfigArgParse/  
-  
+**API docs:** https://bw2.github.io/ConfigArgParse/
+
 **PyPI:** http://pypi.python.org/pypi/ConfigArgParse
 
 ## Install
@@ -158,14 +158,14 @@ Only command line args that have a long version (eg. one that starts with '--')
 can be set in a config file. For example, "--color" can be set by putting
 "color=green" in a config file. The config file syntax depends on the constructor
 arg: `config_file_parser_class` which can be set to one of the provided
-classes: 
+classes:
 - `DefaultConfigFileParser`
 - `YAMLConfigFileParser`
 - `ConfigparserConfigFileParser`
 - `IniConfigParser`
 - `TomlConfigParser`
 - `CompositeConfigParser`
-  
+
 or to your own subclass of the `ConfigFileParser` abstract class.
 
 #### *DefaultConfigFileParser* - the full range of valid syntax is:
@@ -332,6 +332,8 @@ parser = configargparse.ArgParser(
 
 [TOML](https://github.com/toml-lang/toml/blob/main/toml.md) parser. This config parser can be used to integrate with `pyproject.toml` files.
 
+Requires installation of [toml](https://pypi.org/project/toml/) for Python versions below 3.11.
+
 Example:
 
 ```toml
@@ -387,7 +389,7 @@ parser = configargparse.ArgParser(
 ...
 ```
 
-Note that it's required to put the TOML parser first because the INI syntax basically would accept anything whereas TOML.
+Note that it's required to put the TOML parser first because the INI syntax basically would accept anything whereas TOML is a bit more strict.
 
 ## ArgParser Singletons
 

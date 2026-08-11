@@ -46,8 +46,7 @@ def launch_http_server(directory):
             logging.debug("All network port. ")
     except Exception as e:
         logging.error(
-            "ERROR: while starting an HTTP server to serve "
-            "the coverage report: %s" % e
+            "ERROR: while starting an HTTP server to serve the coverage report: %s" % e
         )
 
 
@@ -82,7 +81,7 @@ install_requires = []
 tests_require = [
     "black",
     "mock",
-    "toml",
+    "toml; python_version < '3.11'",
     "PyYAML",
     "pytest",
     "pytest-cov",
@@ -126,6 +125,7 @@ setup(
     install_requires=install_requires,
     tests_require=tests_require,
     extras_require={
+        "toml": ["toml; python_version < '3.11'"],
         "yaml": ["PyYAML"],
         "test": tests_require,
     },
