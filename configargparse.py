@@ -17,6 +17,7 @@ import sys
 import types
 from collections import OrderedDict
 import textwrap
+import warnings
 from io import StringIO
 
 ACTION_TYPES_THAT_DONT_NEED_A_VALUE = [
@@ -530,21 +531,21 @@ class TomlConfigParser(ConfigFileParser):
         except ImportError:
             try:
                 import toml
-            except ImportError:
+            except ImportError as e:
                 raise ConfigFileParserMissingDependency(
                     "Could not import toml or tomllib. "
                     "toml can be installed by running 'pip install toml'"
-                )
+                ) from e
 
-            # tomllib.load() requires binary mode, so use loads() for stream compatibility
-            try:
-                content = stream.read()
-                # If content is bytes, decode it; if string, use as-is
-                if isinstance(content, bytes):
-                    content = content.decode("utf-8")
-                config = toml.loads(content)
-            except Exception as e:
-                raise ConfigFileParserException("Couldn't parse TOML file: %s" % e)
+        # tomllib.load() requires binary mode, so use loads() for stream compatibility
+        try:
+            content = stream.read()
+            # If content is bytes, decode it; if string, use as-is
+            if isinstance(content, bytes):
+                content = content.decode("utf-8")
+            config = toml.loads(content)
+        except Exception as e:
+            raise ConfigFileParserException("Couldn't parse TOML file: %s" % e)
 
         # convert to dict and filter based on section names
         result = OrderedDict()
@@ -581,7 +582,7 @@ class TomlConfigParser(ConfigFileParser):
         try:
             import toml
         except ImportError:
-            raise ConfigFileParserException(
+            raise ConfigFileParserMissingDependency(
                 "The 'toml' package is required for TOML serialization. "
                 "Install it with: pip install toml"
             )
@@ -770,6 +771,19 @@ class CompositeConfigParser(ConfigFileParser):
         super().__init__()
         self.parsers: list[ConfigFileParser] = [p() for p in config_parser_types]
 
+        seen_ini = False
+        for parser in self.parsers:
+            if not seen_ini and isinstance(parser, IniConfigParser):
+                seen_ini = True
+                continue
+            if seen_ini and isinstance(parser, TomlConfigParser):
+                warnings.warn(
+                    "IniConfigParser was found before TomlConfigParser in parsers for "
+                    "CompositeConfigParser. This might lead to a TOML file being "
+                    "parsed as an INI file. Reorder the parsers.",
+                    category=SyntaxWarning,
+                )
+
     def __call__(self):
         return self
 
@@ -777,10 +791,12 @@ class CompositeConfigParser(ConfigFileParser):
         errors = []
         for i, p in enumerate(self.parsers):
             try:
+                print(f"USING PARSER {p.__class__.__name__}")
                 return p.parse(stream)  # type: ignore[no-any-return]
             except ConfigFileParserMissingDependency as e:
                 msg = f"Cannot use parser {p.__class__.__name__} without optional dependency."
-                raise ConfigFileParserMissingDependency(msg) from e
+                print(msg)
+                raise
             except Exception as e:
                 errors.append(e)
                 # Try to seek back to beginning for next parser

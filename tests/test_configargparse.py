@@ -10,7 +10,9 @@ import tempfile
 import types
 import unittest
 from unittest import mock
+import warnings
 import textwrap
+import pytest
 
 from io import BytesIO, StringIO
 
@@ -2092,6 +2094,18 @@ class TestTomlConfigParser(unittest.TestCase):
         parser = configargparse.TomlConfigParser(["tool.section"])
         self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": ["1", "2", "3"]})
 
+    def test_read_without_toml_packages(self):
+        f = self.write_toml_file("""
+            [tool.section]
+            key1 = "toml1"
+            key2 = [1, 2, 3]
+            """)
+        parser = configargparse.TomlConfigParser(["tool.section"])
+
+        with mock.patch.dict(sys.modules, {"toml": None, "tomllib": None}):
+            with self.assertRaises(configargparse.ConfigFileParserMissingDependency):
+                parser.parse(f)
+
     def test_binary_read_works(self):
         # Binary mode now works with tomllib (Python 3.11+)
         f = self.write_toml_file(
@@ -2143,7 +2157,7 @@ class TestTomlConfigParser(unittest.TestCase):
         import unittest.mock as mock
 
         with mock.patch.dict(sys.modules, {"toml": None}):
-            with self.assertRaises(configargparse.ConfigFileParserException):
+            with self.assertRaises(configargparse.ConfigFileParserMissingDependency):
                 parser.serialize(items)
 
 
@@ -2187,9 +2201,9 @@ class TestCompositeConfigParser(unittest.TestCase):
             default_config_files=["config.yaml", "config.toml", "config.ini"],
             config_file_parser_class=configargparse.CompositeConfigParser(
                 [
-                    configargparse.IniConfigParser(["section"], False),
                     configargparse.TomlConfigParser(["section"]),
                     configargparse.YAMLConfigFileParser,
+                    configargparse.IniConfigParser(["section"], False),
                 ]
             ),
         )
@@ -2281,6 +2295,23 @@ class TestCompositeConfigParser(unittest.TestCase):
         self.write_toml_file_extra()
         with self.assertRaises(SystemExit):
             self.parser.parse_args([])
+
+    def test_composite_fails_if_missing_dependency(self):
+        self.write_yaml_file()
+        self.write_ini_file()
+
+        with mock.patch.dict(sys.modules, {"toml": None, "tomllib": None}):
+            with self.assertRaises(configargparse.ConfigFileParserMissingDependency):
+                self.parser.parse_args([])
+
+    def test_composite_warns_if_wrong_order(self):
+        with self.assertWarns(SyntaxWarning):
+            composite = configargparse.CompositeConfigParser(
+                [
+                    configargparse.IniConfigParser(["section"], False),
+                    configargparse.TomlConfigParser(["section"]),
+                ]
+            )()
 
     def test_composite_serialize_delegates_to_first_parser(self):
         composite = configargparse.CompositeConfigParser(
