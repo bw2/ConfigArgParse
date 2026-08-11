@@ -134,6 +134,10 @@ class ConfigFileParserException(Exception):
     """Raised when config file parsing failed."""
 
 
+class ConfigFileParserMissingDependency(Exception):
+    """Raised when an optional dependency is missing."""
+
+
 class DefaultConfigFileParser(ConfigFileParser):
     """
     Based on a simplified subset of INI and YAML formats. Here is the
@@ -316,7 +320,7 @@ class YAMLConfigFileParser(ConfigFileParser):
         try:
             import yaml
         except ImportError:
-            raise ConfigFileParserException(
+            raise ConfigFileParserMissingDependency(
                 "Could not import yaml. "
                 "It can be installed by running 'pip install PyYAML'"
             )
@@ -373,7 +377,7 @@ class YAMLConfigFileParser(ConfigFileParser):
 Provides `configargparse.ConfigFileParser` classes to parse ``TOML`` and ``INI`` files with **mandatory** support for sections.
 Useful to integrate configuration into project files like ``pyproject.toml`` or ``setup.cfg``.
 
-`TomlConfigParser` usage: 
+`TomlConfigParser` usage:
 
 >>> TomlParser = TomlConfigParser(['tool.my_super_tool']) # Simple TOML parser.
 >>> parser = ArgumentParser(..., default_config_files=['./pyproject.toml'], config_file_parser_class=TomlParser)
@@ -522,7 +526,15 @@ class TomlConfigParser(ConfigFileParser):
         """Parses the keys and values from a TOML config file."""
         # Use tomllib (Python 3.11+) if available, otherwise fall back to toml package
         try:
-            import tomllib
+            import tomllib as toml
+        except ImportError:
+            try:
+                import toml
+            except ImportError:
+                raise ConfigFileParserMissingDependency(
+                    "Could not import toml or tomllib. "
+                    "toml can be installed by running 'pip install toml'"
+                )
 
             # tomllib.load() requires binary mode, so use loads() for stream compatibility
             try:
@@ -530,15 +542,7 @@ class TomlConfigParser(ConfigFileParser):
                 # If content is bytes, decode it; if string, use as-is
                 if isinstance(content, bytes):
                     content = content.decode("utf-8")
-                config = tomllib.loads(content)
-            except Exception as e:
-                raise ConfigFileParserException("Couldn't parse TOML file: %s" % e)
-        except ImportError:
-            # Fall back to toml package (supports text mode)
-            import toml
-
-            try:
-                config = toml.load(stream)
+                config = toml.loads(content)
             except Exception as e:
                 raise ConfigFileParserException("Couldn't parse TOML file: %s" % e)
 
@@ -764,7 +768,7 @@ class CompositeConfigParser(ConfigFileParser):
 
     def __init__(self, config_parser_types):
         super().__init__()
-        self.parsers = [p() for p in config_parser_types]
+        self.parsers: list[ConfigFileParser] = [p() for p in config_parser_types]
 
     def __call__(self):
         return self
@@ -774,6 +778,9 @@ class CompositeConfigParser(ConfigFileParser):
         for i, p in enumerate(self.parsers):
             try:
                 return p.parse(stream)  # type: ignore[no-any-return]
+            except ConfigFileParserMissingDependency as e:
+                msg = f"Cannot use parser {p.__class__.__name__} without optional dependency."
+                raise ConfigFileParserMissingDependency(msg) from e
             except Exception as e:
                 errors.append(e)
                 # Try to seek back to beginning for next parser
@@ -804,7 +811,7 @@ class CompositeConfigParser(ConfigFileParser):
 
         msg = "Uses multiple config parser settings (in order): \n"
         for i, parser in enumerate(self.parsers):
-            msg += f"[{i+1}] {guess_format_name(parser.__class__.__name__)}: {parser.get_syntax_description()} \n"
+            msg += f"[{i + 1}] {guess_format_name(parser.__class__.__name__)}: {parser.get_syntax_description()} \n"
         return msg
 
     def serialize(self, items):
@@ -1447,9 +1454,9 @@ class ArgumentParser(argparse.ArgumentParser):
         if action is not None and isinstance(
             action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE
         ):
-            assert isinstance(
-                value, str
-            ), "config parser should convert anything that is not a list to string."
+            assert isinstance(value, str), (
+                "config parser should convert anything that is not a list to string."
+            )
             if value.lower() in ("true", "yes", "on", "1"):
                 if not is_boolean_optional_action(action):
                     args.append(command_line_key)
@@ -1725,7 +1732,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 added_config_file_help = True
 
                 msg += (
-                    "Args that start with '%s' can also be set in " "a config file"
+                    "Args that start with '%s' can also be set in a config file"
                 ) % cc
                 config_arg_string = " or ".join(
                     a.option_strings[0] for a in config_path_actions if a.option_strings
@@ -1832,15 +1839,13 @@ def add_argument(self, *args, **kwargs):
     if action.is_positional_arg and env_var:
         raise ValueError("env_var can't be set for a positional arg.")
     if action.is_config_file_arg and not isinstance(action, argparse._StoreAction):
-        raise ValueError("arg with is_config_file_arg=True must have " "action='store'")
+        raise ValueError("arg with is_config_file_arg=True must have action='store'")
     if action.is_write_out_config_file_arg:
         error_prefix = "arg with is_write_out_config_file_arg=True "
         if not isinstance(action, argparse._StoreAction):
             raise ValueError(error_prefix + "must have action='store'")
         if is_config_file_arg:
-            raise ValueError(
-                error_prefix + "can't also have " "is_config_file_arg=True"
-            )
+            raise ValueError(error_prefix + "can't also have is_config_file_arg=True")
 
     return action
 

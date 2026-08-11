@@ -581,7 +581,7 @@ class TestBasicUseCases(TestCase):
         )
         self.assertRaisesRegex(
             ValueError,
-            "arg with " "is_write_out_config_file_arg=True must have action='store'",
+            "arg with is_write_out_config_file_arg=True must have action='store'",
             self.add_arg,
             "-y",
             "--Y",
@@ -1029,7 +1029,7 @@ class TestMisc(TestCase):
         self.assertEqual(p.prog, "prog")
         self.assertRaisesRegex(
             ValueError,
-            "kwargs besides 'name' can only be " "passed in the first time",
+            "kwargs besides 'name' can only be passed in the first time",
             configargparse.getArgumentParser,
             name,
             prog="prog",
@@ -1106,7 +1106,8 @@ class TestMisc(TestCase):
             r"%s:\n"
             r"  -h, --help\s+ show this help message and exit\n"
             rf"  -c{short_c}, --config CONFIG_FILE\s+ my config file\n"
-            r"  --genome GENOME\s+ Path to genome file\n\n" % OPTIONAL_ARGS_STRING
+            r"  --genome GENOME\s+ Path to genome file\n\n"
+            % OPTIONAL_ARGS_STRING
             + 5 * r"(.+\s*)",
         )
 
@@ -1188,7 +1189,8 @@ class TestMisc(TestCase):
             r"Config file syntax allows: key=value, flag=true, stuff=\[a,b,c\] "
             r"\(for details, see syntax at https://goo.gl/R74nmi\). "
             r"In general, command-line values override config file values "
-            r"which override defaults. ".replace(" ", r"\s*") % OPTIONAL_ARGS_STRING,
+            r"which override defaults. ".replace(" ", r"\s*")
+            % OPTIONAL_ARGS_STRING,
         )
 
     def test_FormatHelpProg(self):
@@ -1969,7 +1971,7 @@ class TestConfigFileParsers(TestCase):
             import yaml
         except:
             logging.warning(
-                "WARNING: PyYAML not installed. " "Couldn't test YAMLConfigFileParser"
+                "WARNING: PyYAML not installed. Couldn't test YAMLConfigFileParser"
             )
             return
 
@@ -1989,7 +1991,7 @@ class TestConfigFileParsers(TestCase):
             import yaml
         except:
             logging.warning(
-                "WARNING: PyYAML not installed. " "Couldn't test YAMLConfigFileParser"
+                "WARNING: PyYAML not installed. Couldn't test YAMLConfigFileParser"
             )
             return
 
@@ -2019,7 +2021,7 @@ class TestConfigFileParsers(TestCase):
             import yaml
         except:
             raise AssertionError(
-                "WARNING: PyYAML not installed. " "Couldn't test YAMLConfigFileParser"
+                "WARNING: PyYAML not installed. Couldn't test YAMLConfigFileParser"
             )
             return
 
@@ -2090,10 +2092,6 @@ class TestTomlConfigParser(unittest.TestCase):
         parser = configargparse.TomlConfigParser(["tool.section"])
         self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": ["1", "2", "3"]})
 
-    @unittest.skipIf(
-        sys.version_info < (3, 11),
-        "Binary mode only supported with tomllib (Python 3.11+)",
-    )
     def test_binary_read_works(self):
         # Binary mode now works with tomllib (Python 3.11+)
         f = self.write_toml_file(
@@ -2104,20 +2102,6 @@ class TestTomlConfigParser(unittest.TestCase):
         parser = configargparse.TomlConfigParser(["tool.section"])
         # Should successfully parse binary stream
         self.assertEqual(parser.parse(f), {"key1": "toml1"})
-
-    @unittest.skipIf(
-        sys.version_info >= (3, 11),
-        "On Python 3.11+, tomllib handles binary; this tests the toml package fallback",
-    )
-    def test_binary_read_fails_without_tomllib(self):
-        # Without tomllib (Python < 3.11), binary streams should fail
-        f = self.write_toml_file(
-            b"""[section]\nkey1 = "toml1"\n""",
-            obj=BytesIO,
-        )
-        parser = configargparse.TomlConfigParser(["section"])
-        with self.assertRaises(configargparse.ConfigFileParserException):
-            parser.parse(f)
 
     def test_serialize_with_section(self):
         parser = configargparse.TomlConfigParser(["section"])
