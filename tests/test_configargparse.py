@@ -430,6 +430,32 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.arg, ["Shell", "someword", "anotherword"])
         self.assertEqual(ns.a, "positional_value")
 
+    def testCustomActionWithNargsAndConfigVarList(self):
+        # https://github.com/bw2/ConfigArgParse/issues/354
+        class CustomAction(configargparse.Action):
+            def __call__(self, parser, namespace, values, option_string=None):
+                setattr(namespace, self.dest, values)
+
+        self.initParser()
+        self.add_arg("-x", "--arg", nargs="+", action=CustomAction)
+
+        ns = self.parse("", config_file_contents="""arg = [foo, bar]""")
+        self.assertEqual(ns.arg, ["foo", "bar"])
+
+    def testCustomActionWithoutNargsAndConfigVarList(self):
+        class CustomAction(configargparse.Action):
+            def __call__(self, parser, namespace, values, option_string=None):
+                setattr(namespace, self.dest, values)
+
+        self.initParser()
+        self.add_arg("-x", "--arg", action=CustomAction)
+
+        self.assertParseArgsRaises(
+            "arg can't be set to a list",
+            args="",
+            config_file_contents="""arg = [foo, bar]""",
+        )
+
     def testMutuallyExclusiveArgs(self):
         config_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
 
