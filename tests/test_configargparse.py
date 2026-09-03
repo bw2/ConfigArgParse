@@ -2,6 +2,7 @@ import argparse
 from collections import OrderedDict
 import configargparse
 from contextlib import contextmanager
+import functools
 import inspect
 import logging
 import os
@@ -1342,6 +1343,1216 @@ class TestMisc(TestCase):
             args=command_line_args + " --write-config /",
         )
         cfg_f.close()
+
+    def testWriteOutConfigFileArg_CantBeSetFromAConfigFile(self):
+        """A config file must not be able to trigger writing out a config file.
+
+        Doing so overwrites the given path and then exits, so a config file that
+        an attacker controls could otherwise destroy an arbitrary file without
+        the user passing any command line args at all.
+        """
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
+        self.add_arg("--name", default="world")
+
+        self.assertParseArgsRaises(
+            "write-config can only be set on the command line",
+            args=[],
+            config_file_contents="name = attacker\nwrite-config = %s" % cfg_f.name,
+        )
+        self.assertFalse(self.parser._exit_method_called)
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_CantBeSetFromAConfigFileByAbbreviation(self):
+        """An abbreviated config file key reaches the same arg, so it's rejected too.
+
+        argparse resolves an unambiguous abbreviation of a long option, so
+        rejecting only the exact key would leave the same file overwrite open.
+        """
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
+        self.add_arg("--name", default="world")
+
+        self.assertParseArgsRaises(
+            "write-conf can only be set on the command line",
+            args=[],
+            config_file_contents="name = attacker\nwrite-conf = %s" % cfg_f.name,
+        )
+        self.assertFalse(self.parser._exit_method_called)
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_ConfigFileCantRedirectTheUsersOwnPath(self):
+        """A config file must not be able to change where the user asked to write.
+
+        Config file args are spliced in after any positional args, so a config
+        file entry could otherwise win the last-one-wins store and send the
+        output to a path of its choosing instead of the one the user gave.
+        """
+        users_path = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        users_path.close()
+        os.remove(users_path.name)
+
+        victims_path = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        victims_path.write("original contents")
+        victims_path.close()
+
+        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
+        self.add_arg("--name", default="world")
+        self.add_arg("rest", nargs="*")
+
+        self.assertParseArgsRaises(
+            "write-config can only be set on the command line",
+            args=["-w", users_path.name, "--", "extra"],
+            config_file_contents="write-config = %s" % victims_path.name,
+        )
+
+        with open(victims_path.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        self.assertFalse(os.path.exists(users_path.name))
+        os.remove(victims_path.name)
+
+    def testWriteOutConfigFileArg_UnrelatedArgsDontMakeItReachable(self):
+        """An unrelated arg that merely looks similar must not enable the write.
+
+        The config file is the only thing naming the write-out arg here, so it
+        must be rejected no matter what else the command line contains.
+        """
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
+        self.add_arg("-week", action="store_true")
+        self.add_arg("--name", default="world")
+
+        self.assertParseArgsRaises(
+            "write-config can only be set on the command line",
+            args=["-week", "--name", "bob"],
+            config_file_contents="write-config = %s" % cfg_f.name,
+        )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_CantBeSetFromAConfigFileValue(self):
+        """A config file value must not be able to set it either.
+
+        A list value becomes several command line args, so a value can name an
+        arg just as a key can.
+        """
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
+        self.add_arg("--files", nargs="*")
+
+        self.assertParseArgsRaises(
+            "write-config can only be set on the command line",
+            args=[],
+            config_file_contents="files = [--write-config, %s]" % cfg_f.name,
+        )
+        self.assertFalse(self.parser._exit_method_called)
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_CantBeSetFromAnEnvVarValue(self):
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
+        self.add_arg("--files", nargs="*", env_var="FILES")
+
+        self.assertParseArgsRaises(
+            "write-config can only be set on the command line",
+            args=[],
+            env_vars={"FILES": '["--write-config", "%s"]' % cfg_f.name},
+        )
+        self.assertFalse(self.parser._exit_method_called)
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_CantBeSetFromAConfigFileValueInAnyForm(self):
+        """Every form argparse accepts must be rejected, not just the plain one.
+
+        A list value is passed through as command line args verbatim, so it can
+        carry the option with its value attached, or bundled behind another
+        short option.
+        """
+        for value_form in ("-w%s", "-vw%s", "--write-config=%s", "--write-conf"):
+            cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+            cfg_f.write("original contents")
+            cfg_f.close()
+
+            self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
+            self.add_arg("-v", action="store_true")
+            self.add_arg("--files", nargs="+")
+
+            self.assertParseArgsRaises(
+                "can only be set on the command line",
+                args=[],
+                config_file_contents="files = [a, %s]"
+                % (value_form.replace("%s", cfg_f.name)),
+            )
+
+            with open(cfg_f.name) as f:
+                self.assertEqual(f.read(), "original contents", msg=value_form)
+            os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_RejectionCoversEveryFormArgparseAccepts(self):
+        """Whatever argparse binds to the write-out arg has to be rejected.
+
+        The rejection has to recognize an arg the same way argparse does, so
+        this asks argparse itself: for each arg string, if a plain
+        argparse.ArgumentParser with the same options sets the write-out dest
+        from it, configargparse must refuse to take that arg from a config file.
+        """
+        arg_strings = [
+            "-w",
+            "-wPATH",
+            "-w=PATH",
+            "-vw",
+            "-vwPATH",
+            "-xvw",
+            "-xvwPATH",
+            "--write-config",
+            "--write-config=PATH",
+            "--write-conf",
+            "--write",
+            "--writ",
+            "--name",
+            "--nam",
+            "-v",
+            "-x",
+            "-n",
+            "-nPATH",
+            "-nw",
+            "-5",
+            "--",
+            "--=PATH",
+            "--=",
+            "-=PATH",
+            "-",
+            "",
+            "PATH",
+            "-write-config",
+            "-write-config=PATH",
+            "-write-conf",
+            "-wr",
+            "-wr=PATH",
+        ]
+
+        for allow_abbrev in (True, False):
+            for write_out_option_strings in (
+                ["-w", "--write-config"],
+                ["--write-config"],
+                ["-w"],
+                ["-write-config"],
+            ):
+                parser = configargparse.ArgumentParser(
+                    add_help=False,
+                    allow_abbrev=allow_abbrev,
+                    args_for_writing_out_config_file=write_out_option_strings,
+                )
+                reference = argparse.ArgumentParser(
+                    add_help=False, allow_abbrev=allow_abbrev
+                )
+                reference.add_argument(
+                    *write_out_option_strings, dest="write_out_config_file_to_this_path"
+                )
+                for p in (parser, reference):
+                    p.add_argument("-v", action="store_true")
+                    p.add_argument("-x", action="store_true")
+                    p.add_argument("--write", action="store_true")
+                    p.add_argument("--name")
+                    p.add_argument("-n", dest="nn")
+
+                for arg_string in arg_strings:
+                    argparse_sets_it = False
+                    for trailing in ([], ["PATH2"]):
+                        try:
+                            with captured_output():
+                                ns, _ = reference.parse_known_args(
+                                    [arg_string] + trailing
+                                )
+                        except SystemExit:
+                            continue
+                        if ns.write_out_config_file_to_this_path is not None:
+                            argparse_sets_it = True
+
+                    if argparse_sets_it:
+                        with self.subTest(
+                            arg_string=arg_string,
+                            allow_abbrev=allow_abbrev,
+                            write_out=write_out_option_strings,
+                        ):
+                            self.assertTrue(
+                                parser._names_a_write_out_config_file_arg(
+                                    arg_string, [parser]
+                                )
+                            )
+
+    def testWriteOutConfigFileArg_ArgSharingItsPrefixStillWorks(self):
+        # argparse resolves an exact match straight to that arg, so a config key
+        # naming a real arg can't reach the write-out one and must be accepted
+        # even when the write-out arg's name starts with it
+        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
+        self.add_arg("--write", action="store_true")
+        self.add_arg("--name", default="world")
+
+        ns = self.parse(args=[], config_file_contents="write = true\nname = bob")
+        self.assertTrue(ns.write)
+        self.assertEqual(ns.name, "bob")
+        self.assertFalse(self.parser._exit_method_called)
+
+    def testWriteOutConfigFileArg_UnknownConfigKeyStillReachesExtras(self):
+        # a key that only looks like an abbreviation of the write-out arg when
+        # abbreviations are enabled must stay an ordinary unknown key when they
+        # aren't, rather than becoming an error
+        self.initParser(
+            allow_abbrev=False,
+            args_for_writing_out_config_file=["-w", "--write-out-config-file"],
+        )
+        self.add_arg("--name", default="world")
+
+        ns, extras = self.parse_known(args=[], config_file_contents="write = something")
+        self.assertEqual(ns.name, "world")
+        self.assertEqual(extras, ["--write=something"])
+        self.assertFalse(self.parser._exit_method_called)
+
+    def testWriteOutConfigFileArg_ConfigFileKeysThatArentStringsStillWork(self):
+        # YAML maps 'on' to a bool, and ignore_unknown_config_file_keys=True is
+        # there to tolerate exactly that kind of foreign key
+        try:
+            import yaml  # noqa: F401
+        except ImportError:
+            self.skipTest("PyYAML not installed")
+
+        self.initParser(
+            args_for_writing_out_config_file=["-w", "--write-config"],
+            config_file_parser_class=configargparse.YAMLConfigFileParser,
+            ignore_unknown_config_file_keys=True,
+        )
+        self.add_arg("--name")
+
+        ns = self.parse(args=[], config_file_contents="name: bob\non: something\n")
+        self.assertEqual(ns.name, "bob")
+        self.assertFalse(self.parser._exit_method_called)
+
+    def testWriteOutConfigFileArg_EmptyConfigValueIsntAnArgsFile(self):
+        # an empty value isn't a reference to a file of args, even though every
+        # string starts with one
+        self.initParser(
+            args_for_writing_out_config_file=["-w", "--write-config"],
+            fromfile_prefix_chars="@",
+        )
+        self.add_arg("--files", nargs="+")
+
+        ns = self.parse(args=[], config_file_contents='files = ["a", ""]')
+        self.assertEqual(ns.files, ["a", ""])
+        self.assertFalse(self.parser._exit_method_called)
+
+    def testWriteOutConfigFileArg_ConfigValuesThatLookLikeOptionsStillWork(self):
+        # only a value that actually names the write-out arg is rejected: a
+        # leading '-' on its own, or a negative number, still parses
+        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
+        self.add_arg("--dash-value")
+        self.add_arg("--num", type=int)
+
+        ns = self.parse(args=[], config_file_contents="dash-value = -\nnum = -5")
+        self.assertEqual(ns.dash_value, "-")
+        self.assertEqual(ns.num, -5)
+        self.assertFalse(self.parser._exit_method_called)
+
+    def testWriteOutConfigFileArg_CantBeSetFromAConfigFileByPrefixAlone(self):
+        # '--' on its own is argparse's end-of-options separator, but '--=path'
+        # is an abbreviation that matches every long option
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser(
+            add_help=False, args_for_writing_out_config_file=["-w", "--write-config"]
+        )
+        self.add_arg("-n")
+
+        self.assertParseArgsRaises(
+            "can only be set on the command line",
+            args=[],
+            config_file_contents="- = %s" % cfg_f.name,
+        )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_ConfigFileCantReadArgsFromAFile(self):
+        """A config file must not be able to use @file expansion.
+
+        argparse expands an @file arg into the args that file contains, and it
+        does so after the config file's args have been checked, so the file's
+        contents could name any arg at all.
+        """
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+        args_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        args_f.write("--write-config\n%s\n" % cfg_f.name)
+        args_f.close()
+
+        self.initParser(
+            args_for_writing_out_config_file=["-w", "--write-config"],
+            fromfile_prefix_chars="@",
+        )
+        self.add_arg("--files", nargs="+")
+
+        self.assertParseArgsRaises(
+            "would read command line args from a file",
+            args=[],
+            config_file_contents="files = [a, @%s]" % args_f.name,
+        )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+
+        # and the same by way of an environment variable
+        self.initParser(
+            args_for_writing_out_config_file=["-w", "--write-config"],
+            fromfile_prefix_chars="@",
+        )
+        self.add_arg("--files", nargs="+", env_var="FILES")
+
+        self.assertParseArgsRaises(
+            "would read command line args from a file",
+            args=[],
+            env_vars={"FILES": '["a", "@%s"]' % args_f.name},
+        )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+        os.remove(args_f.name)
+
+    def testWriteOutConfigFileArg_AnArgSharingItsDestCantChooseThePath(self):
+        """Only the write-out arg itself decides where the config file goes.
+
+        Another arg can share its dest and put a value of its own in the
+        namespace: on the same parser, through parents=, or from a subparser,
+        which argparse parses into the same namespace. None of them may choose
+        the path, whether or not the command line asks for a config file.
+        """
+
+        def sharing_the_dest_on_one_parser():
+            self.initParser(args_for_writing_out_config_file=["-w"])
+            self.add_arg("--out", dest="write_out_config_file_to_this_path")
+            self.add_arg("rest", nargs="*")
+            return "out", ["--", "extra"]
+
+        def sharing_the_dest_through_parents():
+            base = configargparse.ArgParser(add_help=False)
+            base.add_argument("-o", "--output")
+            write_out = configargparse.ArgParser(add_help=False)
+            write_out.add_argument(
+                "-w", dest="output", is_write_out_config_file_arg=True
+            )
+            self.initParser(parents=[base, write_out])
+            self.add_arg("rest", nargs="*")
+            return "output", ["--", "extra"]
+
+        victims_path = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        victims_path.write("original contents")
+        victims_path.close()
+
+        for build_parser in (
+            sharing_the_dest_on_one_parser,
+            sharing_the_dest_through_parents,
+        ):
+            # the rest of the command line puts the config file's args after the
+            # write-out arg, which is where a value from one could otherwise win
+            # the last-one-wins store
+            config_key, rest_of_command_line = build_parser()
+            config_file_contents = "%s = %s" % (config_key, victims_path.name)
+
+            # with nothing on the command line asking for it, nothing is written
+            self.parse(
+                args=rest_of_command_line, config_file_contents=config_file_contents
+            )
+            self.assertFalse(self.parser._exit_method_called, msg=config_key)
+            with open(victims_path.name) as f:
+                self.assertEqual(f.read(), "original contents", msg=config_key)
+
+            # and when it is asked for, it goes where the command line said
+            users_path = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+            users_path.close()
+            os.remove(users_path.name)
+
+            build_parser()
+            self.parse(
+                args=["-w", users_path.name] + rest_of_command_line,
+                config_file_contents=config_file_contents,
+            )
+            self.assertTrue(self.parser._exit_method_called, msg=config_key)
+
+            with open(victims_path.name) as f:
+                self.assertEqual(f.read(), "original contents", msg=config_key)
+            self.assertTrue(os.path.exists(users_path.name), msg=config_key)
+            os.remove(users_path.name)
+
+        os.remove(victims_path.name)
+
+    def testWriteOutConfigFileArg_ASubparserArgSharingItsDestCantChooseThePath(self):
+        """A subcommand parses into the same namespace, and loads its own env vars.
+
+        So an arg on a subcommand can share a write-out arg's dest and be set
+        from the environment without the parent ever seeing it. It still must
+        not decide where the config file gets written.
+        """
+        victims_path = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        victims_path.write("original contents")
+        victims_path.close()
+
+        users_path = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        users_path.close()
+        os.remove(users_path.name)
+
+        self.initParser(args_for_writing_out_config_file=["-w"])
+        self.add_arg("--name", default="world")
+        subparsers = self.parser.add_subparsers(dest="cmd")
+        subparsers.add_parser("go").add_argument(
+            "--out",
+            dest="write_out_config_file_to_this_path",
+            env_var="WRITE_OUT_CONFIG_TO",
+        )
+
+        with mock.patch.dict(os.environ, {"WRITE_OUT_CONFIG_TO": victims_path.name}):
+            self.parse(args=["-w", users_path.name, "go"])
+        self.assertTrue(self.parser._exit_method_called)
+
+        with open(victims_path.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        self.assertTrue(os.path.exists(users_path.name))
+
+        os.remove(users_path.name)
+        os.remove(victims_path.name)
+
+    def testWriteOutConfigFileArg_ConfigFileCantReadArgsFromASubparsersFile(self):
+        # the subparser is the one with fromfile_prefix_chars here, and it is
+        # the one that would expand the arg into whatever the file holds
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+        args_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        args_f.write("-w\n%s\n" % cfg_f.name)
+        args_f.close()
+
+        self.initParser()
+        self.add_arg("--extra", nargs="*")
+        subparsers = self.parser.add_subparsers(dest="cmd")
+        subparsers.add_parser(
+            "go", fromfile_prefix_chars="@", args_for_writing_out_config_file=["-w"]
+        )
+
+        self.assertParseArgsRaises(
+            "would read command line args from a file",
+            args=["go", "--"],
+            config_file_contents="extra = [@%s]" % args_f.name,
+        )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+        os.remove(args_f.name)
+
+    def testWriteOutConfigFileArg_CantBeSetFromAConfigFileOnASubparser(self):
+        """A subcommand's write-out arg is reachable from the parent's config file.
+
+        The parent hands the args it has put together to the subparser, which
+        treats them as its own command line, so the parent has to check them
+        against the subcommand's write-out args too.
+        """
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser()
+        self.add_arg("--extra", nargs="*")
+        subparsers = self.parser.add_subparsers(dest="cmd")
+        subparsers.add_parser(
+            "go", args_for_writing_out_config_file=["-w", "--write-config"]
+        )
+
+        self.assertParseArgsRaises(
+            "can only be set on the command line",
+            args=["go", "--"],
+            config_file_contents="extra = [-w, %s]" % cfg_f.name,
+        )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_OnASubparserStillWorks(self):
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.close()
+
+        self.initParser()
+        subparsers = self.parser.add_subparsers(dest="cmd")
+        sub = subparsers.add_parser(
+            "go", args_for_writing_out_config_file=["-w", "--write-config"]
+        )
+        sub.add_argument("--name")
+
+        # the subparser is a parser of its own, so it's the one that exits here
+        with captured_output():
+            self.assertRaises(
+                SystemExit, self.parse, ["go", "-w", cfg_f.name, "--name", "bob"]
+            )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "name = bob\n")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_OnASubcommandRestrictsTheWholeParser(self):
+        """A write-out arg on any subcommand rules that name out everywhere.
+
+        Which subcommand runs can't be told from the args: an option's value
+        reads exactly like a subcommand name, and the args built from a config
+        file can name a subcommand themselves. So every subcommand is taken
+        into account, whatever the command line looks like. The cost is an
+        error on a key named after a write-out arg on a subcommand that wasn't
+        going to run, which is the safe direction to be wrong in.
+        """
+        for args in ([], ["deploy"]):
+            self.initParser()
+            self.add_arg("--output", env_var="APP_OUTPUT")
+            subparsers = self.parser.add_subparsers(dest="cmd")
+            subparsers.add_parser(
+                "deploy", args_for_writing_out_config_file=["--output-config"]
+            )
+
+            # '--output' is an abbreviation of the subcommand's '--output-config'
+            self.assertParseArgsRaises(
+                "can only be set on the command line",
+                args=args,
+                config_file_contents="output = /tmp/report.txt",
+            )
+            self.assertParseArgsRaises(
+                "can only be set on the command line",
+                args=args,
+                env_vars={"APP_OUTPUT": "/tmp/report.txt"},
+            )
+
+        # a name that doesn't reach it is unaffected
+        self.initParser()
+        self.add_arg("--other")
+        subparsers = self.parser.add_subparsers(dest="cmd")
+        subparsers.add_parser(
+            "deploy", args_for_writing_out_config_file=["--output-config"]
+        )
+        ns = self.parse(args=[], config_file_contents="other = /tmp/report.txt")
+        self.assertEqual(ns.other, "/tmp/report.txt")
+        self.assertFalse(self.parser._exit_method_called)
+
+    def testWriteOutConfigFileArg_ArgsFileCharsOnlyMatterWhereTheyCanReachOne(self):
+        """An args file only feeds the parser that expands it, and its own subcommands.
+
+        So a value naming one is refused when a write-out arg sits at or below
+        the parser whose args-file character it starts with, and left alone
+        when it can't reach one.
+        """
+        # the subcommand reads args files, but no write-out arg lives under it
+        self.initParser(args_for_writing_out_config_file=["-w"])
+        self.add_arg("--notify", nargs="+")
+        subparsers = self.parser.add_subparsers(dest="cmd")
+        subparsers.add_parser("deploy", fromfile_prefix_chars="@")
+
+        ns = self.parse(args=[], config_file_contents='notify = ["@oncall", "b"]')
+        self.assertEqual(ns.notify, ["@oncall", "b"])
+        self.assertFalse(self.parser._exit_method_called)
+
+        # and now one does
+        self.initParser()
+        self.add_arg("--notify", nargs="+")
+        subparsers = self.parser.add_subparsers(dest="cmd")
+        subparsers.add_parser(
+            "deploy", fromfile_prefix_chars="@", args_for_writing_out_config_file=["-w"]
+        )
+
+        self.assertParseArgsRaises(
+            "would read command line args from a file",
+            args=[],
+            config_file_contents='notify = ["@oncall", "b"]',
+        )
+
+    def testWriteOutConfigFileArg_CantBeSetWhenAnArgsFileCouldPickTheSubcommand(self):
+        """An @file on the command line can name the subcommand itself.
+
+        argparse expands it after the config file's args have been checked, so
+        which subparser will run isn't known yet and every one of them has to
+        be taken into account.
+        """
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+        args_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        args_f.write("go\n")
+        args_f.close()
+
+        self.initParser(fromfile_prefix_chars="@")
+        self.add_arg("--write-config")
+        subparsers = self.parser.add_subparsers(dest="cmd")
+        subparsers.add_parser("go", args_for_writing_out_config_file=["--write-config"])
+
+        self.assertParseArgsRaises(
+            "can only be set on the command line",
+            args=["@" + args_f.name],
+            config_file_contents="write-config = %s" % cfg_f.name,
+        )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+        os.remove(args_f.name)
+
+    def testWriteOutConfigFileArg_CantBeSetOnASubparserBehindAPlainArgparseOne(self):
+        # a subparser doesn't have to be one of ours to have one of ours under
+        # it, so the search for write-out args walks through it either way
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser()
+        self.add_arg("--pair", nargs="+")
+        outer = self.parser.add_subparsers(
+            dest="l1", parser_class=argparse.ArgumentParser
+        ).add_parser("outer")
+        outer.add_subparsers(
+            dest="l2", parser_class=configargparse.ArgumentParser
+        ).add_parser("inner", args_for_writing_out_config_file=["-w"])
+
+        self.assertParseArgsRaises(
+            "can only be set on the command line",
+            args=["outer", "inner", "--"],
+            config_file_contents="pair = [a, b, -w, %s]" % cfg_f.name,
+        )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_SubcommandsAreTakenTogether(self):
+        """Once these args can reach a subparser, every subcommand is considered.
+
+        Which one will run can't be told from the args alone, since a value
+        belonging to an earlier option reads exactly like a subcommand name, so
+        a write-out arg on any of them turns the key down. That costs an error
+        on a key named after another subcommand's write-out arg, which is the
+        safe direction to be wrong in.
+        """
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        def build():
+            self.initParser()
+            self.add_arg("--mode")
+            subparsers = self.parser.add_subparsers(dest="cmd")
+            build_parser = subparsers.add_parser("build")
+            build_parser.add_argument("rest", nargs="*")
+            subparsers.add_parser(
+                "run", args_for_writing_out_config_file=["--write-config"]
+            )
+
+        # the value of --mode reads as the name of a subcommand that has no
+        # write-out arg, while the one that does is the one actually named
+        build()
+        self.assertParseArgsRaises(
+            "can only be set on the command line",
+            args=["--mode", "build", "run", "--"],
+            config_file_contents="write-config = %s" % cfg_f.name,
+        )
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+
+        # and args that stay with the parent are unaffected by any of it
+        build()
+        ns = self.parse(args=["--mode", "x", "build"], config_file_contents="mode = y")
+        self.assertEqual(ns.cmd, "build")
+        self.assertFalse(self.parser._exit_method_called)
+
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_AnyPlainStoreActionSpellingWorks(self):
+        # argparse takes several spellings for the same store action, and all of
+        # them have to end up recording the path
+        for action in ("store", None, argparse._StoreAction):
+            self.initParser()
+            self.add_arg("-w", is_write_out_config_file_arg=True, action=action)
+
+        # a program's own store action keeps whatever it does, and records too
+        class ExpandUser(argparse._StoreAction):
+            def __call__(self_inner, parser, namespace, values, option_string=None):
+                argparse._StoreAction.__call__(
+                    self_inner,
+                    parser,
+                    namespace,
+                    os.path.expanduser(values),
+                    option_string,
+                )
+
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.close()
+
+        self.initParser()
+        self.add_arg("-w", is_write_out_config_file_arg=True, action=ExpandUser)
+        self.add_arg("--name")
+
+        self.parse(["-w", cfg_f.name, "--name", "bob"])
+        self.assertTrue(self.parser._exit_method_called)
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "name = bob\n")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_EmptyPathIsStillReported(self):
+        # an empty path is a path the user asked for, so it fails the way any
+        # other unwritable path does rather than being quietly skipped
+        self.initParser(args_for_writing_out_config_file=["-w"])
+        self.add_arg("--name")
+
+        self.assertRaisesRegex(
+            ValueError,
+            "Couldn't open  for writing",
+            self.parse,
+            ["--name", "bob", "-w", ""],
+        )
+
+    def testWriteOutConfigFileArg_OnASubcommandReachedByACustomDispatcher(self):
+        """A program can register its own subcommand dispatcher.
+
+        It won't be an argparse._SubParsersAction, so the search for write-out
+        args recognizes the shape as well: subcommand names mapped to parsers,
+        taking the rest of the args.
+        """
+
+        class CustomParsers(argparse.Action):
+            def __init__(
+                self_inner,
+                option_strings,
+                prog=None,
+                parser_class=None,
+                dest=argparse.SUPPRESS,
+                required=False,
+                help=None,
+                metavar=None,
+            ):
+                self_inner._name_parser_map = {}
+                argparse.Action.__init__(
+                    self_inner,
+                    option_strings=option_strings,
+                    dest=dest,
+                    nargs=argparse.PARSER,
+                    choices=self_inner._name_parser_map,
+                    required=required,
+                    help=help,
+                    metavar=metavar,
+                )
+                self_inner._parser_class = parser_class
+
+            def add_parser(self_inner, name, **kwargs):
+                parser = self_inner._parser_class(**kwargs)
+                self_inner._name_parser_map[name] = parser
+                return parser
+
+            def __call__(self_inner, parser, namespace, values, option_string=None):
+                self_inner._name_parser_map[values[0]].parse_known_args(
+                    values[1:], namespace
+                )
+
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser()
+        self.parser.register("action", "parsers", CustomParsers)
+        self.add_arg("--pair", nargs="+")
+        self.parser.add_subparsers(
+            dest="cmd", parser_class=configargparse.ArgumentParser
+        ).add_parser("deploy", args_for_writing_out_config_file=["-w"])
+
+        self.assertEqual(len(self.parser._reachable_parsers()), 2)
+        self.assertParseArgsRaises(
+            "can only be set on the command line",
+            args=["deploy", "--"],
+            config_file_contents="pair = [x, -w, %s]" % cfg_f.name,
+        )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_CantBeSetFromAConfigFileByPrefixCharAlone(self):
+        # argparse looks a single-prefix-char arg up by the part before any '=',
+        # and takes any option starting with it, so a lone '-' reaches a short
+        # option when it is the only candidate
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser(
+            prefix_chars="+-", add_help=False, args_for_writing_out_config_file=["-w"]
+        )
+        self.add_arg("++files", nargs="+")
+
+        self.assertParseArgsRaises(
+            "can only be set on the command line",
+            args=[],
+            config_file_contents="files = [a, -=%s]" % cfg_f.name,
+        )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_UsesThePathTheActionStored(self):
+        """A store action of the program's own may change the path on its way in.
+
+        The file has to be written where the action put it, not where the raw
+        arg pointed.
+        """
+
+        class Prefixer(argparse._StoreAction):
+            def __call__(self_inner, parser, namespace, values, option_string=None):
+                argparse._StoreAction.__call__(
+                    self_inner, parser, namespace, values + ".ini", option_string
+                )
+
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", suffix=".ini", delete=False)
+        cfg_f.close()
+
+        self.initParser()
+        self.add_arg("-w", is_write_out_config_file_arg=True, action=Prefixer)
+        self.add_arg("--name", default="bob")
+
+        self.parse(["-w", cfg_f.name[: -len(".ini")]])
+        self.assertTrue(self.parser._exit_method_called)
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "name = bob\n")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_StoreActionRegisteredUnderAName(self):
+        # a store action reached through the registry is wrapped like any other
+        class MyStore(argparse._StoreAction):
+            pass
+
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.close()
+
+        self.initParser()
+        self.parser.register("action", "mystore", MyStore)
+        self.add_arg("-w", is_write_out_config_file_arg=True, action="mystore")
+        self.add_arg("--name", default="bob")
+
+        self.parse(["-w", cfg_f.name])
+        self.assertTrue(self.parser._exit_method_called)
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "name = bob\n")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_CantBeSetByAFlagWithMoreOptionsAfterIt(self):
+        # before Python 3.11 argparse reads whatever follows the '=' of a
+        # single-dash flag that takes no value as more short options, so '-v=w'
+        # reaches '-w' there
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
+        self.add_arg("-v", action="store_true")
+        self.add_arg("--files", nargs="+")
+
+        self.assertParseArgsRaises(
+            "can only be set on the command line",
+            args=[],
+            config_file_contents="files = [a, -v=w, %s]" % cfg_f.name,
+        )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_RejectionDoesntRelyOnErrorStopping(self):
+        """error() is meant to stop the program, but a program can override exit().
+
+        The args are dropped rather than added when one of them names a
+        write-out arg, so the protection holds either way.
+        """
+
+        class KeepsGoing(configargparse.ArgumentParser):
+            def exit(self_inner, status=0, message=None):
+                pass
+
+            def error(self_inner, message):
+                self_inner.exit(2, message)
+
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        parser = KeepsGoing(args_for_writing_out_config_file=["-w", "--write-config"])
+        parser.add_argument("--files", nargs="*")
+
+        with captured_output():
+            parser.parse_known_args(
+                args=[],
+                config_file_contents="files = [--write-config, %s]" % cfg_f.name,
+            )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testSubcommandsDispatchedByAPlainChoicesDictStillParse(self):
+        # an ordinary program can dispatch its own subcommands with a dict of
+        # choices that holds anything at all, and it has no write-out arg
+        def handler():
+            pass
+
+        self.initParser()
+        self.add_arg("--verbose", action="store_true")
+        self.add_arg("command", nargs=argparse.PARSER, choices={"run": handler})
+
+        # the dict values aren't parsers, and looking for write-out args must
+        # not trip over them. Behaviour is otherwise exactly as it was before:
+        # a PARSER positional swallows the args added from the config file.
+        ns = self.parse(["run", "x"], config_file_contents="verbose = true")
+        self.assertFalse(ns.verbose)
+        self.assertEqual(ns.command, ["run", "x", "--verbose"])
+
+        self.initParser()
+        self.add_arg("--verbose", action="store_true")
+        self.add_arg("command", nargs=argparse.PARSER, choices={"run": handler})
+        ns = self.parse(["run", "x"])
+        self.assertEqual(ns.command, ["run", "x"])
+
+    def testWriteOutConfigFileArg_CantBeSetAfterAMultiLetterFlagAndAnEquals(self):
+        # before Python 3.11.9 and 3.12.3, argparse reads what follows the '='
+        # of a single-dash flag that takes no value as more short options, so
+        # '-force=w' reaches '-w' there
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
+        self.add_arg("-force", action="store_true")
+        self.add_arg("--files", nargs="+")
+
+        self.assertParseArgsRaises(
+            "can only be set on the command line",
+            args=[],
+            config_file_contents="files = [a, -force=w, %s]" % cfg_f.name,
+        )
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_ActionBuiltByACallable(self):
+        # argparse takes any callable that returns an action, not just a class
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.close()
+
+        self.initParser(add_help=False)
+        self.add_arg(
+            "-w",
+            action=functools.partial(argparse._StoreAction),
+            is_write_out_config_file_arg=True,
+        )
+        self.add_arg("--name", default="bob")
+
+        self.parse(["-w", cfg_f.name])
+        self.assertTrue(self.parser._exit_method_called)
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "name = bob\n")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_PathIsForgottenBetweenParses(self):
+        """A path from one parse must not still be there for the next one.
+
+        Uses a parser whose exit() doesn't stop, so parsing carries on past the
+        first write the way a program overriding exit() would.
+        """
+
+        class KeepsGoing(configargparse.ArgumentParser):
+            def exit(self_inner, status=0, message=None):
+                pass
+
+        first = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        first.close()
+        os.remove(first.name)
+        second = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        second.close()
+        os.remove(second.name)
+
+        parser = KeepsGoing(args_for_writing_out_config_file=["-w"])
+        parser.add_argument("--name", default="bob")
+
+        with captured_output():
+            parser.parse_known_args(["-w", first.name])
+        self.assertTrue(os.path.exists(first.name))
+        os.remove(first.name)
+
+        # the second parse doesn't ask for one, so nothing is written
+        with captured_output():
+            parser.parse_known_args([])
+        self.assertFalse(os.path.exists(first.name))
+        self.assertFalse(os.path.exists(second.name))
+
+    def testWriteOutConfigFileArg_CantHaveAnEnvVar(self):
+        # an env var that sets one would overwrite the path it names, so the
+        # combination is rejected up front rather than at parse time
+        self.initParser()
+        self.assertRaisesRegex(
+            ValueError,
+            "is_write_out_config_file_arg=True can't also have env_var set",
+            self.add_arg,
+            "--write-config",
+            is_write_out_config_file_arg=True,
+            env_var="WRITE_CONFIG",
+        )
+
+    def testWriteOutConfigFileArg_IgnoreUnknownConfigFileKeys(self):
+        # ignore_unknown_config_file_keys=True discards the key like any other
+        # unknown one, so it neither writes the file nor errors
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser(
+            args_for_writing_out_config_file=["-w", "--write-config"],
+            ignore_unknown_config_file_keys=True,
+        )
+        self.add_arg("--name", default="world")
+
+        ns = self.parse(args=[], config_file_contents="write-config = %s" % cfg_f.name)
+        self.assertEqual(ns.name, "world")
+        self.assertFalse(self.parser._exit_method_called)
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_CommandLineFormsAllStillWork(self):
+        """Every form of the arg that argparse accepts must still write the file."""
+        for command_line_args in (
+            ["--write-config", "%s"],  # long form
+            ["--write-config=%s"],  # long form with the value attached
+            ["--write-conf", "%s"],  # unambiguous abbreviation
+            ["-w", "%s"],  # short form
+            ["-w%s"],  # short form with the value attached
+            ["-vw", "%s"],  # bundled with another short option
+            ["-vw%s"],  # bundled, with the value attached
+        ):
+            cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+            cfg_f.close()
+
+            self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
+            self.add_arg("-v", action="store_true")
+            self.add_arg("--name")
+
+            self.parse(
+                [a.replace("%s", cfg_f.name) for a in command_line_args]
+                + ["--name", "bob"]
+            )
+            self.assertTrue(self.parser._exit_method_called, msg=str(command_line_args))
+
+            with open(cfg_f.name) as f:
+                self.assertEqual(f.read(), "name = bob\n", msg=str(command_line_args))
+            os.remove(cfg_f.name)
+
+    def testWriteOutConfigFileArg_CantBePositional(self):
+        """A positional can't be one of these.
+
+        A config file value becomes a plain command line arg, and a positional
+        would take one of those just as readily as one the user typed. Telling
+        them apart would mean working out how argparse hands out positionals
+        over a whole arg list, so the combination is turned down instead.
+        """
+        self.initParser()
+        self.assertRaisesRegex(
+            ValueError,
+            "is_write_out_config_file_arg=True can't be a positional arg",
+            self.add_arg,
+            "outpath",
+            nargs="?",
+            is_write_out_config_file_arg=True,
+        )
+
+    def testWriteOutConfigFileArg_FromfilePrefixChars(self):
+        # argparse expands @file args into the command line, so an arg supplied
+        # that way is still a command line arg
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.close()
+        args_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        args_f.write("--write-config\n%s\n" % cfg_f.name)
+        args_f.close()
+
+        self.initParser(
+            args_for_writing_out_config_file=["-w", "--write-config"],
+            fromfile_prefix_chars="@",
+        )
+        self.add_arg("--name")
+
+        self.parse(["@" + args_f.name, "--name", "bob"])
+        self.assertTrue(self.parser._exit_method_called)
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "name = bob\n")
+        os.remove(cfg_f.name)
+        os.remove(args_f.name)
+
+    def testWriteOutConfigFileArg_OutputFileIsntTruncatedOnFailure(self):
+        """Nothing is opened for writing until the contents to write exist."""
+
+        class FailingConfigFileParser(configargparse.DefaultConfigFileParser):
+            def serialize(self_inner, items):
+                raise ValueError("can't serialize that")
+
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.write("original contents")
+        cfg_f.close()
+
+        self.initParser(
+            args_for_writing_out_config_file=["-w"],
+            config_file_parser_class=FailingConfigFileParser,
+        )
+        self.add_arg("--name")
+
+        self.assertRaises(
+            ValueError, self.parse, args=["-w", cfg_f.name, "--name", "bob"]
+        )
+        self.assertFalse(self.parser._exit_method_called)
+
+        with open(cfg_f.name) as f:
+            self.assertEqual(f.read(), "original contents")
+        os.remove(cfg_f.name)
 
     def testMethodAliases(self):
         p = self.parser
