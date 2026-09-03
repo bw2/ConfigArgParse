@@ -247,6 +247,22 @@ class DefaultConfigFileParser(ConfigFileParser):
             if isinstance(value, list):
                 # handle special case of lists
                 value = "[" + ", ".join(map(str, value)) + "]"
+            else:
+                # render it the way this has always rendered it: str() differs
+                # for an Enum on Python before 3.11
+                value = "{}".format(value)
+            # this format puts one key on each line, so a newline in a key or a
+            # value would silently turn into extra keys when the file is read
+            # back in (see parse() above). There's no way to quote it, so say so
+            # instead of writing a file that means something else.
+            for field in (str(key), value):
+                if "\n" in field or "\r" in field:
+                    raise ValueError(
+                        "Config file values can't contain newlines, so {} = {} "
+                        "can't be written out in this config file format. Use a "
+                        "config_file_parser_class that supports multi-line "
+                        "values, such as YAMLConfigFileParser.".format(key, value)
+                    )
             r.write("{} = {}\n".format(key, value))
         return r.getvalue()
 

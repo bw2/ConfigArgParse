@@ -2843,6 +2843,46 @@ class TestConfigFileParsers(TestCase):
 
         self.assertDictEqual(parsed_obj, {"a": "3"})
 
+    def testDefaultConfigFileParser_SerializeRendersValuesAsBefore(self):
+        # the newline check must not change how a value that isn't a plain
+        # string comes out: str() and format() differ for an Enum before 3.11
+        from enum import Enum, IntEnum
+
+        class Color(str, Enum):
+            RED = "red"
+
+        class Level(IntEnum):
+            HIGH = 2
+
+        p = configargparse.DefaultConfigFileParser()
+        self.assertEqual(
+            p.serialize(OrderedDict([("color", Color.RED), ("level", Level.HIGH)])),
+            "color = {}\nlevel = {}\n".format(Color.RED, Level.HIGH),
+        )
+
+    def testDefaultConfigFileParser_SerializeRejectsNewlines(self):
+        # this format puts one key per line, so a newline in a value would come
+        # back as extra keys rather than as part of the value
+        p = configargparse.DefaultConfigFileParser()
+        self.assertRaisesRegex(
+            ValueError,
+            "can't contain newlines",
+            p.serialize,
+            OrderedDict([("a", "3\nb = 4")]),
+        )
+        self.assertRaisesRegex(
+            ValueError,
+            "can't contain newlines",
+            p.serialize,
+            OrderedDict([("a", ["3", "4\nb = 5"])]),
+        )
+        self.assertRaisesRegex(
+            ValueError,
+            "can't contain newlines",
+            p.serialize,
+            OrderedDict([("a\nb", "3")]),
+        )
+
     def testDefaultConfigFileParser_All(self):
         p = configargparse.DefaultConfigFileParser()
 
