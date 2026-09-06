@@ -48,5 +48,6 @@ docs/_build
 # IDEs
 .idea
 .claude
+.memory
 
 .eggs/
