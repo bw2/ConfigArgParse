@@ -4,6 +4,7 @@ import configargparse
 from contextlib import contextmanager
 import functools
 import inspect
+import json
 import logging
 import os
 import sys
@@ -1482,7 +1483,7 @@ class TestMisc(TestCase):
         self.assertParseArgsRaises(
             "write-config can only be set on the command line",
             args=[],
-            env_vars={"FILES": '["--write-config", "%s"]' % cfg_f.name},
+            env_vars={"FILES": json.dumps(["--write-config", cfg_f.name])},
         )
         self.assertFalse(self.parser._exit_method_called)
 
@@ -1743,7 +1744,7 @@ class TestMisc(TestCase):
         self.assertParseArgsRaises(
             "would read command line args from a file",
             args=[],
-            env_vars={"FILES": '["a", "@%s"]' % args_f.name},
+            env_vars={"FILES": json.dumps(["a", "@" + args_f.name])},
         )
 
         with open(cfg_f.name) as f:
