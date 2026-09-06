@@ -1740,17 +1740,15 @@ class ArgumentParser(argparse.ArgumentParser):
                     "'false', 'yes', 'no', 'on', 'off', '1' or '0'" % (key, value)
                 )
         elif isinstance(value, list):
-            accepts_list_and_has_nargs = (
-                action is not None
-                and action.nargs is not None
-                and (
-                    isinstance(action, argparse._StoreAction)
-                    or isinstance(action, argparse._AppendAction)
-                )
-                and (
-                    action.nargs in ("+", "*")
-                    or (isinstance(action.nargs, int) and action.nargs > 1)
-                )
+            # Only nargs is relevant here: any action, including a custom
+            # argparse.Action subclass, consumes several values when nargs
+            # allows it. Testing the action class as well would be redundant,
+            # since actions that cannot consume a list have an nargs that
+            # fails the test below anyway: 0 or None for store_const, count
+            # and friends, 'A...' for subparsers, '...' for REMAINDER.
+            accepts_list_and_has_nargs = action is not None and (
+                action.nargs in ("+", "*")
+                or (isinstance(action.nargs, int) and action.nargs > 1)
             )
 
             if action is None or isinstance(action, argparse._AppendAction):
