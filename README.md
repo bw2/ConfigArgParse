@@ -332,7 +332,9 @@ parser = configargparse.ArgParser(
 
 [TOML](https://github.com/toml-lang/toml/blob/main/toml.md) parser. This config parser can be used to integrate with `pyproject.toml` files.
 
-Requires installation of [toml](https://pypi.org/project/toml/) for Python versions below 3.11.
+Requires installation of [toml](https://pypi.org/project/toml/) for Python versions
+below 3.11, and for writing a config file out on any version, since the standard
+library's `tomllib` can only read.
 
 Example:
 

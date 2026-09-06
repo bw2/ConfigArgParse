@@ -81,7 +81,7 @@ install_requires = []
 tests_require = [
     "black",
     "mock",
-    "toml; python_version < '3.11'",
+    "toml",
     "PyYAML",
     "pytest",
     "pytest-cov",
@@ -125,7 +125,7 @@ setup(
     install_requires=install_requires,
     tests_require=tests_require,
     extras_require={
-        "toml": ["toml; python_version < '3.11'"],
+        "toml": ["toml"],
         "yaml": ["PyYAML"],
         "test": tests_require,
     },

@@ -164,7 +164,7 @@ class ConfigFileParserException(Exception):
     """Raised when config file parsing failed."""
 
 
-class ConfigFileParserMissingDependency(Exception):
+class ConfigFileParserMissingDependency(ConfigFileParserException):
     """Raised when an optional dependency is missing."""
 
 
@@ -836,13 +836,15 @@ class CompositeConfigParser(ConfigFileParser):
         errors = []
         for i, p in enumerate(self.parsers):
             try:
-                print(f"USING PARSER {p.__class__.__name__}")
                 return p.parse(stream)  # type: ignore[no-any-return]
-            except ConfigFileParserMissingDependency as e:
-                msg = f"Cannot use parser {p.__class__.__name__} without optional dependency."
-                print(msg)
-                raise
             except Exception as e:
+                if isinstance(e, ConfigFileParserMissingDependency):
+                    # don't skip it silently, but don't take the rest of the
+                    # chain down with it either
+                    warnings.warn(
+                        f"Cannot use parser {p.__class__.__name__} without "
+                        f"optional dependency: {e}"
+                    )
                 errors.append(e)
                 # Try to seek back to beginning for next parser
                 # If this is not the last parser and seek fails, we can't continue
@@ -1738,9 +1740,9 @@ class ArgumentParser(argparse.ArgumentParser):
         if action is not None and isinstance(
             action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE
         ):
-            assert isinstance(value, str), (
-                "config parser should convert anything that is not a list to string."
-            )
+            assert isinstance(
+                value, str
+            ), "config parser should convert anything that is not a list to string."
             if value.lower() in ("true", "yes", "on", "1"):
                 if not is_boolean_optional_action(action):
                     args.append(command_line_key)

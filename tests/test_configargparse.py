@@ -14,7 +14,6 @@ import unittest
 from unittest import mock
 import warnings
 import textwrap
-import pytest
 
 from io import BytesIO, StringIO
 
@@ -1136,8 +1135,7 @@ class TestMisc(TestCase):
             r"%s:\n"
             r"  -h, --help\s+ show this help message and exit\n"
             rf"  -c{short_c}, --config CONFIG_FILE\s+ my config file\n"
-            r"  --genome GENOME\s+ Path to genome file\n\n"
-            % OPTIONAL_ARGS_STRING
+            r"  --genome GENOME\s+ Path to genome file\n\n" % OPTIONAL_ARGS_STRING
             + 5 * r"(.+\s*)",
         )
 
@@ -1219,8 +1217,7 @@ class TestMisc(TestCase):
             r"Config file syntax allows: key=value, flag=true, stuff=\[a,b,c\] "
             r"\(for details, see syntax at https://goo.gl/R74nmi\). "
             r"In general, command-line values override config file values "
-            r"which override defaults. ".replace(" ", r"\s*")
-            % OPTIONAL_ARGS_STRING,
+            r"which override defaults. ".replace(" ", r"\s*") % OPTIONAL_ARGS_STRING,
         )
 
     def test_FormatHelpProg(self):
@@ -3574,13 +3571,15 @@ class TestCompositeConfigParser(unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.parser.parse_args([])
 
-    def test_composite_fails_if_missing_dependency(self):
+    def test_composite_warns_if_missing_dependency(self):
         self.write_yaml_file()
         self.write_ini_file()
 
         with mock.patch.dict(sys.modules, {"toml": None, "tomllib": None}):
-            with self.assertRaises(configargparse.ConfigFileParserMissingDependency):
-                self.parser.parse_args([])
+            with self.assertWarnsRegex(UserWarning, "TomlConfigParser"):
+                ns = self.parser.parse_args([])
+        # the parser that could not run is reported, but the chain still works
+        self.assertEqual(ns.key1, "ini1")
 
     def test_composite_warns_if_wrong_order(self):
         with self.assertWarns(SyntaxWarning):
