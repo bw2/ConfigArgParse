@@ -12,6 +12,7 @@ import tempfile
 import types
 import unittest
 from unittest import mock
+import warnings
 import textwrap
 
 from io import BytesIO, StringIO
@@ -609,7 +610,7 @@ class TestBasicUseCases(TestCase):
         )
         self.assertRaisesRegex(
             ValueError,
-            "arg with " "is_write_out_config_file_arg=True must have action='store'",
+            "arg with is_write_out_config_file_arg=True must have action='store'",
             self.add_arg,
             "-y",
             "--Y",
@@ -1057,7 +1058,7 @@ class TestMisc(TestCase):
         self.assertEqual(p.prog, "prog")
         self.assertRaisesRegex(
             ValueError,
-            "kwargs besides 'name' can only be " "passed in the first time",
+            "kwargs besides 'name' can only be passed in the first time",
             configargparse.getArgumentParser,
             name,
             prog="prog",
@@ -3247,7 +3248,7 @@ class TestConfigFileParsers(TestCase):
             import yaml
         except:
             logging.warning(
-                "WARNING: PyYAML not installed. " "Couldn't test YAMLConfigFileParser"
+                "WARNING: PyYAML not installed. Couldn't test YAMLConfigFileParser"
             )
             return
 
@@ -3267,7 +3268,7 @@ class TestConfigFileParsers(TestCase):
             import yaml
         except:
             logging.warning(
-                "WARNING: PyYAML not installed. " "Couldn't test YAMLConfigFileParser"
+                "WARNING: PyYAML not installed. Couldn't test YAMLConfigFileParser"
             )
             return
 
@@ -3297,7 +3298,7 @@ class TestConfigFileParsers(TestCase):
             import yaml
         except:
             raise AssertionError(
-                "WARNING: PyYAML not installed. " "Couldn't test YAMLConfigFileParser"
+                "WARNING: PyYAML not installed. Couldn't test YAMLConfigFileParser"
             )
             return
 
@@ -3368,10 +3369,18 @@ class TestTomlConfigParser(unittest.TestCase):
         parser = configargparse.TomlConfigParser(["tool.section"])
         self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": ["1", "2", "3"]})
 
-    @unittest.skipIf(
-        sys.version_info < (3, 11),
-        "Binary mode only supported with tomllib (Python 3.11+)",
-    )
+    def test_read_without_toml_packages(self):
+        f = self.write_toml_file("""
+            [tool.section]
+            key1 = "toml1"
+            key2 = [1, 2, 3]
+            """)
+        parser = configargparse.TomlConfigParser(["tool.section"])
+
+        with mock.patch.dict(sys.modules, {"toml": None, "tomllib": None}):
+            with self.assertRaises(configargparse.ConfigFileParserMissingDependency):
+                parser.parse(f)
+
     def test_binary_read_works(self):
         # Binary mode now works with tomllib (Python 3.11+)
         f = self.write_toml_file(
@@ -3382,20 +3391,6 @@ class TestTomlConfigParser(unittest.TestCase):
         parser = configargparse.TomlConfigParser(["tool.section"])
         # Should successfully parse binary stream
         self.assertEqual(parser.parse(f), {"key1": "toml1"})
-
-    @unittest.skipIf(
-        sys.version_info >= (3, 11),
-        "On Python 3.11+, tomllib handles binary; this tests the toml package fallback",
-    )
-    def test_binary_read_fails_without_tomllib(self):
-        # Without tomllib (Python < 3.11), binary streams should fail
-        f = self.write_toml_file(
-            b"""[section]\nkey1 = "toml1"\n""",
-            obj=BytesIO,
-        )
-        parser = configargparse.TomlConfigParser(["section"])
-        with self.assertRaises(configargparse.ConfigFileParserException):
-            parser.parse(f)
 
     def test_serialize_with_section(self):
         parser = configargparse.TomlConfigParser(["section"])
@@ -3437,7 +3432,7 @@ class TestTomlConfigParser(unittest.TestCase):
         import unittest.mock as mock
 
         with mock.patch.dict(sys.modules, {"toml": None}):
-            with self.assertRaises(configargparse.ConfigFileParserException):
+            with self.assertRaises(configargparse.ConfigFileParserMissingDependency):
                 parser.serialize(items)
 
 
@@ -3481,9 +3476,9 @@ class TestCompositeConfigParser(unittest.TestCase):
             default_config_files=["config.yaml", "config.toml", "config.ini"],
             config_file_parser_class=configargparse.CompositeConfigParser(
                 [
-                    configargparse.IniConfigParser(["section"], False),
                     configargparse.TomlConfigParser(["section"]),
                     configargparse.YAMLConfigFileParser,
+                    configargparse.IniConfigParser(["section"], False),
                 ]
             ),
         )
@@ -3575,6 +3570,25 @@ class TestCompositeConfigParser(unittest.TestCase):
         self.write_toml_file_extra()
         with self.assertRaises(SystemExit):
             self.parser.parse_args([])
+
+    def test_composite_warns_if_missing_dependency(self):
+        self.write_yaml_file()
+        self.write_ini_file()
+
+        with mock.patch.dict(sys.modules, {"toml": None, "tomllib": None}):
+            with self.assertWarnsRegex(UserWarning, "TomlConfigParser"):
+                ns = self.parser.parse_args([])
+        # the parser that could not run is reported, but the chain still works
+        self.assertEqual(ns.key1, "ini1")
+
+    def test_composite_warns_if_wrong_order(self):
+        with self.assertWarns(SyntaxWarning):
+            composite = configargparse.CompositeConfigParser(
+                [
+                    configargparse.IniConfigParser(["section"], False),
+                    configargparse.TomlConfigParser(["section"]),
+                ]
+            )()
 
     def test_composite_serialize_delegates_to_first_parser(self):
         composite = configargparse.CompositeConfigParser(

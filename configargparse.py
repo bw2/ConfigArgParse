@@ -17,6 +17,7 @@ import sys
 import types
 from collections import OrderedDict
 import textwrap
+import warnings
 from io import StringIO
 
 ACTION_TYPES_THAT_DONT_NEED_A_VALUE = [
@@ -161,6 +162,10 @@ class _WriteOutConfigFileActionMixin(object):
 
 class ConfigFileParserException(Exception):
     """Raised when config file parsing failed."""
+
+
+class ConfigFileParserMissingDependency(ConfigFileParserException):
+    """Raised when an optional dependency is missing."""
 
 
 class DefaultConfigFileParser(ConfigFileParser):
@@ -361,7 +366,7 @@ class YAMLConfigFileParser(ConfigFileParser):
         try:
             import yaml
         except ImportError:
-            raise ConfigFileParserException(
+            raise ConfigFileParserMissingDependency(
                 "Could not import yaml. "
                 "It can be installed by running 'pip install PyYAML'"
             )
@@ -418,7 +423,7 @@ class YAMLConfigFileParser(ConfigFileParser):
 Provides `configargparse.ConfigFileParser` classes to parse ``TOML`` and ``INI`` files with **mandatory** support for sections.
 Useful to integrate configuration into project files like ``pyproject.toml`` or ``setup.cfg``.
 
-`TomlConfigParser` usage: 
+`TomlConfigParser` usage:
 
 >>> TomlParser = TomlConfigParser(['tool.my_super_tool']) # Simple TOML parser.
 >>> parser = ArgumentParser(..., default_config_files=['./pyproject.toml'], config_file_parser_class=TomlParser)
@@ -567,25 +572,25 @@ class TomlConfigParser(ConfigFileParser):
         """Parses the keys and values from a TOML config file."""
         # Use tomllib (Python 3.11+) if available, otherwise fall back to toml package
         try:
-            import tomllib
-
-            # tomllib.load() requires binary mode, so use loads() for stream compatibility
-            try:
-                content = stream.read()
-                # If content is bytes, decode it; if string, use as-is
-                if isinstance(content, bytes):
-                    content = content.decode("utf-8")
-                config = tomllib.loads(content)
-            except Exception as e:
-                raise ConfigFileParserException("Couldn't parse TOML file: %s" % e)
+            import tomllib as toml
         except ImportError:
-            # Fall back to toml package (supports text mode)
-            import toml
-
             try:
-                config = toml.load(stream)
-            except Exception as e:
-                raise ConfigFileParserException("Couldn't parse TOML file: %s" % e)
+                import toml
+            except ImportError as e:
+                raise ConfigFileParserMissingDependency(
+                    "Could not import toml or tomllib. "
+                    "toml can be installed by running 'pip install toml'"
+                ) from e
+
+        # tomllib.load() requires binary mode, so use loads() for stream compatibility
+        try:
+            content = stream.read()
+            # If content is bytes, decode it; if string, use as-is
+            if isinstance(content, bytes):
+                content = content.decode("utf-8")
+            config = toml.loads(content)
+        except Exception as e:
+            raise ConfigFileParserException("Couldn't parse TOML file: %s" % e)
 
         # convert to dict and filter based on section names
         result = OrderedDict()
@@ -622,7 +627,7 @@ class TomlConfigParser(ConfigFileParser):
         try:
             import toml
         except ImportError:
-            raise ConfigFileParserException(
+            raise ConfigFileParserMissingDependency(
                 "The 'toml' package is required for TOML serialization. "
                 "Install it with: pip install toml"
             )
@@ -809,7 +814,20 @@ class CompositeConfigParser(ConfigFileParser):
 
     def __init__(self, config_parser_types):
         super().__init__()
-        self.parsers = [p() for p in config_parser_types]
+        self.parsers: list[ConfigFileParser] = [p() for p in config_parser_types]
+
+        seen_ini = False
+        for parser in self.parsers:
+            if not seen_ini and isinstance(parser, IniConfigParser):
+                seen_ini = True
+                continue
+            if seen_ini and isinstance(parser, TomlConfigParser):
+                warnings.warn(
+                    "IniConfigParser was found before TomlConfigParser in parsers for "
+                    "CompositeConfigParser. This might lead to a TOML file being "
+                    "parsed as an INI file. Reorder the parsers.",
+                    category=SyntaxWarning,
+                )
 
     def __call__(self):
         return self
@@ -820,6 +838,13 @@ class CompositeConfigParser(ConfigFileParser):
             try:
                 return p.parse(stream)  # type: ignore[no-any-return]
             except Exception as e:
+                if isinstance(e, ConfigFileParserMissingDependency):
+                    # don't skip it silently, but don't take the rest of the
+                    # chain down with it either
+                    warnings.warn(
+                        f"Cannot use parser {p.__class__.__name__} without "
+                        f"optional dependency: {e}"
+                    )
                 errors.append(e)
                 # Try to seek back to beginning for next parser
                 # If this is not the last parser and seek fails, we can't continue
@@ -849,7 +874,7 @@ class CompositeConfigParser(ConfigFileParser):
 
         msg = "Uses multiple config parser settings (in order): \n"
         for i, parser in enumerate(self.parsers):
-            msg += f"[{i+1}] {guess_format_name(parser.__class__.__name__)}: {parser.get_syntax_description()} \n"
+            msg += f"[{i + 1}] {guess_format_name(parser.__class__.__name__)}: {parser.get_syntax_description()} \n"
         return msg
 
     def serialize(self, items):
@@ -1991,7 +2016,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 added_config_file_help = True
 
                 msg += (
-                    "Args that start with '%s' can also be set in " "a config file"
+                    "Args that start with '%s' can also be set in a config file"
                 ) % cc
                 config_arg_string = " or ".join(
                     a.option_strings[0] for a in config_path_actions if a.option_strings
@@ -2112,15 +2137,13 @@ def add_argument(self, *args, **kwargs):
     if action.is_positional_arg and env_var:
         raise ValueError("env_var can't be set for a positional arg.")
     if action.is_config_file_arg and not isinstance(action, argparse._StoreAction):
-        raise ValueError("arg with is_config_file_arg=True must have " "action='store'")
+        raise ValueError("arg with is_config_file_arg=True must have action='store'")
     if action.is_write_out_config_file_arg:
         error_prefix = "arg with is_write_out_config_file_arg=True "
         if not isinstance(action, _WriteOutConfigFileActionMixin):
             raise ValueError(error_prefix + "must have action='store'")
         if is_config_file_arg:
-            raise ValueError(
-                error_prefix + "can't also have " "is_config_file_arg=True"
-            )
+            raise ValueError(error_prefix + "can't also have is_config_file_arg=True")
         if env_var:
             # writing out a config file overwrites the given path and then
             # exits, so an env var that sets one could destroy an arbitrary file
