@@ -28,7 +28,7 @@
       
       <div class="navlinks">
         <span class="navbar-brand">
-          <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 0.0.post1.dev1+gb2ea0e5df</a> <a href="index.html">API Documentation</a>
+          <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 0.0.post1.dev1+g213801b5d</a> <a href="index.html">API Documentation</a>
         </span>
 
         <a href="moduleIndex.html">
@@ -2068,6 +2068,22 @@
             <div class="kind">Method</div>
             <div class="privacy">PUBLIC</div>
             <div class="summary">Does the inverse of config parsing by taking parsed values and converting them back to a string representing config file contents.</div>
+          </li><li id="configargparse._WriteOutConfigFileActionMixin">
+            
+            <div class="fullName">configargparse<wbr></wbr>._<wbr></wbr>Write<wbr></wbr>Out<wbr></wbr>Config<wbr></wbr>File<wbr></wbr>Action<wbr></wbr>Mixin</div>
+            <div class="url">configargparse._WriteOutConfigFileActionMixin.html</div>
+            <div class="type">Class</div>
+            <div class="kind">Class</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary">Remembers the path this arg was given, on the parser that parsed it.</div>
+          </li><li id="configargparse._WriteOutConfigFileActionMixin.__call__">
+            
+            <div class="fullName">configargparse<wbr></wbr>._<wbr></wbr>Write<wbr></wbr>Out<wbr></wbr>Config<wbr></wbr>File<wbr></wbr>Action<wbr></wbr>Mixin<wbr></wbr>.__call__</div>
+            <div class="url">configargparse._WriteOutConfigFileActionMixin.html#__call__</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary"><span class="undocumented">Undocumented</span></div>
           </li><li id="configargparse.ConfigFileParserException">
             
             <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>Config<wbr></wbr>File<wbr></wbr>Parser<wbr></wbr>Exception</div>
@@ -2524,6 +2540,14 @@
             <div class="kind">Method</div>
             <div class="privacy">PRIVATE</div>
             <div class="summary">Find the right index to insert config/env var args into the command line.</div>
+          </li><li id="configargparse.ArgumentParser._find_subcommand_index">
+            
+            <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>Argument<wbr></wbr>Parser<wbr></wbr>._find<wbr></wbr>_subcommand<wbr></wbr>_index</div>
+            <div class="url">configargparse.ArgumentParser.html#_find_subcommand_index</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary">Find where the subcommand is on the command line, if there is one.</div>
           </li><li id="configargparse.ArgumentParser.parse_args">
             
             <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>Argument<wbr></wbr>Parser<wbr></wbr>.parse<wbr></wbr>_args</div>
@@ -2548,6 +2572,14 @@
             <div class="kind">Instance Variable</div>
             <div class="privacy">PRIVATE</div>
             <div class="summary"><span class="undocumented">Undocumented</span></div>
+          </li><li id="configargparse.ArgumentParser._write_out_config_file_paths">
+            
+            <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>Argument<wbr></wbr>Parser<wbr></wbr>._write<wbr></wbr>_out<wbr></wbr>_config<wbr></wbr>_file<wbr></wbr>_paths</div>
+            <div class="url">configargparse.ArgumentParser.html#_write_out_config_file_paths</div>
+            <div class="type">Attribute</div>
+            <div class="kind">Instance Variable</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary"><span class="undocumented">Undocumented</span></div>
           </li><li id="configargparse.ArgumentParser.get_source_to_settings_dict">
             
             <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>Argument<wbr></wbr>Parser<wbr></wbr>.get<wbr></wbr>_source<wbr></wbr>_to<wbr></wbr>_settings<wbr></wbr>_dict</div>
@@ -2556,6 +2588,46 @@
             <div class="kind">Method</div>
             <div class="privacy">PUBLIC</div>
             <div class="summary">If called after <code><a href="configargparse.ArgumentParser.html#parse_args" class="internal-link" title="configargparse.ArgumentParser.parse_args">parse_args()</a></code> or <code><a href="configargparse.ArgumentParser.html#parse_known_args" class="internal-link" title="configargparse.ArgumentParser.parse_known_args">parse_known_args()</a></code>, returns a dict that contains up to 4 keys corresponding to where a given option's value is coming from: - "command_line" - "environment_variables" - "config_file" - "defaults" Each such key, will be mapped to another dictionary containing the options set via that method...</div>
+          </li><li id="configargparse.ArgumentParser._reject_write_out_config_file_args">
+            
+            <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>Argument<wbr></wbr>Parser<wbr></wbr>._reject<wbr></wbr>_write<wbr></wbr>_out<wbr></wbr>_config<wbr></wbr>_file<wbr></wbr>_args</div>
+            <div class="url">configargparse.ArgumentParser.html#_reject_write_out_config_file_args</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary">Reject synthesized command line args that set a write-out-config-file arg.</div>
+          </li><li id="configargparse.ArgumentParser._names_a_write_out_config_file_arg">
+            
+            <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>Argument<wbr></wbr>Parser<wbr></wbr>._names<wbr></wbr>_a<wbr></wbr>_write<wbr></wbr>_out<wbr></wbr>_config<wbr></wbr>_file<wbr></wbr>_arg</div>
+            <div class="url">configargparse.ArgumentParser.html#_names_a_write_out_config_file_arg</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary">Check whether a command line arg would set a write-out-config-file arg.</div>
+          </li><li id="configargparse.ArgumentParser._reachable_parsers">
+            
+            <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>Argument<wbr></wbr>Parser<wbr></wbr>._reachable<wbr></wbr>_parsers</div>
+            <div class="url">configargparse.ArgumentParser.html#_reachable_parsers</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary">Find this parser and every subparser these args could be handed to.</div>
+          </li><li id="configargparse.ArgumentParser._write_out_config_file_args">
+            
+            <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>Argument<wbr></wbr>Parser<wbr></wbr>._write<wbr></wbr>_out<wbr></wbr>_config<wbr></wbr>_file<wbr></wbr>_args</div>
+            <div class="url">configargparse.ArgumentParser.html#_write_out_config_file_args</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary">Find the write-out-config-file args the given parsers define.</div>
+          </li><li id="configargparse.ArgumentParser._could_set_option">
+            
+            <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>Argument<wbr></wbr>Parser<wbr></wbr>._could<wbr></wbr>_set<wbr></wbr>_option</div>
+            <div class="url">configargparse.ArgumentParser.html#_could_set_option</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary">Check whether a command line arg could set the given option.</div>
           </li><li id="configargparse.ArgumentParser.write_config_file">
             
             <div class="fullName">configargparse<wbr></wbr>.<wbr></wbr>Argument<wbr></wbr>Parser<wbr></wbr>.write<wbr></wbr>_config<wbr></wbr>_file</div>
@@ -2636,6 +2708,22 @@
             <div class="kind">Function</div>
             <div class="privacy">PUBLIC</div>
             <div class="summary">This method supports the same args as ArgumentParser.add_argument(..) as well as the additional args below.</div>
+          </li><li id="configargparse._subparsers_of">
+            
+            <div class="fullName">configargparse<wbr></wbr>._subparsers<wbr></wbr>_of</div>
+            <div class="url">configargparse.html#_subparsers_of</div>
+            <div class="type">Function</div>
+            <div class="kind">Function</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary">Find a parser and every subparser reachable from it.</div>
+          </li><li id="configargparse._dispatches_to_subparsers">
+            
+            <div class="fullName">configargparse<wbr></wbr>._dispatches<wbr></wbr>_to<wbr></wbr>_subparsers</div>
+            <div class="url">configargparse.html#_dispatches_to_subparsers</div>
+            <div class="type">Function</div>
+            <div class="kind">Function</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary">Check whether an action hands the rest of the command line to a subparser.</div>
           </li><li id="configargparse.already_on_command_line">
             
             <div class="fullName">configargparse<wbr></wbr>.already<wbr></wbr>_on<wbr></wbr>_command<wbr></wbr>_line</div>

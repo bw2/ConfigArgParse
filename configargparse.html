@@ -32,7 +32,7 @@
       
       <div class="navlinks">
         <span class="navbar-brand">
-          <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 0.0.post1.dev1+gb2ea0e5df</a> <a href="index.html">API Documentation</a>
+          <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 0.0.post1.dev1+g213801b5d</a> <a href="index.html">API Documentation</a>
         </span>
 
         <a href="moduleIndex.html">
@@ -222,6 +222,16 @@
             </div>
         
 
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="configargparse._WriteOutConfigFileActionMixin.html" class="internal-link" title="configargparse._WriteOutConfigFileActionMixin">_<wbr></wbr>Write<wbr></wbr>Out<wbr></wbr>Config<wbr></wbr>File<wbr></wbr>Action<wbr></wbr>Mixin</a></code>
+            </div>
+        
+
     </li>
 </ul>
 
@@ -305,6 +315,26 @@
 
         
             <div class="itemName"><code><a href="#unquote_str" class="internal-link" title="configargparse.unquote_str">unquote<wbr></wbr>_str</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_dispatches_to_subparsers" class="internal-link" title="configargparse._dispatches_to_subparsers">_dispatches<wbr></wbr>_to<wbr></wbr>_subparsers</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_subparsers_of" class="internal-link" title="configargparse._subparsers_of">_subparsers<wbr></wbr>_of</a></code>
             </div>
         
 
@@ -443,7 +473,7 @@
         </div>
 
         <div class="extrasDocstring">
-          <a href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py" class="sourceLink">(source)</a>
+          <a href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py" class="sourceLink">(source)</a>
           <p></p>
         </div>
 
@@ -555,6 +585,21 @@
     <td>Variable</td>
     <td><code><a href="#is_boolean_optional_action" class="internal-link" title="configargparse.is_boolean_optional_action">is<wbr></wbr>_boolean<wbr></wbr>_optional<wbr></wbr>_action</a></code></td>
     <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="class private">
+    
+    <td>Class</td>
+    <td><code><a href="configargparse._WriteOutConfigFileActionMixin.html" class="internal-link" title="configargparse._WriteOutConfigFileActionMixin">_<wbr></wbr>Write<wbr></wbr>Out<wbr></wbr>Config<wbr></wbr>File<wbr></wbr>Action<wbr></wbr>Mixin</a></code></td>
+    <td>Remembers the path this arg was given, on the parser that parsed it.</td>
+  </tr><tr class="function private">
+    
+    <td>Function</td>
+    <td><code><a href="#_dispatches_to_subparsers" class="internal-link" title="configargparse._dispatches_to_subparsers">_dispatches<wbr></wbr>_to<wbr></wbr>_subparsers</a></code></td>
+    <td>Check whether an action hands the rest of the command line to a subparser.</td>
+  </tr><tr class="function private">
+    
+    <td>Function</td>
+    <td><code><a href="#_subparsers_of" class="internal-link" title="configargparse._subparsers_of">_subparsers<wbr></wbr>_of</a></code></td>
+    <td>Find a parser and every subparser reachable from it.</td>
   </tr><tr class="constant private">
     
     <td>Constant</td>
@@ -611,7 +656,7 @@
     
     
     <span class="py-keyword">def</span> <span class="py-defname">add_argument</span><span class="function-signature">(self, *args, **kwargs)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L1792">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L2060">
       
       (source)
     </a>
@@ -632,9 +677,13 @@ the automatic name.</td></tr><tr><td class="fieldArgContainer"><span class="fiel
 This provides an alternative way to specify config files in place of
 the ArgumentParser(fromfile_prefix_chars=..) mechanism.
 Default: False</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">is<wbr></wbr>_write<wbr></wbr>_out<wbr></wbr>_config<wbr></wbr>_file<wbr></wbr>_arg</span></td><td class="fieldArgDesc">If True, this arg will be treated as a
-config file path, and, when it is specified, will cause
-configargparse to write all current commandline args to this file
-as config options and then exit.
+config file path, and, when it is specified on the command line,
+will cause configargparse to write all current commandline args to
+this file as config options and then exit. It can only be set on the
+command line: a config file key that names it is an error, and it
+can't be combined with env_var, nor be a positional arg, since a
+config file value would be indistinguishable from a path the user
+typed and could overwrite an arbitrary file.
 Default: False</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="argparse.Action.html" class="internal-link">argparse.Action</a></code></td><td class="fieldArgDesc">the new argparse action</td></tr></table></div>
   </div>
 </div><div class="basefunction">
@@ -650,7 +699,7 @@ Default: False</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2"
     
     
     <span class="py-keyword">def</span> <span class="py-defname">already_on_command_line</span><span class="function-signature">(existing_args_list, potential_command_line_args, prefix_chars)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L1848">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L2189">
       
       (source)
     </a>
@@ -678,7 +727,7 @@ already present in existing_args.</p><table class="fieldTable"><tr class="fieldS
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_argument_parser</span><span class="function-signature">(name=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, **kwargs)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L68">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L68">
       
       (source)
     </a>
@@ -708,7 +757,7 @@ ArgumentParser constructor.</p></div>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_toml_section</span><span class="function-signature">(data, section)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L463">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L508">
       
       (source)
     </a>
@@ -736,7 +785,7 @@ Returns <tt class="rst-docutils rst-literal">None</tt> if the section is not fou
     
     
     <span class="py-keyword">def</span> <span class="py-defname">init_argument_parser</span><span class="function-signature">(name=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, **kwargs)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L45">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L45">
       
       (source)
     </a>
@@ -765,7 +814,7 @@ This instance can then be retrieved using get_argument_parser(..)</p></div>
     
     @<a href="https://docs.python.org/3/library/functools.html#functools.lru_cache" class="intersphinx-link">functools.lru_cache</a>(<wbr></wbr>maxsize=256, <wbr></wbr>typed=<a href="https://docs.python.org/3/library/constants.html#True" class="intersphinx-link">True</a>)<br />
     <span class="py-keyword">def</span> <span class="py-defname">is_quoted</span><span class="function-signature">(text, triple=<a href="https://docs.python.org/3/library/constants.html#True" class="intersphinx-link">True</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L409">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L454">
       
       (source)
     </a>
@@ -792,7 +841,7 @@ This instance can then be retrieved using get_argument_parser(..)</p></div>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">parse_toml_section_name</span><span class="function-signature">(section_name)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L443">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L488">
       
       (source)
     </a>
@@ -825,7 +874,7 @@ This instance can then be retrieved using get_argument_parser(..)</p></div>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">unquote_str</span><span class="function-signature">(text, triple=<a href="https://docs.python.org/3/library/constants.html#True" class="intersphinx-link">True</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L421">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L466">
       
       (source)
     </a>
@@ -854,7 +903,7 @@ This would be a bug in the regex.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">ACTION_TYPES_THAT_DONT_NEED_A_VALUE</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L22">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L22">
       
       (source)
     </a>
@@ -881,7 +930,7 @@ This would be a bug in the regex.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">is_boolean_optional_action</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L32">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L32">
       
       (source)
     </a>
@@ -896,6 +945,65 @@ This would be a bug in the regex.</td></tr></table></div>
     <div><p class="undocumented">Undocumented</p></div>
     
   </div>
+</div><div class="basefunction private">
+  
+  
+  <a name="configargparse._dispatches_to_subparsers">
+    
+  </a>
+  <a name="_dispatches_to_subparsers">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span> <span class="py-defname">_dispatches_to_subparsers</span><span class="function-signature">(action)</span>:
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L2167">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_dispatches_to_subparsers" title="configargparse._dispatches_to_subparsers">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Check whether an action hands the rest of the command line to a subparser.</p>
+<p>Nearly always this is an <tt class="rst-docutils rst-literal">argparse._SubParsersAction</tt>, but a program can
+register a class of its own for the job, so recognize the shape too: a
+mapping of subcommand names to parsers, taking the rest of the args.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">action</span></td><td class="fieldArgDesc">the action to check.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">whether it dispatches to subparsers</td></tr></table></div>
+  </div>
+</div><div class="basefunction private">
+  
+  
+  <a name="configargparse._subparsers_of">
+    
+  </a>
+  <a name="_subparsers_of">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span> <span class="py-defname">_subparsers_of</span><span class="function-signature">(parser, seen=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>)</span>:
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L2140">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_subparsers_of" title="configargparse._subparsers_of">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Find a parser and every subparser reachable from it.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">parser</span></td><td class="fieldArgDesc">the parser to start from.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">seen</span></td><td class="fieldArgDesc">ids of the parsers already visited, so that a subparser leading
+back to one of its own ancestors doesn't loop forever.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="argparse.ArgumentParser.html" class="internal-link">argparse.ArgumentParser</a>]</code></td><td class="fieldArgDesc">the parser and its subparsers</td></tr></table></div>
+  </div>
 </div><div class="baseconstant private">
   
   
@@ -908,7 +1016,7 @@ This would be a bug in the regex.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">_COMMAND_LINE_SOURCE_KEY</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L821">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L866">
       
       (source)
     </a>
@@ -935,7 +1043,7 @@ This would be a bug in the regex.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">_CONFIG_FILE_SOURCE_KEY</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L823">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L868">
       
       (source)
     </a>
@@ -962,7 +1070,7 @@ This would be a bug in the regex.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">_DEFAULTS_SOURCE_KEY</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L824">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L869">
       
       (source)
     </a>
@@ -989,7 +1097,7 @@ This would be a bug in the regex.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">_ENV_VAR_SOURCE_KEY</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L822">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L867">
       
       (source)
     </a>
@@ -1016,7 +1124,7 @@ This would be a bug in the regex.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">_QUOTED_STR_REGEX</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L397">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L442">
       
       (source)
     </a>
@@ -1043,7 +1151,7 @@ This would be a bug in the regex.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">_TRIPLE_QUOTED_STR_REGEX</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L399">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L444">
       
       (source)
     </a>
@@ -1073,7 +1181,7 @@ $<span class="rst-re-group">)</span><span class="rst-variable-quote">'</span>,
   <div class="functionHeader">
     
     <span class="py-defname">_parsers</span>: <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/b2ea0e5df1ea6752e1eff01c3cd8a8da9e7e2e74/configargparse.py#L42">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L42">
       
       (source)
     </a>
@@ -1098,9 +1206,9 @@ $<span class="rst-re-group">)</span><span class="rst-variable-quote">'</span>,
 
   
   <div class="container-fluid">
-    <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 0.0.post1.dev1+gb2ea0e5df</a>,
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 0.0.post1.dev1+g213801b5d</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    24.11.2 at 2026-05-05 10:12:56.
+    24.11.2 at 2026-09-06 02:02:41.
   </div>
 
   <!-- Search related scripts needs to be loaded at the end of HTML 

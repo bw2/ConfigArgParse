@@ -6,7 +6,7 @@
 
   <head>
     
-    <title>configargparse.YAMLConfigFileParser</title>
+    <title>configargparse._WriteOutConfigFileActionMixin</title>
     <meta name="generator" content="pydoctor 24.11.2"> 
         
     </meta>
@@ -110,7 +110,7 @@
 
       <div class="thingTitle">
         <span>Class</span>
-        <code class="thisobject"><a href="configargparse.YAMLConfigFileParser.html" class="internal-link" title="This class"><wbr></wbr>YAMLConfig<wbr></wbr>File<wbr></wbr>Parser</a></code> 
+        <code class="thisobject"><a href="configargparse._WriteOutConfigFileActionMixin.html" class="internal-link" title="This class">_<wbr></wbr>Write<wbr></wbr>Out<wbr></wbr>Config<wbr></wbr>File<wbr></wbr>Action<wbr></wbr>Mixin</a></code> 
       </div>
       
       <div>
@@ -131,37 +131,7 @@
         
 
         
-            <div class="itemName"><code><a href="#get_syntax_description" class="internal-link" title="configargparse.YAMLConfigFileParser.get_syntax_description">get<wbr></wbr>_syntax<wbr></wbr>_description</a></code>
-            </div>
-        
-
-    </li><li class="">
-        
-        
-        
-
-        
-            <div class="itemName"><code><a href="#parse" class="internal-link" title="configargparse.YAMLConfigFileParser.parse">parse</a></code>
-            </div>
-        
-
-    </li><li class="">
-        
-        
-        
-
-        
-            <div class="itemName"><code><a href="#serialize" class="internal-link" title="configargparse.YAMLConfigFileParser.serialize">serialize</a></code>
-            </div>
-        
-
-    </li><li class="private">
-        
-        
-        
-
-        
-            <div class="itemName"><code><a href="#_load_yaml" class="internal-link" title="configargparse.YAMLConfigFileParser._load_yaml">_load<wbr></wbr>_yaml</a></code>
+            <div class="itemName"><code><a href="#__call__" class="internal-link" title="configargparse._WriteOutConfigFileActionMixin.__call__">__call__</a></code>
             </div>
         
 
@@ -274,7 +244,7 @@
             </div>
         
 
-    </li><li class=" thisobject">
+    </li><li class="">
         
         
         
@@ -294,7 +264,7 @@
             </div>
         
 
-    </li><li class="private">
+    </li><li class="private thisobject">
         
         
         
@@ -534,7 +504,7 @@
         
 
         <div class="page-header">
-          <h1 class="class"><code><code><a href="configargparse.html" class="internal-link">configargparse</a></code><wbr></wbr>.<code><a href="configargparse.YAMLConfigFileParser.html" class="internal-link" title="configargparse.YAMLConfigFileParser">YAMLConfigFileParser</a></code></code></h1>
+          <h1 class="class private"><code><code><a href="configargparse.html" class="internal-link">configargparse</a></code><wbr></wbr>.<code><a href="configargparse._WriteOutConfigFileActionMixin.html" class="internal-link" title="configargparse._WriteOutConfigFileActionMixin">_WriteOutConfigFileActionMixin</a></code></code></h1>
           <div id="showPrivate">
             <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
           </div>
@@ -545,39 +515,31 @@
         </div>
 
         <div class="extrasDocstring">
-          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">YAMLConfigFileParser</span>(<a href="configargparse.ConfigFileParser.html" class="internal-link" title="configargparse.ConfigFileParser">ConfigFileParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L346" class="sourceLink">(source)</a></code></p>
-          <p><a href="classIndex.html#configargparse.YAMLConfigFileParser">View In Hierarchy</a></p>
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">_WriteOutConfigFileActionMixin</span>(<a href="https://docs.python.org/3/library/functions.html#object" class="intersphinx-link">object</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L133" class="sourceLink">(source)</a></code></p>
+          <p><a href="classIndex.html#configargparse._WriteOutConfigFileActionMixin">View In Hierarchy</a></p>
         </div>
 
         <div class="moduleDocstring">
-          <div><p>Parses YAML config files. Depends on the PyYAML module.
-<a class="rst-external rst-reference" href="https://pypi.python.org/pypi/PyYAML" target="_top">https://pypi.python.org/pypi/PyYAML</a></p></div>
+          <div><p>Remembers the path this arg was given, on the parser that parsed it.</p>
+<p>The path can't just be read back out of the parsed namespace once parsing
+finishes: another arg sharing this one's dest could have put a value there,
+from a config file or anywhere else, and writing a config file overwrites
+the path it is given. Recording it as the arg is parsed means only this
+arg decides where that write goes.</p>
+<p>add_argument() puts this over whichever store action the program asked for,
+so an arg that does something of its own with the path still records it.</p>
+</div>
         </div>
 
         <div id="splitTables">
-          <table class="children sortable" id="id80">
+          <table class="children sortable" id="id77">
   
   
   <tr class="method">
     
     <td>Method</td>
-    <td><code><a href="#get_syntax_description" class="internal-link" title="configargparse.YAMLConfigFileParser.get_syntax_description">get<wbr></wbr>_syntax<wbr></wbr>_description</a></code></td>
-    <td>Returns a string describing the config file syntax.</td>
-  </tr><tr class="method">
-    
-    <td>Method</td>
-    <td><code><a href="#parse" class="internal-link" title="configargparse.YAMLConfigFileParser.parse">parse</a></code></td>
-    <td>Parses the keys and values from a config file.</td>
-  </tr><tr class="method">
-    
-    <td>Method</td>
-    <td><code><a href="#serialize" class="internal-link" title="configargparse.YAMLConfigFileParser.serialize">serialize</a></code></td>
-    <td>Does the inverse of config parsing by taking parsed values and converting them back to a string representing config file contents.</td>
-  </tr><tr class="method private">
-    
-    <td>Method</td>
-    <td><code><a href="#_load_yaml" class="internal-link" title="configargparse.YAMLConfigFileParser._load_yaml">_load<wbr></wbr>_yaml</a></code></td>
-    <td>lazy-import PyYAML so that configargparse doesn't have to depend on it unless this parser is used.</td>
+    <td><code><a href="#__call__" class="internal-link" title="configargparse._WriteOutConfigFileActionMixin.__call__">__call__</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
   </tr>
 </table>
           
@@ -589,111 +551,21 @@
           <div class="basemethod">
   
   
-  <a name="configargparse.YAMLConfigFileParser.get_syntax_description">
+  <a name="configargparse._WriteOutConfigFileActionMixin.__call__">
     
   </a>
-  <a name="get_syntax_description">
-    
-  </a>
-  <div class="functionHeader">
-    
-    
-    <span class="py-keyword">def</span> <span class="py-defname">get_syntax_description</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L351">
-      
-      (source)
-    </a>
-    <a class="headerLink" href="#get_syntax_description" title="configargparse.YAMLConfigFileParser.get_syntax_description">
-      
-      
-      ¶
-    </a>
-  </div>
-  <div class="docstring functionBody">
-    <div class="interfaceinfo">overrides <code><a href="configargparse.ConfigFileParser.html#get_syntax_description" class="internal-link">configargparse.ConfigFileParser.get_syntax_description</a></code></div>
-    <div><p>Returns a string describing the config file syntax.</p></div>
-  </div>
-</div><div class="basemethod">
-  
-  
-  <a name="configargparse.YAMLConfigFileParser.parse">
-    
-  </a>
-  <a name="parse">
+  <a name="__call__">
     
   </a>
   <div class="functionHeader">
     
     
-    <span class="py-keyword">def</span> <span class="py-defname">parse</span><span class="function-signature">(self, stream)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L378">
+    <span class="py-keyword">def</span> <span class="py-defname">__call__</span><span class="function-signature">(self, parser, namespace, values, option_string=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>)</span>:
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L146">
       
       (source)
     </a>
-    <a class="headerLink" href="#parse" title="configargparse.YAMLConfigFileParser.parse">
-      
-      
-      ¶
-    </a>
-  </div>
-  <div class="docstring functionBody">
-    <div class="interfaceinfo">overrides <code><a href="configargparse.ConfigFileParser.html#parse" class="internal-link">configargparse.ConfigFileParser.parse</a></code></div>
-    <div><p>Parses the keys and values from a config file.</p>
-<p>NOTE: For keys that were specified to configargparse as
-action="store_true" or "store_false", the config file value must be
-one of: "yes", "no", "on", "off", "true", "false". Otherwise an error will be raised.</p>
-<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">stream:</span><code><a href="https://docs.python.org/3/library/io.html#io.IOBase" class="intersphinx-link">io.IOBase</a></code></td><td class="fieldArgDesc">A config file input stream (such as an open file object).</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/collections.html#collections.OrderedDict" class="intersphinx-link">OrderedDict</a></code></td><td class="fieldArgDesc">Items where the keys are strings and the
-values are either strings or lists (eg. to support config file
-formats like YAML which allow lists).</td></tr></table></div>
-  </div>
-</div><div class="basemethod">
-  
-  
-  <a name="configargparse.YAMLConfigFileParser.serialize">
-    
-  </a>
-  <a name="serialize">
-    
-  </a>
-  <div class="functionHeader">
-    
-    
-    <span class="py-keyword">def</span> <span class="py-defname">serialize</span><span class="function-signature">(self, items, default_flow_style=<a href="https://docs.python.org/3/library/constants.html#False" class="intersphinx-link">False</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L406">
-      
-      (source)
-    </a>
-    <a class="headerLink" href="#serialize" title="configargparse.YAMLConfigFileParser.serialize">
-      
-      
-      ¶
-    </a>
-  </div>
-  <div class="docstring functionBody">
-    <div class="interfaceinfo">overrides <code><a href="configargparse.ConfigFileParser.html#serialize" class="internal-link">configargparse.ConfigFileParser.serialize</a></code></div>
-    <div><p>Does the inverse of config parsing by taking parsed values and
-converting them back to a string representing config file contents.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">items</span></td><td class="fieldArgDesc">an OrderedDict of items to be converted to the config file
-format. Keys should be strings, and values should be either strings
-or lists.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">default<wbr></wbr>_flow<wbr></wbr>_style</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td colspan="2">Contents of config file as a string</td></tr></table></div>
-  </div>
-</div><div class="basemethod private">
-  
-  
-  <a name="configargparse.YAMLConfigFileParser._load_yaml">
-    
-  </a>
-  <a name="_load_yaml">
-    
-  </a>
-  <div class="functionHeader">
-    
-    
-    <span class="py-keyword">def</span> <span class="py-defname">_load_yaml</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/213801b5d2b7422db3e400cd8311718fc172292c/configargparse.py#L358">
-      
-      (source)
-    </a>
-    <a class="headerLink" href="#_load_yaml" title="configargparse.YAMLConfigFileParser._load_yaml">
+    <a class="headerLink" href="#__call__" title="configargparse._WriteOutConfigFileActionMixin.__call__">
       
       
       ¶
@@ -701,8 +573,7 @@ or lists.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">defa
   </div>
   <div class="docstring functionBody">
     
-    <div><p>lazy-import PyYAML so that configargparse doesn't have to depend
-on it unless this parser is used.</p></div>
+    <div><p class="undocumented">Undocumented</p></div>
   </div>
 </div>
         </div>
