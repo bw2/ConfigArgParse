@@ -32,7 +32,7 @@
       
       <div class="navlinks">
         <span class="navbar-brand">
-          <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7.7</a> <a href="index.html">API Documentation</a>
+          <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 0.0.post1.dev1+gd8ac796b8</a> <a href="index.html">API Documentation</a>
         </span>
 
         <a href="moduleIndex.html">
@@ -292,6 +292,16 @@
 
         
             <div class="itemName"><code><a href="#_open_config_files" class="internal-link" title="configargparse.ArgumentParser._open_config_files">_open<wbr></wbr>_config<wbr></wbr>_files</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_option_strings_that_override" class="internal-link" title="configargparse.ArgumentParser._option_strings_that_override">_option<wbr></wbr>_strings<wbr></wbr>_that<wbr></wbr>_override</a></code>
             </div>
         
 
@@ -1474,7 +1484,7 @@
         </div>
 
         <div class="extrasDocstring">
-          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">ArgumentParser</span>(<a href="argparse.ArgumentParser.html" class="internal-link" title="argparse.ArgumentParser">argparse.ArgumentParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L897" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.ArgumentParser.__init__">ArgumentParser(*args, **kwargs)</a></code></p>
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">ArgumentParser</span>(<a href="argparse.ArgumentParser.html" class="internal-link" title="argparse.ArgumentParser">argparse.ArgumentParser</a>): <a href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L897" class="sourceLink">(source)</a></code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="configargparse.ArgumentParser.__init__">ArgumentParser(*args, **kwargs)</a></code></p>
           <p><a href="classIndex.html#configargparse.ArgumentParser">View In Hierarchy</a></p>
         </div>
 
@@ -1577,6 +1587,11 @@ environment variables and <tt class="rst-docutils rst-literal">.ini</tt> or <tt 
     <td>Method</td>
     <td><code><a href="#_open_config_files" class="internal-link" title="configargparse.ArgumentParser._open_config_files">_open<wbr></wbr>_config<wbr></wbr>_files</a></code></td>
     <td>Tries to parse config file path(s) from within command_line_args. Returns a list of opened config files, including files specified on the commandline as well as any default_config_files specified in the constructor that are present on disk.</td>
+  </tr><tr class="method private">
+    
+    <td>Method</td>
+    <td><code><a href="#_option_strings_that_override" class="internal-link" title="configargparse.ArgumentParser._option_strings_that_override">_option<wbr></wbr>_strings<wbr></wbr>_that<wbr></wbr>_override</a></code></td>
+    <td>Find the option strings that, when already on the command line, mean an env var or config file value for the given action should be dropped.</td>
   </tr><tr class="method private">
     
     <td>Method</td>
@@ -2010,7 +2025,7 @@ environment variables and <tt class="rst-docutils rst-literal">.ini</tt> or <tt 
     
     
     <span class="py-keyword">def</span> <span class="py-defname">__init__</span><span class="function-signature">(self, *args, **kwargs)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L902">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L902">
       
       (source)
     </a>
@@ -2087,7 +2102,7 @@ the args in args_for_writing_out_config_file.</td></tr></table></div>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">convert_item_to_command_line_arg</span><span class="function-signature">(self, action, key, value)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1715">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1743">
       
       (source)
     </a>
@@ -2102,7 +2117,7 @@ the args in args_for_writing_out_config_file.</td></tr></table></div>
     <div><p>Converts a config file or env var key + value to a list of
 commandline args to append to the commandline.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">action</span></td><td class="fieldArgDesc">The argparse Action object for this setting, or None if this
 config file setting doesn't correspond to any defined
-configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key</span></td><td class="fieldArgDesc">string (config file key or env var name)</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">value</span></td><td class="fieldArgDesc">parsed value of type string or list</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]</code></td><td class="fieldArgDesc">args</td></tr></table></div>
+configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key</span></td><td class="fieldArgDesc">string (config file key or env var name)</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">value</span></td><td class="fieldArgDesc">parsed value of type string or list</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="https://docs.python.org/3/builtins/stdtypes.html#str" class="intersphinx-link">str</a>]</code></td><td class="fieldArgDesc">args</td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -2117,7 +2132,7 @@ configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fiel
     
     
     <span class="py-keyword">def</span> <span class="py-defname">format_help</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1992">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L2020">
       
       (source)
     </a>
@@ -2144,7 +2159,7 @@ configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fiel
     
     
     <span class="py-keyword">def</span> <span class="py-defname">format_values</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1955">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1983">
       
       (source)
     </a>
@@ -2157,7 +2172,7 @@ configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fiel
   <div class="docstring functionBody">
     
     <div><p>Returns a string with all args and settings and where they came from
-(eg. commandline, config file, environment variable or default)</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">source to settings string</td></tr></table></div>
+(eg. commandline, config file, environment variable or default)</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">source to settings string</td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -2172,7 +2187,7 @@ configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fiel
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_command_line_key_for_unknown_config_file_setting</span><span class="function-signature">(self, key)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1648">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1676">
       
       (source)
     </a>
@@ -2186,7 +2201,7 @@ configargparse arg.</td></tr><tr><td class="fieldArgContainer"><span class="fiel
     
     <div><p>Compute a commandline arg key to be used for a config file setting
 that doesn't correspond to any defined configargparse arg (and so
-doesn't have a user-specified commandline arg key).</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key</span></td><td class="fieldArgDesc">The config file key that was being set.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">command line key</td></tr></table></div>
+doesn't have a user-specified commandline arg key).</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">key</span></td><td class="fieldArgDesc">The config file key that was being set.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc">command line key</td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -2201,7 +2216,7 @@ doesn't have a user-specified commandline arg key).</p><table class="fieldTable"
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_items_for_config_file_output</span><span class="function-signature">(self, source_to_settings, parsed_namespace)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1664">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1692">
       
       (source)
     </a>
@@ -2230,7 +2245,7 @@ or lists</td></tr></table></div>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_possible_config_keys</span><span class="function-signature">(self, action)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1808">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1836">
       
       (source)
     </a>
@@ -2244,7 +2259,7 @@ or lists</td></tr></table></div>
     
     <div><p>This method decides which actions can be set in a config file and
 what their keys will be. It returns a list of 0 or more config keys that
-can be used to set the given action's value in a config file.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]</code></td><td class="fieldArgDesc">keys</td></tr></table></div>
+can be used to set the given action's value in a config file.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="https://docs.python.org/3/builtins/stdtypes.html#str" class="intersphinx-link">str</a>]</code></td><td class="fieldArgDesc">keys</td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -2259,7 +2274,7 @@ can be used to set the given action's value in a config file.</p><table class="f
     
     
     <span class="py-keyword">def</span> <span class="py-defname">get_source_to_settings_dict</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1400">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1428">
       
       (source)
     </a>
@@ -2278,7 +2293,7 @@ to where a given option's value is coming from:
 - "config_file"
 - "defaults"
 Each such key, will be mapped to another dictionary containing the options set via that method. Here the key
-will be the option name, and the value will be a 2-tuple of the form (<code><a href="argparse.Action.html" class="internal-link">argparse.Action</a></code> obj, <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code> value).</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, <code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code>, <code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="argparse.Action.html" class="internal-link">argparse.Action</a></code>, <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]]]</code></td><td class="fieldArgDesc">source to settings dict</td></tr></table></div>
+will be the option name, and the value will be a 2-tuple of the form (<code><a href="argparse.Action.html" class="internal-link">argparse.Action</a></code> obj, <code><a href="https://docs.python.org/3/builtins/stdtypes.html#str" class="intersphinx-link">str</a></code> value).</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/builtins/stdtypes.html#str" class="intersphinx-link">str</a></code>, <code><a href="https://docs.python.org/3/builtins/stdtypes.html#dict" class="intersphinx-link">dict</a>[<a href="https://docs.python.org/3/builtins/stdtypes.html#str" class="intersphinx-link">str</a></code>, <code><a href="https://docs.python.org/3/builtins/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="argparse.Action.html" class="internal-link">argparse.Action</a></code>, <code><a href="https://docs.python.org/3/builtins/stdtypes.html#str" class="intersphinx-link">str</a>]]]</code></td><td class="fieldArgDesc">source to settings dict</td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -2292,8 +2307,8 @@ will be the option name, and the value will be a 2-tuple of the form (<code><a h
   <div class="functionHeader">
     
     
-    <span class="py-keyword">def</span> <span class="py-defname">parse_args</span><span class="function-signature">(self, args=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, namespace=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, config_file_contents=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, env_vars=<a href="https://docs.python.org/3/library/os.html#os.environ" class="intersphinx-link">os.environ</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1133">
+    <span class="py-keyword">def</span> <span class="py-defname">parse_args</span><span class="function-signature">(self, args=<a href="https://docs.python.org/3/builtins/constants.html#None" class="intersphinx-link">None</a>, namespace=<a href="https://docs.python.org/3/builtins/constants.html#None" class="intersphinx-link">None</a>, config_file_contents=<a href="https://docs.python.org/3/builtins/constants.html#None" class="intersphinx-link">None</a>, env_vars=<a href="https://docs.python.org/3/library/os.html#os.environ" class="intersphinx-link">os.environ</a>)</span>:
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1157">
       
       (source)
     </a>
@@ -2320,8 +2335,8 @@ as well as the following additional args.</p><table class="fieldTable"><tr class
   <div class="functionHeader">
     
     
-    <span class="py-keyword">def</span> <span class="py-defname">parse_known_args</span><span class="function-signature">(self, args=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, namespace=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, config_file_contents=<a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a>, env_vars=<a href="https://docs.python.org/3/library/os.html#os.environ" class="intersphinx-link">os.environ</a>, ignore_help_args=<a href="https://docs.python.org/3/library/constants.html#False" class="intersphinx-link">False</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1163">
+    <span class="py-keyword">def</span> <span class="py-defname">parse_known_args</span><span class="function-signature">(self, args=<a href="https://docs.python.org/3/builtins/constants.html#None" class="intersphinx-link">None</a>, namespace=<a href="https://docs.python.org/3/builtins/constants.html#None" class="intersphinx-link">None</a>, config_file_contents=<a href="https://docs.python.org/3/builtins/constants.html#None" class="intersphinx-link">None</a>, env_vars=<a href="https://docs.python.org/3/library/os.html#os.environ" class="intersphinx-link">os.environ</a>, ignore_help_args=<a href="https://docs.python.org/3/builtins/constants.html#False" class="intersphinx-link">False</a>)</span>:
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1187">
       
       (source)
     </a>
@@ -2334,8 +2349,8 @@ as well as the following additional args.</p><table class="fieldTable"><tr class
   <div class="docstring functionBody">
     <div class="interfaceinfo">overrides <code><a href="argparse.ArgumentParser.html#parse_known_args" class="internal-link">argparse.ArgumentParser.parse_known_args</a></code></div>
     <div><p>Supports all the same args as the <code><a href="argparse.ArgumentParser.html#parse_args" class="internal-link" title="argparse.ArgumentParser.parse_args">argparse.ArgumentParser.parse_args()</a></code>,
-as well as the following additional args.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">args</span></td><td class="fieldArgDesc">a list of args as in argparse, or a string (eg. "-x -y bla")</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">namespace</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config<wbr></wbr>_file<wbr></wbr>_contents:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc"></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">env<wbr></wbr>_vars:</span><code><a href="https://docs.python.org/3/library/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc"></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">ignore<wbr></wbr>_help<wbr></wbr>_args:</span><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">This flag determines behavior when user specifies <tt class="rst-docutils rst-literal"><span class="pre">--help</span></tt> or <tt class="rst-docutils rst-literal"><span class="pre">-h</span></tt>. If False,
-it will have the default behavior - printing help and exiting. If True, it won't do either.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="argparse.Namespace.html" class="internal-link">argparse.Namespace</a></code>, <code><a href="https://docs.python.org/3/library/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]]</code></td><td class="fieldArgDesc">tuple namescpace, unknown_args</td></tr></table></div>
+as well as the following additional args.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">args</span></td><td class="fieldArgDesc">a list of args as in argparse, or a string (eg. "-x -y bla")</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">namespace</span></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">config<wbr></wbr>_file<wbr></wbr>_contents:</span><code><a href="https://docs.python.org/3/builtins/stdtypes.html#str" class="intersphinx-link">str</a></code></td><td class="fieldArgDesc"></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">env<wbr></wbr>_vars:</span><code><a href="https://docs.python.org/3/builtins/stdtypes.html#dict" class="intersphinx-link">dict</a></code></td><td class="fieldArgDesc"></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">ignore<wbr></wbr>_help<wbr></wbr>_args:</span><code><a href="https://docs.python.org/3/builtins/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">This flag determines behavior when user specifies <tt class="rst-docutils rst-literal"><span class="pre">--help</span></tt> or <tt class="rst-docutils rst-literal"><span class="pre">-h</span></tt>. If False,
+it will have the default behavior - printing help and exiting. If True, it won't do either.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="argparse.Namespace.html" class="internal-link">argparse.Namespace</a></code>, <code><a href="https://docs.python.org/3/builtins/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="https://docs.python.org/3/builtins/stdtypes.html#str" class="intersphinx-link">str</a>]]</code></td><td class="fieldArgDesc">tuple namescpace, unknown_args</td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -2350,7 +2365,7 @@ it will have the default behavior - printing help and exiting. If True, it won't
     
     
     <span class="py-keyword">def</span> <span class="py-defname">print_values</span><span class="function-signature">(self, file=<a href="https://docs.python.org/3/library/sys.html#sys.stdout" class="intersphinx-link">sys.stdout</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1988">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L2016">
       
       (source)
     </a>
@@ -2376,8 +2391,8 @@ it will have the default behavior - printing help and exiting. If True, it won't
   <div class="functionHeader">
     
     
-    <span class="py-keyword">def</span> <span class="py-defname">write_config_file</span><span class="function-signature">(self, parsed_namespace, output_file_paths, exit_after=<a href="https://docs.python.org/3/library/constants.html#False" class="intersphinx-link">False</a>)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1616">
+    <span class="py-keyword">def</span> <span class="py-defname">write_config_file</span><span class="function-signature">(self, parsed_namespace, output_file_paths, exit_after=<a href="https://docs.python.org/3/builtins/constants.html#False" class="intersphinx-link">False</a>)</span>:
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1644">
       
       (source)
     </a>
@@ -2402,8 +2417,8 @@ it will have the default behavior - printing help and exiting. If True, it won't
   </a>
   <div class="functionHeader">
     
-    <span class="py-defname">exit_on_error</span>: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1082">
+    <span class="py-defname">exit_on_error</span>: <code><a href="https://docs.python.org/3/builtins/functions.html#bool" class="intersphinx-link">bool</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1082">
       
       (source)
     </a>
@@ -2431,7 +2446,7 @@ it will have the default behavior - printing help and exiting. If True, it won't
     
     
     <span class="py-keyword">def</span> <span class="py-defname">_could_set_option</span><span class="function-signature">(self, arg_string, option_string)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1532">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1560">
       
       (source)
     </a>
@@ -2450,7 +2465,7 @@ it), bundled with other short options, and abbreviated. Where argparse
 would need to look at the rest of the command line to decide, this says
 yes, since it is used to reject args that must not reach an option at
 all, and being wrong in that direction only costs an error message.</p>
-<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">arg<wbr></wbr>_string</span></td><td class="fieldArgDesc">a single command line arg.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">option<wbr></wbr>_string</span></td><td class="fieldArgDesc">an option string of the option to look for.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">whether the arg could set the option</td></tr></table></div>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">arg<wbr></wbr>_string</span></td><td class="fieldArgDesc">a single command line arg.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">option<wbr></wbr>_string</span></td><td class="fieldArgDesc">an option string of the option to look for.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">whether the arg could set the option</td></tr></table></div>
   </div>
 </div><div class="basemethod private">
   
@@ -2465,7 +2480,7 @@ all, and being wrong in that direction only costs an error message.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">_find_insertion_index</span><span class="function-signature">(self, args)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1084">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1084">
       
       (source)
     </a>
@@ -2497,7 +2512,7 @@ exists. Falls back to appending.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">_find_subcommand_index</span><span class="function-signature">(self, args)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1115">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1115">
       
       (source)
     </a>
@@ -2509,7 +2524,7 @@ exists. Falls back to appending.</p>
   </div>
   <div class="docstring functionBody">
     
-    <div><p>Find where the subcommand is on the command line, if there is one.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">args</span></td><td class="fieldArgDesc">the command line args.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#int" class="intersphinx-link">int</a></code> or <code><a href="https://docs.python.org/3/library/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc">the index of the first arg naming a subcommand</td></tr></table></div>
+    <div><p>Find where the subcommand is on the command line, if there is one.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">args</span></td><td class="fieldArgDesc">the command line args.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/functions.html#int" class="intersphinx-link">int</a></code> or <code><a href="https://docs.python.org/3/builtins/constants.html#None" class="intersphinx-link">None</a></code></td><td class="fieldArgDesc">the index of the first arg naming a subcommand</td></tr></table></div>
   </div>
 </div><div class="basemethod private">
   
@@ -2524,7 +2539,7 @@ exists. Falls back to appending.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">_names_a_write_out_config_file_arg</span><span class="function-signature">(self, arg_string, parsers)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1480">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1508">
       
       (source)
     </a>
@@ -2536,7 +2551,7 @@ exists. Falls back to appending.</p>
   </div>
   <div class="docstring functionBody">
     
-    <div><p>Check whether a command line arg would set a write-out-config-file arg.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">arg<wbr></wbr>_string</span></td><td class="fieldArgDesc">a single command line arg.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">parsers</span></td><td class="fieldArgDesc">the parsers that could end up parsing it.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">whether it names a write-out-config-file arg</td></tr></table></div>
+    <div><p>Check whether a command line arg would set a write-out-config-file arg.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">arg<wbr></wbr>_string</span></td><td class="fieldArgDesc">a single command line arg.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">parsers</span></td><td class="fieldArgDesc">the parsers that could end up parsing it.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">whether it names a write-out-config-file arg</td></tr></table></div>
   </div>
 </div><div class="basemethod private">
   
@@ -2551,7 +2566,7 @@ exists. Falls back to appending.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">_open_config_files</span><span class="function-signature">(self, command_line_args)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1828">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1856">
       
       (source)
     </a>
@@ -2566,11 +2581,45 @@ exists. Falls back to appending.</p>
     <div><p>Tries to parse config file path(s) from within command_line_args.
 Returns a list of opened config files, including files specified on the
 commandline as well as any default_config_files specified in the
-constructor that are present on disk.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">command<wbr></wbr>_line<wbr></wbr>_args</span></td><td class="fieldArgDesc">List of all args</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="https://docs.python.org/3/library/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="https://docs.python.org/3/library/io.html#io.IOBase" class="intersphinx-link">io.IOBase</a></code>, <code><a href="https://docs.python.org/3/library/stdtypes.html#str" class="intersphinx-link">str</a>]]</code></td><td class="fieldArgDesc">list of <tt class="rst-docutils rst-literal">(stream, source_label)</tt>
+constructor that are present on disk.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">command<wbr></wbr>_line<wbr></wbr>_args</span></td><td class="fieldArgDesc">List of all args</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="https://docs.python.org/3/builtins/stdtypes.html#tuple" class="intersphinx-link">tuple</a>[<a href="https://docs.python.org/3/library/io.html#io.IOBase" class="intersphinx-link">io.IOBase</a></code>, <code><a href="https://docs.python.org/3/builtins/stdtypes.html#str" class="intersphinx-link">str</a>]]</code></td><td class="fieldArgDesc">list of <tt class="rst-docutils rst-literal">(stream, source_label)</tt>
 pairs. The <tt class="rst-docutils rst-literal">source_label</tt> is unique per entry (file path for
 path entries; <tt class="rst-docutils rst-literal"><span class="pre">"&lt;entry_label&gt;[&lt;index&gt;]"</span></tt> for callable entries),
 so different entries cannot collapse into a single source key in
 <tt class="rst-docutils rst-literal">format_values()</tt>.</td></tr></table></div>
+  </div>
+</div><div class="basemethod private">
+  
+  
+  <a name="configargparse.ArgumentParser._option_strings_that_override">
+    
+  </a>
+  <a name="_option_strings_that_override">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span> <span class="py-defname">_option_strings_that_override</span><span class="function-signature">(self, action)</span>:
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1133">
+      
+      (source)
+    </a>
+    <a class="headerLink" href="#_option_strings_that_override" title="configargparse.ArgumentParser._option_strings_that_override">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Find the option strings that, when already on the command line, mean
+an env var or config file value for the given action should be dropped.</p>
+<p>These are the action's own option strings plus those of every other
+action in the same mutually exclusive group, mirroring the conflicts
+argparse checks for. Without the latter, a config file value for one
+member of a group would clash with a different member given on the
+command line instead of being overridden by it (see issue #164).</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">action</span></td><td class="fieldArgDesc">the argparse.Action to find overriding option strings for.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="https://docs.python.org/3/builtins/stdtypes.html#str" class="intersphinx-link">str</a>]</code></td><td class="fieldArgDesc">the option strings</td></tr></table></div>
   </div>
 </div><div class="basemethod private">
   
@@ -2585,7 +2634,7 @@ so different entries cannot collapse into a single source key in
     
     
     <span class="py-keyword">def</span> <span class="py-defname">_reachable_parsers</span><span class="function-signature">(self)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1500">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1528">
       
       (source)
     </a>
@@ -2603,7 +2652,7 @@ them as its own command line, and argparse parses it into this parser's
 namespace, so both what a subparser accepts and what it stores matter
 here. Subparsers that aren't ConfigArgParse parsers are walked through
 as well, since one of them can hold a subparser that is.</p>
-<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="argparse.ArgumentParser.html" class="internal-link">argparse.ArgumentParser</a>]</code></td><td class="fieldArgDesc">this parser and its subparsers</td></tr></table></div>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/stdtypes.html#list" class="intersphinx-link">list</a>[<a href="argparse.ArgumentParser.html" class="internal-link">argparse.ArgumentParser</a>]</code></td><td class="fieldArgDesc">this parser and its subparsers</td></tr></table></div>
   </div>
 </div><div class="basemethod private">
   
@@ -2618,7 +2667,7 @@ as well, since one of them can hold a subparser that is.</p>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">_reject_write_out_config_file_args</span><span class="function-signature">(self, synthesized_args, source_description, parsers)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1417">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1445">
       
       (source)
     </a>
@@ -2647,7 +2696,7 @@ themselves. So a config file may not name a write-out arg anywhere in
 the parser tree, which costs an error on a key named after one on a
 subcommand that wasn't going to run.</p>
 <table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">synthesized<wbr></wbr>_args</span></td><td class="fieldArgDesc">command line args built from a config file or from
-environment variables, before they are added to the real ones.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">source<wbr></wbr>_description</span></td><td class="fieldArgDesc">where they came from, for the error message.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">parsers</span></td><td class="fieldArgDesc">the parsers that could end up parsing them.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">whether the args may be used. error() is meant to stop the
+environment variables, before they are added to the real ones.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">source<wbr></wbr>_description</span></td><td class="fieldArgDesc">where they came from, for the error message.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">parsers</span></td><td class="fieldArgDesc">the parsers that could end up parsing them.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/functions.html#bool" class="intersphinx-link">bool</a></code></td><td class="fieldArgDesc">whether the args may be used. error() is meant to stop the
 program, but a program can override exit(), so this says so rather
 than counting on the call not returning.</td></tr></table></div>
   </div>
@@ -2664,7 +2713,7 @@ than counting on the call not returning.</td></tr></table></div>
     
     
     <span class="py-keyword">def</span> <span class="py-defname">_write_out_config_file_args</span><span class="function-signature">(self, parsers)</span>:
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1514">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1542">
       
       (source)
     </a>
@@ -2676,7 +2725,7 @@ than counting on the call not returning.</td></tr></table></div>
   </div>
   <div class="docstring functionBody">
     
-    <div><p>Find the write-out-config-file args the given parsers define.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">parsers</span></td><td class="fieldArgDesc">the parsers to look in.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/library/stdtypes.html#list" class="intersphinx-link">list</a></code></td><td class="fieldArgDesc">each such arg as an <tt class="rst-docutils rst-literal">(argparse.ArgumentParser,
+    <div><p>Find the write-out-config-file args the given parsers define.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">parsers</span></td><td class="fieldArgDesc">the parsers to look in.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="https://docs.python.org/3/builtins/stdtypes.html#list" class="intersphinx-link">list</a></code></td><td class="fieldArgDesc">each such arg as an <tt class="rst-docutils rst-literal">(argparse.ArgumentParser,
 argparse.Action)</tt> pair, since it's the parser an arg belongs to
 that decides which command line args can set it.</td></tr></table></div>
   </div>
@@ -2691,8 +2740,8 @@ that decides which command line args can set it.</td></tr></table></div>
   </a>
   <div class="functionHeader">
     
-    <span class="py-defname">_add_config_file_help</span>: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1024">
+    <span class="py-defname">_add_config_file_help</span>: <code><a href="https://docs.python.org/3/builtins/functions.html#bool" class="intersphinx-link">bool</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1024">
       
       (source)
     </a>
@@ -2718,8 +2767,8 @@ that decides which command line args can set it.</td></tr></table></div>
   </a>
   <div class="functionHeader">
     
-    <span class="py-defname">_add_env_var_help</span>: <code><a href="https://docs.python.org/3/library/functions.html#bool" class="intersphinx-link">bool</a></code> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1025">
+    <span class="py-defname">_add_env_var_help</span>: <code><a href="https://docs.python.org/3/builtins/functions.html#bool" class="intersphinx-link">bool</a></code> =
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1025">
       
       (source)
     </a>
@@ -2746,7 +2795,7 @@ that decides which command line args can set it.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">_auto_env_var_prefix</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1026">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1026">
       
       (source)
     </a>
@@ -2773,7 +2822,7 @@ that decides which command line args can set it.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">_config_file_open_func</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1022">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1022">
       
       (source)
     </a>
@@ -2800,7 +2849,7 @@ that decides which command line args can set it.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">_config_file_parser</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1043">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1043">
       
       (source)
     </a>
@@ -2827,7 +2876,7 @@ that decides which command line args can set it.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">_default_config_files</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1059">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1059">
       
       (source)
     </a>
@@ -2854,7 +2903,7 @@ that decides which command line args can set it.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">_ignore_unknown_config_file_keys</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1060">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1060">
       
       (source)
     </a>
@@ -2881,7 +2930,7 @@ that decides which command line args can set it.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">_source_to_settings</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1201">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1225">
       
       (source)
     </a>
@@ -2908,7 +2957,7 @@ that decides which command line args can set it.</td></tr></table></div>
   <div class="functionHeader">
     
     <span class="py-defname">_write_out_config_file_paths</span> =
-    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/v1.7.7/configargparse.py#L1384">
+    <a class="sourceLink" href="https://github.com/bw2/ConfigArgParse/tree/d8ac796b869dddef7beb099acc3434bb73e473ef/configargparse.py#L1412">
       
       (source)
     </a>
@@ -2933,9 +2982,9 @@ that decides which command line args can set it.</td></tr></table></div>
 
   
   <div class="container-fluid">
-    <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 1.7.7</a>,
+    <a href="index.html">API Documentation</a> for <a href="https://github.com/bw2/ConfigArgParse" class="projecthome">ConfigArgParse 0.0.post1.dev1+gd8ac796b8</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    24.11.2 at 2026-09-06 20:56:34.
+    24.11.2 at 2026-09-14 23:38:40.
   </div>
 
   <!-- Search related scripts needs to be loaded at the end of HTML 
