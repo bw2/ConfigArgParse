@@ -1130,6 +1130,30 @@ class ArgumentParser(argparse.ArgumentParser):
 
         return None
 
+    def _option_strings_that_override(self, action):
+        """Find the option strings that, when already on the command line, mean
+        an env var or config file value for the given action should be dropped.
+
+        These are the action's own option strings plus those of every other
+        action in the same mutually exclusive group, mirroring the conflicts
+        argparse checks for. Without the latter, a config file value for one
+        member of a group would clash with a different member given on the
+        command line instead of being overridden by it (see issue #164).
+
+        Args:
+            action: the argparse.Action to find overriding option strings for.
+
+        Returns:
+            list[str]: the option strings
+        """
+        option_strings = list(action.option_strings)
+        for group in self._mutually_exclusive_groups:
+            if action in group._group_actions:
+                for other_action in group._group_actions:
+                    if other_action is not action:
+                        option_strings += other_action.option_strings
+        return option_strings
+
     def parse_args(
         self, args=None, namespace=None, config_file_contents=None, env_vars=os.environ
     ):
@@ -1232,7 +1256,9 @@ class ArgumentParser(argparse.ArgumentParser):
             if not a.is_positional_arg
             and a.env_var
             and a.env_var in env_vars
-            and not already_on_command_line(args, a.option_strings, self.prefix_chars)
+            and not already_on_command_line(
+                args, self._option_strings_that_override(a), self.prefix_chars
+            )
         ]
         for action in actions_with_env_var_values:
             key = action.env_var
@@ -1304,7 +1330,9 @@ class ArgumentParser(argparse.ArgumentParser):
                     if key in known_config_keys:
                         action = known_config_keys[key]
                         discard_this_key = already_on_command_line(
-                            args, action.option_strings, self.prefix_chars
+                            args,
+                            self._option_strings_that_override(action),
+                            self.prefix_chars,
                         )
                     else:
                         action = None

@@ -530,6 +530,107 @@ class TestBasicUseCases(TestCase):
         )
         config_file.close()
 
+    def testMutuallyExclusiveArgsOverriddenByOtherSources(self):
+        # a config file or env var value for one member of a mutually exclusive
+        # group is overridden by a different member set in a higher priority
+        # source, instead of clashing with it (issue #164)
+        def init_parser(**kwargs):
+            p = self.initParser(**kwargs)
+            g = p.add_mutually_exclusive_group(required=True)
+            g.add_arg(
+                "-m",
+                "--mega",
+                dest="mode",
+                action="store_const",
+                const="mega",
+                env_var="MEGA",
+            )
+            g.add_arg(
+                "-g",
+                "--giga",
+                dest="mode",
+                action="store_const",
+                const="giga",
+                env_var="GIGA",
+            )
+            return p
+
+        init_parser()
+        ns = self.parse(args=[], config_file_contents="mega = true", env_vars={})
+        self.assertEqual(ns.mode, "mega")
+
+        # command line overrides config file
+        ns = self.parse(
+            args=["--giga"], config_file_contents="mega = true", env_vars={}
+        )
+        self.assertEqual(ns.mode, "giga")
+        self.assertEqual(self.format_values(), "Command Line Args:   --giga\n")
+        ns = self.parse(args=["-g"], config_file_contents="mega = true", env_vars={})
+        self.assertEqual(ns.mode, "giga")
+
+        # command line overrides env var
+        ns = self.parse(args=["--giga"], env_vars={"MEGA": "true"})
+        self.assertEqual(ns.mode, "giga")
+        self.assertEqual(self.format_values(), "Command Line Args:   --giga\n")
+
+        # env var overrides config file
+        ns = self.parse(
+            args=[], config_file_contents="mega = true", env_vars={"GIGA": "true"}
+        )
+        self.assertEqual(ns.mode, "giga")
+
+        # a config file given on the command line overrides a default config file
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            default_config_path = os.path.join(tmp_dir, "default.ini")
+            with open(default_config_path, "w") as f:
+                f.write("mega = true\n")
+            user_config_path = os.path.join(tmp_dir, "user.ini")
+            with open(user_config_path, "w") as f:
+                f.write("giga = true\n")
+
+            init_parser(default_config_files=[default_config_path])
+            self.add_arg("-c", "--config", is_config_file=True)
+            ns = self.parse(args=[], env_vars={})
+            self.assertEqual(ns.mode, "mega")
+            ns = self.parse(args=["-c", user_config_path], env_vars={})
+            self.assertEqual(ns.mode, "giga")
+
+        # members set together within a single source still conflict
+        init_parser()
+        self.assertParseArgsRaises(
+            "not allowed with argument",
+            args=[],
+            config_file_contents="mega = true\ngiga = true",
+            env_vars={},
+        )
+        self.assertParseArgsRaises(
+            "not allowed with argument",
+            args=[],
+            env_vars={"MEGA": "true", "GIGA": "true"},
+        )
+        self.assertParseArgsRaises(
+            "not allowed with argument", args=["--mega", "--giga"], env_vars={}
+        )
+
+    def testMutuallyExclusiveBoolArgsOverriddenByCommandLine(self):
+        # the --feature / --no-feature pattern from issue #164, with the
+        # mutually exclusive group inside an argument group
+        g = self.parser.add_argument_group(title="features")
+        g = g.add_mutually_exclusive_group()
+        g.add_arg("--feature", dest="feature", action="store_true")
+        g.add_arg("--no-feature", dest="feature", action="store_false")
+
+        ns = self.parse(args=[], config_file_contents="feature = true", env_vars={})
+        self.assertEqual(ns.feature, True)
+        ns = self.parse(
+            args=["--no-feature"], config_file_contents="feature = true", env_vars={}
+        )
+        self.assertEqual(ns.feature, False)
+        ns = self.parse(
+            args=["--feature"], config_file_contents="no-feature = true", env_vars={}
+        )
+        self.assertEqual(ns.feature, True)
+
     def testSubParsers(self):
         config_file1 = tempfile.NamedTemporaryFile(mode="w", delete=False)
         config_file1.write("--i = B")
