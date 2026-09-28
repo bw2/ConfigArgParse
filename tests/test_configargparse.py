@@ -330,7 +330,7 @@ class TestBasicUseCases(TestCase):
             short_f = SHORT_OPT_METAVAR.format(metavar="FRMT")
             self.assertRegex(
                 self.format_help(),
-                "usage: .* \\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?"
+                "usage: .*\\s+\\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?"
                 "\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n"
                 "positional arguments:\n"
                 "  vcf \\s+ Variant file\\(s\\)\n\n"
@@ -350,7 +350,7 @@ class TestBasicUseCases(TestCase):
             short_f = SHORT_OPT_METAVAR.format(metavar="FRMT")
             self.assertRegex(
                 self.format_help(),
-                "usage: .* \\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?"
+                "usage: .*\\s+\\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?"
                 "\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n"
                 "positional arguments:\n"
                 "  vcf \\s+ Variant file\\(s\\)\n\n"
@@ -516,7 +516,7 @@ class TestBasicUseCases(TestCase):
         short_f = SHORT_OPT_METAVAR.format(metavar="FRMT")
         self.assertRegex(
             self.format_help(),
-            r"usage: .* \[-h\] --genome GENOME \[-v\]\s+\(-f1 TYPE1_CFG_FILE \|"
+            r"usage: .*\s+\[-h\] --genome GENOME \[-v\]\s+\(-f1 TYPE1_CFG_FILE \|"
             r"\s+-f2 TYPE2_CFG_FILE\)\s+\(-f FRMT \| -b\)\n\n"
             "%s:\n"
             "  -h, --help            show this help message and exit\n"
@@ -1232,7 +1232,7 @@ class TestMisc(TestCase):
         short_c = SHORT_OPT_METAVAR.format(metavar="CONFIG_FILE")
         self.assertRegex(
             self.format_help(),
-            r"usage: .* \[-h\] -c CONFIG_FILE --genome GENOME\n\n"
+            r"usage: .*\s+\[-h\] -c CONFIG_FILE --genome GENOME\n\n"
             r"%s:\n"
             r"  -h, --help\s+ show this help message and exit\n"
             rf"  -c{short_c}, --config CONFIG_FILE\s+ my config file\n"
@@ -1303,7 +1303,7 @@ class TestMisc(TestCase):
         short_w = SHORT_OPT_METAVAR.format(metavar="CONFIG_OUTPUT_PATH")
         self.assertRegex(
             self.format_help(),
-            r"usage: .* \[-h\] -c CONFIG_FILE\s+"
+            r"usage: .*\s+\[-h\] -c CONFIG_FILE\s+"
             r"\[-w CONFIG_OUTPUT_PATH\]\s* --arg1\s+ARG1\s*\[--flag\]\s*"
             "%s:\\s*"
             "-h, --help \\s* show this help message and exit "
@@ -4203,19 +4203,43 @@ except ImportError:
         "============================\n"
     )
 else:
+    test_argparse_source_file = inspect.getsourcefile(test.test_argparse)
     test_argparse_source_code = inspect.getsource(test.test_argparse)
+    configargparse_dir = os.path.dirname(
+        os.path.abspath(configargparse.__file__)
+    ).replace("\\", "/")
     test_argparse_source_code = (
         test_argparse_source_code.replace(
             "argparse.ArgumentParser", "configargparse.ArgumentParser"
         )
         .replace("TestHelpFormattingMetaclass", "_TestHelpFormattingMetaclass")
         .replace("test_main", "_test_main")
+        .replace(
+            "import argparse\n        parser = configargparse.ArgumentParser()",
+            "import sys; "
+            f"sys.path.insert(0, {configargparse_dir!r}); "
+            "import configargparse\n        parser = configargparse.ArgumentParser()",
+        )
+        .replace(
+            "self.assertEqual(cm.filename, __file__)",
+            "self.assertEqual(cm.filename, test_argparse_source_file)",
+        )
     )
 
     # pytest tries to collect tests from TestHelpFormattingMetaclass, and
     # test_main, and raises a warning when it finds it's not a test class
     # nor test function. Renaming TestHelpFormattingMetaclass and test_main
     # prevents pytest from trying.
+
+    # Python 3.14+ TestProgName runs its source in an isolated (-I) subprocess,
+    # which ignores PYTHONPATH and the working directory, so the script puts
+    # the directory of the configargparse under test on sys.path itself (with
+    # forward slashes so Windows backslashes aren't read as string escapes),
+    # on the same line as the import to keep line numbers unchanged.
+    # Several 3.14+ tests also check that a warning's filename is the test
+    # file, so the exec'd code is compiled under the upstream test file's path
+    # (which also gives tracebacks the right file and line numbers) and
+    # compared against that path.
 
     # run or debug a subset of the argparse tests
     # test_argparse_source_code = test_argparse_source_code.replace(
@@ -4227,7 +4251,7 @@ else:
     # test_argparse_source_code = test_argparse_source_code.replace(
     #   "class TestMessageContentError", "class TestMessageContentError(TestCase)")
 
-    exec(test_argparse_source_code)
+    exec(compile(test_argparse_source_code, test_argparse_source_file, "exec"))
 
     # print argparse unittest source code
     def print_source_code(source_code, line_numbers, context_lines=10):
