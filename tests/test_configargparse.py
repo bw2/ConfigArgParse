@@ -4205,6 +4205,9 @@ except ImportError:
 else:
     test_argparse_source_file = inspect.getsourcefile(test.test_argparse)
     test_argparse_source_code = inspect.getsource(test.test_argparse)
+    configargparse_dir = os.path.dirname(
+        os.path.abspath(configargparse.__file__)
+    ).replace("\\", "/")
     test_argparse_source_code = (
         test_argparse_source_code.replace(
             "argparse.ArgumentParser", "configargparse.ArgumentParser"
@@ -4213,6 +4216,8 @@ else:
         .replace("test_main", "_test_main")
         .replace(
             "import argparse\n        parser = configargparse.ArgumentParser()",
+            "import sys; "
+            f"sys.path.insert(0, {configargparse_dir!r}); "
             "import configargparse\n        parser = configargparse.ArgumentParser()",
         )
         .replace(
@@ -4226,11 +4231,15 @@ else:
     # nor test function. Renaming TestHelpFormattingMetaclass and test_main
     # prevents pytest from trying.
 
-    # Python 3.14+ TestProgName runs its source in a subprocess, which needs
-    # to import configargparse itself. Several 3.14+ tests also check that a
-    # warning's filename is the test file, so the exec'd code is compiled
-    # under the upstream test file's path (which also gives tracebacks the
-    # right file and line numbers) and compared against that path.
+    # Python 3.14+ TestProgName runs its source in an isolated (-I) subprocess,
+    # which ignores PYTHONPATH and the working directory, so the script puts
+    # the directory of the configargparse under test on sys.path itself (with
+    # forward slashes so Windows backslashes aren't read as string escapes),
+    # on the same line as the import to keep line numbers unchanged.
+    # Several 3.14+ tests also check that a warning's filename is the test
+    # file, so the exec'd code is compiled under the upstream test file's path
+    # (which also gives tracebacks the right file and line numbers) and
+    # compared against that path.
 
     # run or debug a subset of the argparse tests
     # test_argparse_source_code = test_argparse_source_code.replace(
