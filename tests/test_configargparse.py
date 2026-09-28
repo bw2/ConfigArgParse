@@ -330,7 +330,7 @@ class TestBasicUseCases(TestCase):
             short_f = SHORT_OPT_METAVAR.format(metavar="FRMT")
             self.assertRegex(
                 self.format_help(),
-                "usage: .* \\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?"
+                "usage: .*\\s+\\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?"
                 "\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n"
                 "positional arguments:\n"
                 "  vcf \\s+ Variant file\\(s\\)\n\n"
@@ -350,7 +350,7 @@ class TestBasicUseCases(TestCase):
             short_f = SHORT_OPT_METAVAR.format(metavar="FRMT")
             self.assertRegex(
                 self.format_help(),
-                "usage: .* \\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?"
+                "usage: .*\\s+\\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?"
                 "\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n"
                 "positional arguments:\n"
                 "  vcf \\s+ Variant file\\(s\\)\n\n"
@@ -516,7 +516,7 @@ class TestBasicUseCases(TestCase):
         short_f = SHORT_OPT_METAVAR.format(metavar="FRMT")
         self.assertRegex(
             self.format_help(),
-            r"usage: .* \[-h\] --genome GENOME \[-v\]\s+\(-f1 TYPE1_CFG_FILE \|"
+            r"usage: .*\s+\[-h\] --genome GENOME \[-v\]\s+\(-f1 TYPE1_CFG_FILE \|"
             r"\s+-f2 TYPE2_CFG_FILE\)\s+\(-f FRMT \| -b\)\n\n"
             "%s:\n"
             "  -h, --help            show this help message and exit\n"
@@ -1232,7 +1232,7 @@ class TestMisc(TestCase):
         short_c = SHORT_OPT_METAVAR.format(metavar="CONFIG_FILE")
         self.assertRegex(
             self.format_help(),
-            r"usage: .* \[-h\] -c CONFIG_FILE --genome GENOME\n\n"
+            r"usage: .*\s+\[-h\] -c CONFIG_FILE --genome GENOME\n\n"
             r"%s:\n"
             r"  -h, --help\s+ show this help message and exit\n"
             rf"  -c{short_c}, --config CONFIG_FILE\s+ my config file\n"
@@ -1303,7 +1303,7 @@ class TestMisc(TestCase):
         short_w = SHORT_OPT_METAVAR.format(metavar="CONFIG_OUTPUT_PATH")
         self.assertRegex(
             self.format_help(),
-            r"usage: .* \[-h\] -c CONFIG_FILE\s+"
+            r"usage: .*\s+\[-h\] -c CONFIG_FILE\s+"
             r"\[-w CONFIG_OUTPUT_PATH\]\s* --arg1\s+ARG1\s*\[--flag\]\s*"
             "%s:\\s*"
             "-h, --help \\s* show this help message and exit "
