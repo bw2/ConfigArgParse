@@ -4183,6 +4183,108 @@ class TestCallableDefaultConfigFiles(TestCase):
         self.assertGreater(len(help_text), 0)
 
 
+class TestStoreFalseConfigOutput(unittest.TestCase):
+    def make_parser(self, default=True):
+        parser = configargparse.ArgumentParser()
+        parser.add_argument(
+            "-n",
+            "--no-feature",
+            "--disable-feature",
+            action="store_false",
+            dest="feature",
+            default=default,
+            env_var="CONFIGARGPARSE_TEST_NO_FEATURE",
+        )
+        parser.add_argument("--label", env_var="CONFIGARGPARSE_TEST_LABEL")
+        return parser
+
+    def assert_round_trip(self, parser, namespace, reader):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "settings.conf")
+            with captured_output():
+                parser.write_config_file(namespace, [path])
+            with open(path) as config_file:
+                contents = config_file.read()
+        restored = reader.parse_args([], config_file_contents=contents, env_vars={})
+        self.assertEqual(vars(restored), vars(namespace))
+        self.assertIs(type(restored.feature), type(namespace.feature))
+        return contents
+
+    def test_store_false_command_line_round_trip(self):
+        for default in (True, False):
+            for option in ("-n", "--no-feature", "--disable-feature"):
+                with self.subTest(default=default, option=option):
+                    parser = self.make_parser(default)
+                    namespace = parser.parse_args([option], env_vars={})
+                    self.assertFalse(namespace.feature)
+                    self.assert_round_trip(parser, namespace, self.make_parser(default))
+
+    def test_store_false_environment_round_trip(self):
+        for default in (True, False):
+            for value in ("true", "false"):
+                with self.subTest(default=default, value=value):
+                    parser = self.make_parser(default)
+                    with mock.patch.dict(
+                        os.environ,
+                        {
+                            "CONFIGARGPARSE_TEST_NO_FEATURE": value,
+                            "CONFIGARGPARSE_TEST_LABEL": "example",
+                        },
+                    ):
+                        namespace = parser.parse_args([])
+                    self.assertEqual(namespace.feature, default and value == "false")
+                    self.assertEqual(namespace.label, "example")
+                    self.assert_round_trip(parser, namespace, self.make_parser(default))
+
+    def test_store_false_config_round_trip(self):
+        for default in (True, False):
+            for value in ("true", "false"):
+                with self.subTest(default=default, value=value):
+                    parser = self.make_parser(default)
+                    namespace = parser.parse_args(
+                        [], config_file_contents="no-feature = " + value, env_vars={}
+                    )
+                    self.assert_round_trip(parser, namespace, self.make_parser(default))
+
+    def test_non_boolean_store_false_default_round_trip(self):
+        parser = self.make_parser(default=0)
+        namespace = parser.parse_args(
+            [],
+            env_vars={
+                "CONFIGARGPARSE_TEST_NO_FEATURE": "false",
+                "CONFIGARGPARSE_TEST_LABEL": "example",
+            },
+        )
+        self.assertIs(type(namespace.feature), int)
+        self.assert_round_trip(parser, namespace, self.make_parser(default=0))
+
+    def test_store_false_defaults_are_not_added(self):
+        for default in (True, False):
+            with self.subTest(default=default):
+                parser = self.make_parser(default)
+                namespace = parser.parse_args([], env_vars={})
+                contents = self.assert_round_trip(
+                    parser, namespace, self.make_parser(default)
+                )
+                self.assertEqual(contents, "")
+
+    def test_other_boolean_actions_round_trip(self):
+        actions = [("store_true", False, ["--feature"])]
+        if hasattr(argparse, "BooleanOptionalAction"):
+            actions += [
+                (argparse.BooleanOptionalAction, True, ["--no-feature"]),
+                (argparse.BooleanOptionalAction, False, ["--feature"]),
+            ]
+        for action, default, args in actions:
+            with self.subTest(action=action, default=default):
+                parser = configargparse.ArgumentParser()
+                parser.add_argument("--feature", action=action, default=default)
+                namespace = parser.parse_args(args, env_vars={})
+                reader = configargparse.ArgumentParser()
+                reader.add_argument("--feature", action=action, default=default)
+                self.assert_round_trip(parser, namespace, reader)
+
+
 ################################################################################
 # since configargparse should work as a drop-in replacement for argparse
 # in all situations, run argparse unittests on configargparse by modifying

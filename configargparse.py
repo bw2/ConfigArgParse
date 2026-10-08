@@ -1718,6 +1718,9 @@ class ArgumentParser(argparse.ArgumentParser):
                         value = getattr(parsed_namespace, action.dest, None)
                         if value is not None:
                             if isinstance(value, bool):
+                                # The config value controls whether the flag is invoked.
+                                if isinstance(action, argparse._StoreFalseAction):
+                                    value = not value
                                 value = str(value).lower()
                             config_file_items[config_file_keys[0]] = value
 
@@ -1727,6 +1730,10 @@ class ArgumentParser(argparse.ArgumentParser):
                     if config_file_keys:
                         value = getattr(parsed_namespace, action.dest, None)
                         if value is not None:
+                            if isinstance(
+                                action, argparse._StoreFalseAction
+                            ) and isinstance(value, bool):
+                                value = not value
                             config_file_items[config_file_keys[0]] = value
             elif source.startswith(_CONFIG_FILE_SOURCE_KEY):
                 for key, (action, value) in settings.items():
