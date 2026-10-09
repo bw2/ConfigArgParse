@@ -1717,12 +1717,11 @@ class ArgumentParser(argparse.ArgumentParser):
                     ):
                         value = getattr(parsed_namespace, action.dest, None)
                         if value is not None:
-                            if isinstance(value, bool):
-                                # The config value controls whether the flag is invoked.
-                                if isinstance(action, argparse._StoreFalseAction):
-                                    value = not value
-                                value = str(value).lower()
-                            config_file_items[config_file_keys[0]] = value
+                            config_file_items[config_file_keys[0]] = (
+                                _convert_parsed_value_to_config_file_value(
+                                    action, value
+                                )
+                            )
 
             elif source == _ENV_VAR_SOURCE_KEY:
                 for key, (action, value) in settings.items():
@@ -1730,11 +1729,11 @@ class ArgumentParser(argparse.ArgumentParser):
                     if config_file_keys:
                         value = getattr(parsed_namespace, action.dest, None)
                         if value is not None:
-                            if isinstance(
-                                action, argparse._StoreFalseAction
-                            ) and isinstance(value, bool):
-                                value = not value
-                            config_file_items[config_file_keys[0]] = value
+                            config_file_items[config_file_keys[0]] = (
+                                _convert_parsed_value_to_config_file_value(
+                                    action, value
+                                )
+                            )
             elif source.startswith(_CONFIG_FILE_SOURCE_KEY):
                 for key, (action, value) in settings.items():
                     config_file_items[key] = value
@@ -2240,6 +2239,31 @@ def _dispatches_to_subparsers(action):
         argparse.PARSER,
         argparse.REMAINDER,
     ) and isinstance(getattr(action, "choices", None), dict)
+
+
+def _convert_parsed_value_to_config_file_value(action, value):
+    """Convert a parsed arg value to the value a config file should hold for it.
+
+    For a flag (``store_true``, ``store_false`` or ``store_const``), the config
+    file value says whether to invoke the flag, not what it stores, so it is
+    ``"true"`` exactly when the parsed value is the one the flag stores. Other
+    booleans are written in lowercase too, so values from the command line and
+    from environment variables are written the same way.
+
+    Args:
+        action: the action the value was parsed for.
+        value: the value the parser stored for the action.
+
+    Returns:
+        object: ``"true"`` or ``"false"`` for flags and booleans, otherwise the
+        value unchanged.
+    """
+    if isinstance(action, argparse._StoreConstAction):
+        # "is" rather than "==": a store_false default of 0 equals False
+        value = value is action.const
+    if isinstance(value, bool):
+        value = str(value).lower()
+    return value
 
 
 def already_on_command_line(

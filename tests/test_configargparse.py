@@ -1411,7 +1411,7 @@ class TestMisc(TestCase):
         cfg_f.seek(0)
         expected_config_file_contents = "config-file-settable-list = [a, b, c, d]\n"
         expected_config_file_contents += "arg1 = 10\n"
-        expected_config_file_contents += "config-file-settable-flag = True\n"
+        expected_config_file_contents += "config-file-settable-flag = true\n"
         expected_config_file_contents += "arg3 = bla3\n"
         expected_config_file_contents += "arg4 = bla4\n"
         expected_config_file_contents += "arg2 = 3\n"
@@ -4207,7 +4207,9 @@ class TestStoreFalseConfigOutput(unittest.TestCase):
                 contents = config_file.read()
         restored = reader.parse_args([], config_file_contents=contents, env_vars={})
         self.assertEqual(vars(restored), vars(namespace))
-        self.assertIs(type(restored.feature), type(namespace.feature))
+        # assertEqual alone would accept 0 coming back as False
+        for name, value in vars(namespace).items():
+            self.assertIs(type(getattr(restored, name)), type(value), name)
         return contents
 
     def test_store_false_command_line_round_trip(self):
@@ -4247,16 +4249,19 @@ class TestStoreFalseConfigOutput(unittest.TestCase):
                     self.assert_round_trip(parser, namespace, self.make_parser(default))
 
     def test_non_boolean_store_false_default_round_trip(self):
-        parser = self.make_parser(default=0)
-        namespace = parser.parse_args(
-            [],
-            env_vars={
-                "CONFIGARGPARSE_TEST_NO_FEATURE": "false",
-                "CONFIGARGPARSE_TEST_LABEL": "example",
-            },
-        )
-        self.assertIs(type(namespace.feature), int)
-        self.assert_round_trip(parser, namespace, self.make_parser(default=0))
+        # 1 and "yes" are truthy, so writing them as-is would invoke the flag
+        for default in (0, 1, "yes"):
+            with self.subTest(default=default):
+                parser = self.make_parser(default)
+                namespace = parser.parse_args(
+                    [],
+                    env_vars={
+                        "CONFIGARGPARSE_TEST_NO_FEATURE": "false",
+                        "CONFIGARGPARSE_TEST_LABEL": "example",
+                    },
+                )
+                self.assertIs(namespace.feature, default)
+                self.assert_round_trip(parser, namespace, self.make_parser(default))
 
     def test_store_false_defaults_are_not_added(self):
         for default in (True, False):
@@ -4283,6 +4288,43 @@ class TestStoreFalseConfigOutput(unittest.TestCase):
                 reader = configargparse.ArgumentParser()
                 reader.add_argument("--feature", action=action, default=default)
                 self.assert_round_trip(parser, namespace, reader)
+
+    def test_store_const_round_trip(self):
+        def make_parser():
+            parser = configargparse.ArgumentParser()
+            parser.add_argument(
+                "--fast",
+                action="store_const",
+                const="fast",
+                dest="mode",
+                default="slow",
+                env_var="CONFIGARGPARSE_TEST_FAST",
+            )
+            parser.add_argument("--label", env_var="CONFIGARGPARSE_TEST_LABEL")
+            return parser
+
+        cases = [
+            (["--fast"], {}, "fast", "fast = true\n"),
+            (
+                [],
+                {"CONFIGARGPARSE_TEST_FAST": "true", "CONFIGARGPARSE_TEST_LABEL": "x"},
+                "fast",
+                "fast = true\nlabel = x\n",
+            ),
+            (
+                [],
+                {"CONFIGARGPARSE_TEST_FAST": "false", "CONFIGARGPARSE_TEST_LABEL": "x"},
+                "slow",
+                "fast = false\nlabel = x\n",
+            ),
+        ]
+        for args, env_vars, expected_mode, expected_contents in cases:
+            with self.subTest(args=args, env_vars=env_vars):
+                parser = make_parser()
+                namespace = parser.parse_args(args, env_vars=env_vars)
+                self.assertEqual(namespace.mode, expected_mode)
+                contents = self.assert_round_trip(parser, namespace, make_parser())
+                self.assertEqual(contents, expected_contents)
 
 
 ################################################################################
