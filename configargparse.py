@@ -289,6 +289,7 @@ class ConfigparserConfigFileParser(ConfigFileParser):
         See https://docs.python.org/3/library/configparser.html for details.
 
         Note: INI file sections names are still treated as comments.
+        DEFAULT-only files, including serialize() output, are also supported.
         """
         return msg
 
@@ -310,7 +311,7 @@ class ConfigparserConfigFileParser(ConfigFileParser):
 
         # convert to dict and remove INI section names
         result = OrderedDict()
-        for section in config.sections():
+        for section in config.sections() or [configparser.DEFAULTSECT]:
             for k, v in config[section].items():
                 multiLine2SingleLine = v.replace("\n", " ").replace("\r", " ")
                 # handle special case for lists

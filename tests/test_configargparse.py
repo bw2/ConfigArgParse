@@ -4327,6 +4327,64 @@ class TestStoreFalseConfigOutput(unittest.TestCase):
                 self.assertEqual(contents, expected_contents)
 
 
+class TestConfigparserDefaultSection(TestCase):
+    def test_default_only_values(self):
+        parser = configargparse.ConfigparserConfigFileParser()
+        contents = (
+            "[DEFAULT]\nName = alice\nlabel = %(name)s\nempty =\n"
+            "items = ['a', 'b']\nmessage = first\n    second\n"
+        )
+        self.assertEqual(
+            parser.parse(StringIO(contents)),
+            OrderedDict(
+                [
+                    ("name", "alice"),
+                    ("label", "alice"),
+                    ("empty", ""),
+                    ("items", ["a", "b"]),
+                    ("message", "first second"),
+                ]
+            ),
+        )
+
+    def test_serialization_round_trip(self):
+        parser = configargparse.ConfigparserConfigFileParser()
+        items = OrderedDict([("name", "alice"), ("items", ["a", "b"])])
+        self.assertEqual(parser.parse(StringIO(parser.serialize(items))), items)
+
+    def test_saved_config_round_trip(self):
+        parser = self.initParser(
+            config_file_parser_class=configargparse.ConfigparserConfigFileParser
+        )
+        parser.add_argument("--name")
+        parser.add_argument("--count", type=int)
+        expected = parser.parse_args(["--name", "alice", "--count", "3"])
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "saved.ini")
+            parser.write_config_file(expected, [path])
+            with open(path) as stream:
+                contents = stream.read()
+        actual = parser.parse_args([], config_file_contents=contents)
+        self.assertEqual(actual, expected)
+
+    def test_named_sections_keep_default_overrides(self):
+        parser = configargparse.ConfigparserConfigFileParser()
+        contents = (
+            "[DEFAULT]\nname = default\nshared = value\n"
+            "[first]\nname = alice\n[first_extra]\nname = bob\n"
+        )
+        self.assertEqual(
+            parser.parse(StringIO(contents)),
+            OrderedDict([("name", "bob"), ("shared", "value")]),
+        )
+
+    def test_empty_file(self):
+        parser = configargparse.ConfigparserConfigFileParser()
+        for contents in ("", "[DEFAULT]\n"):
+            with self.subTest(contents=contents):
+                self.assertEqual(parser.parse(StringIO(contents)), OrderedDict())
+
+
 ################################################################################
 # since configargparse should work as a drop-in replacement for argparse
 # in all situations, run argparse unittests on configargparse by modifying
