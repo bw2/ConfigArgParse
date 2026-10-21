@@ -272,6 +272,24 @@ class DefaultConfigFileParser(ConfigFileParser):
         return r.getvalue()
 
 
+def _keep_literal_or_convert_to_str(value):
+    """Return a list element as it should be written into a list repr.
+
+    Args:
+        value: an element of a list value.
+
+    Returns:
+        object: the value unchanged if ``ast.literal_eval`` of its repr gives
+        it back, otherwise ``str(value)`` (e.g. for a Path, or inf).
+    """
+    try:
+        if ast.literal_eval(repr(value)) == value:
+            return value
+    except (ValueError, SyntaxError):
+        pass
+    return str(value)
+
+
 class ConfigparserConfigFileParser(ConfigFileParser):
     """parses INI files using pythons configparser."""
 
@@ -281,15 +299,20 @@ class ConfigparserConfigFileParser(ConfigFileParser):
 
         Allowed syntax is that for a ConfigParser with the following options:
 
+            delimiters = ("=", ":")
             allow_no_value = False,
-            inline_comment_prefixes = ("#",)
+            comment_prefixes = ("#", ";")
+            inline_comment_prefixes = ("#", ";")
             strict = True
-            empty_lines_in_values = False
+            empty_lines_in_values = True
 
         See https://docs.python.org/3/library/configparser.html for details.
 
         Note: INI file sections names are still treated as comments.
-        DEFAULT-only files, including serialize() output, are also supported.
+        Settings in a [DEFAULT] section are also read. Keys are lowercased, so
+        an option whose name has uppercase letters can't be set this way, and a
+        saved config file that contains one fails to load unless
+        ignore_unknown_config_file_keys=True.
         """
         return msg
 
@@ -302,7 +325,11 @@ class ConfigparserConfigFileParser(ConfigFileParser):
             comment_prefixes=("#", ";"),
             inline_comment_prefixes=("#", ";"),
             strict=True,
-            empty_lines_in_values=False,
+            # a line indented more than the key above it continues that key's
+            # value even after a blank or comment line, rather than starting a
+            # new key, so a value saved with a blank line in it by an earlier
+            # version of serialize() can't turn into extra keys
+            empty_lines_in_values=True,
         )
         try:
             config.read_string(stream.read())
@@ -312,7 +339,37 @@ class ConfigparserConfigFileParser(ConfigFileParser):
         # convert to dict and remove INI section names
         result = OrderedDict()
         for section in config.sections() or [configparser.DEFAULTSECT]:
-            for k, v in config[section].items():
+            # configparser expands %(name)s references while reading values,
+            # so a stray % fails here rather than in read_string() above
+            try:
+                section_items = list(config[section].items())
+            except configparser.InterpolationError as e:
+                # name only the key, since configparser's own message shows the
+                # value, which may be a secret ("from None" keeps that message
+                # out of tracebacks too). e.option is the key being read, and the
+                # problem may be in a value its %(name)s references pull in.
+                if isinstance(e, configparser.InterpolationDepthError):
+                    problem = (
+                        "its %(name)s references refer back to it or are nested "
+                        "too deeply"
+                    )
+                elif isinstance(e, configparser.InterpolationMissingOptionError):
+                    problem = (
+                        "it, or a value it references, has a %(name)s reference "
+                        "to a key that isn't in the same section or in [DEFAULT]. "
+                        "Write %% for a literal %"
+                    )
+                else:
+                    problem = (
+                        "it, or a value it references, has a '%' that isn't '%%' "
+                        "or a valid %(name)s reference. Write %% for a literal %"
+                    )
+                raise ConfigFileParserException(
+                    "Couldn't parse config file value for {}: {}.".format(
+                        e.option, problem
+                    )
+                ) from None
+            for k, v in section_items:
                 multiLine2SingleLine = v.replace("\n", " ").replace("\r", " ")
                 # handle special case for lists
                 if "[" in multiLine2SingleLine and "]" in multiLine2SingleLine:
@@ -341,10 +398,70 @@ class ConfigparserConfigFileParser(ConfigFileParser):
             strict=True,
             empty_lines_in_values=False,
         )
-        items = {"DEFAULT": items}
-        config.read_dict(items)
+        # write each value so that parse() reads back the same value, except
+        # that configparser strips whitespace from the start and end of a value
+        values = OrderedDict()
+        for key, value in items.items():
+            if isinstance(value, list):
+                # parse() can only evaluate the repr of literals, so write an
+                # element that isn't one (e.g. a Path) as its str(). Keep the
+                # other elements as they are, because
+                # convert_item_to_command_line_arg() passes some inner lists on
+                # whole, as str() of the list (e.g. for nargs="+" with
+                # type=json.loads, or for an unknown key). A tuple is written as
+                # its str() below, as DefaultConfigFileParser writes it, so it
+                # reads back as that string, which e.g. type=ast.literal_eval
+                # turns back into the tuple.
+                value = str(
+                    [
+                        (
+                            [_keep_literal_or_convert_to_str(e) for e in elem]
+                            if isinstance(elem, list)
+                            else _keep_literal_or_convert_to_str(elem)
+                        )
+                        for elem in value
+                    ]
+                )
+                is_python_literal = True
+            else:
+                # parse() turns newlines into spaces anyway, and a lone \r in a
+                # value would be read back as the start of a new key, so write
+                # the spaces here
+                value = str(value).replace("\n", " ").replace("\r", " ")
+                # parse() evaluates a value that looks like a list (same test as
+                # in parse() above), so quote such a string to read it back as a
+                # string
+                is_python_literal = (
+                    "[" in value and "]" in value and "{" not in value.split("[")[0]
+                )
+                if is_python_literal:
+                    value = repr(value)
+            # parse() reads a "#" or ";" after a space as the start of a comment.
+            if is_python_literal:
+                # In a list repr, or a string quoted with repr(), they can only
+                # be inside a string literal, so write them as escape codes,
+                # which parse()'s ast.literal_eval decodes back.
+                value = value.replace("#", "\\x23").replace(";", "\\x3b")
+            elif re.search(r"\s[#;]", value):
+                # configparser can't quote a plain string, so warn that the
+                # value will read back cut short. The warning names only the
+                # key, since the value may be a secret. One at the start of a
+                # value is fine, since the value is written right after the "="
+                # (see below).
+                warnings.warn(
+                    "The value of {} contains a '#' or ';' after a space, which "
+                    "this config file format reads back as the start of a "
+                    "comment, so the saved value will be cut short there. Use a "
+                    "config_file_parser_class that can quote values, such as "
+                    "YAMLConfigFileParser, to save it in full.".format(key)
+                )
+            # parse() expands %(name)s references, so escape every %
+            values[key] = value.replace("%", "%%")
+        config.read_dict({"DEFAULT": values})
         stream = StringIO()
-        config.write(stream)
+        # "key=value" rather than "key = value", so that a value starting with
+        # "#" or ";" isn't read back as a comment
+        config.write(stream, space_around_delimiters=False)
         stream.seek(0)
         return stream.read()
 

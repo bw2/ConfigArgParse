@@ -220,13 +220,22 @@ config = configparser.ArgParser(
     comment_prefixes=("#",";"),
     inline_comment_prefixes=("#",";"),
     strict=True,
-    empty_lines_in_values=False,
+    empty_lines_in_values=True,
 )
 ```
 
+Because of `empty_lines_in_values=True`, a line indented more than the key above
+it continues that key's value, even after a blank line or a comment line, rather
+than starting a new key.
+
 Once configparser parses the config file all section names are removed, thus all
 keys must have unique names regardless of which INI section they are defined
-under. Also, any keys which have python list syntax are converted to lists by
+under. configparser also lowercases all keys, so an option whose name contains
+uppercase letters (e.g. `--outputDir`) can't be set from this kind of config
+file. A config file that `write_config_file` saved for such an option holds the
+lowercased key (`outputdir`), so loading it fails with "unrecognized arguments"
+unless `ignore_unknown_config_file_keys=True`, which skips that setting instead.
+Also, any keys which have python list syntax are converted to lists by
 evaluating them as python code using ast.literal_eval
 (https://docs.python.org/3/library/ast.html#ast.literal_eval). To facilitate
 this all multi-line values are converted to single-line values. Thus multi-line

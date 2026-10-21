@@ -7,8 +7,10 @@ import inspect
 import json
 import logging
 import os
+import pathlib
 import sys
 import tempfile
+import traceback
 import types
 import unittest
 from unittest import mock
@@ -4347,18 +4349,16 @@ class TestConfigparserDefaultSection(TestCase):
             ),
         )
 
-    def test_serialization_round_trip(self):
-        parser = configargparse.ConfigparserConfigFileParser()
-        items = OrderedDict([("name", "alice"), ("items", ["a", "b"])])
-        self.assertEqual(parser.parse(StringIO(parser.serialize(items))), items)
-
     def test_saved_config_round_trip(self):
         parser = self.initParser(
             config_file_parser_class=configargparse.ConfigparserConfigFileParser
         )
         parser.add_argument("--name")
         parser.add_argument("--count", type=int)
-        expected = parser.parse_args(["--name", "alice", "--count", "3"])
+        parser.add_argument("--matrix", nargs="+", type=json.loads)
+        expected = parser.parse_args(
+            ["--name", "alice", "--count", "3", "--matrix", "[1, 2]", "[3, 4]"]
+        )
         with tempfile.TemporaryDirectory() as directory:
             path = os.path.join(directory, "saved.ini")
             parser.write_config_file(expected, [path])
@@ -4366,6 +4366,14 @@ class TestConfigparserDefaultSection(TestCase):
                 contents = stream.read()
         actual = parser.parse_args([], config_file_contents=contents)
         self.assertEqual(actual, expected)
+
+    def test_blank_line_in_value_does_not_start_a_new_key(self):
+        # how an earlier version of serialize() wrote a value with a blank line
+        contents = "[DEFAULT]\nnotes = line1\n\t\n\tupload-url = https://x\n"
+        self.assertEqual(
+            configargparse.ConfigparserConfigFileParser().parse(StringIO(contents)),
+            OrderedDict([("notes", "line1  upload-url = https://x")]),
+        )
 
     def test_named_sections_keep_default_overrides(self):
         parser = configargparse.ConfigparserConfigFileParser()
@@ -4378,11 +4386,83 @@ class TestConfigparserDefaultSection(TestCase):
             OrderedDict([("name", "bob"), ("shared", "value")]),
         )
 
-    def test_empty_file(self):
+    def test_serialized_values_read_back_unchanged(self):
         parser = configargparse.ConfigparserConfigFileParser()
-        for contents in ("", "[DEFAULT]\n"):
+        for value, expected in (
+            ("file[0-9].txt", "file[0-9].txt"),
+            ("[value6.1, value6.2]", "[value6.1, value6.2]"),
+            (["a", "50%"], ["a", "50%"]),
+            ("50%", "50%"),
+            ("100%%", "100%%"),
+            ("%(asctime)s %(message)s", "%(asctime)s %(message)s"),
+            ("a;b", "a;b"),
+            ("#ff0000", "#ff0000"),
+            (";", ";"),
+            # in a list or a quoted string, "#" and ";" are written as escapes
+            (["issue #12", "b ; c"], ["issue #12", "b ; c"]),
+            ("Results [v2] ; final", "Results [v2] ; final"),
+            ([pathlib.Path("a.txt"), float("inf")], ["a.txt", "inf"]),
+            ([["a", 1, pathlib.Path("b.txt")], ["c"]], [["a", 1, "b.txt"], ["c"]]),
+            # a tuple reads back as the string the option's type was given
+            ((224, 224), "(224, 224)"),
+            ([(1, 2), (3, 4)], [(1, 2), (3, 4)]),
+            ("line1\nline2", "line1 line2"),
+            # a blank line or a lone \r must not start a new key
+            ("x\n\nother = injected", "x  other = injected"),
+            ("x\rother = injected", "x other = injected"),
+        ):
+            with self.subTest(value=value), warnings.catch_warnings():
+                # a value that reads back unchanged must not be warned about
+                warnings.simplefilter("error")
+                # newline=None reads a lone \r as a line break, the way open()
+                # does when parse_args reads a config file
+                stream = StringIO(parser.serialize({"key": value}), newline=None)
+                self.assertEqual(parser.parse(stream), OrderedDict([("key", expected)]))
+
+    def test_serialize_warns_about_values_read_back_cut_short(self):
+        parser = configargparse.ConfigparserConfigFileParser()
+        for value in ("run #1", "a ; b", "a\t#b"):
+            with self.subTest(value=value):
+                with self.assertWarnsRegex(
+                    UserWarning, "value of key .*cut short"
+                ) as caught:
+                    contents = parser.serialize({"key": value})
+                self.assertIn("\nkey=", contents)
+                # the value may be a secret, so the warning must not show it
+                self.assertNotIn(str(value), str(caught.warning))
+
+    def test_bad_interpolation_raises_config_file_parser_exception(self):
+        parser = configargparse.ConfigparserConfigFileParser()
+        for contents, problem in (
+            ("[DEFAULT]\npct = 50%secret\n", "isn't '%%'.*Write %%"),
+            ("[section]\npct = 50%secret\n", "isn't '%%'.*Write %%"),
+            (
+                "[section]\nlabel = %(missing)ssecret\n",
+                "isn't in the same section or in \\[DEFAULT\\].*Write %%",
+            ),
+            (
+                "[DEFAULT]\npath = /base\n[job]\npath = %(path)ssecret\n",
+                "refer back to it",
+            ),
+        ):
             with self.subTest(contents=contents):
-                self.assertEqual(parser.parse(StringIO(contents)), OrderedDict())
+                with self.assertRaisesRegex(
+                    configargparse.ConfigFileParserException,
+                    "Couldn't parse config file value for (pct|label|path): .*"
+                    + problem,
+                ) as caught:
+                    parser.parse(StringIO(contents))
+                # the value may be a secret, so neither the message nor a
+                # traceback (which would show a chained exception) may show it
+                exception = caught.exception
+                self.assertNotIn(
+                    "secret",
+                    "".join(
+                        traceback.format_exception(
+                            type(exception), exception, exception.__traceback__
+                        )
+                    ),
+                )
 
 
 ################################################################################
