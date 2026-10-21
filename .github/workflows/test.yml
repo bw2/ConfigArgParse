@@ -57,6 +57,17 @@ jobs:
             os: ubuntu-latest
             python-version: '3.8'
             use-docker: true
+          # setup-python has no Python 3.9 for the Ubuntu version that
+          # ubuntu-latest now points to, so run it in Docker instead
+          - name: Legacy Python on Ubuntu
+            os: ubuntu-latest
+            python-version: '3.9'
+            use-docker: true
+
+        exclude:
+          - os: ubuntu-latest
+            python-version: '3.9'
+            use-docker: false
 
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.9','3.10','3.11','3.12','3.13','3.14']
