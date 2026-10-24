@@ -2395,6 +2395,8 @@ def already_on_command_line(
     """
     arg_names = []
     for arg_string in existing_args_list:
+        if arg_string == "--":
+            break
         if arg_string and arg_string[0] in prefix_chars and "=" in arg_string:
             option_string, explicit_arg = arg_string.split("=", 1)
             arg_names.append(option_string)
