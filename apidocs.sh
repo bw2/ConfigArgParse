@@ -35,6 +35,7 @@ pydoctor \
     --project-name="ConfigArgParse ${project_version}" \
     --project-url="https://github.com/bw2/ConfigArgParse" \
     --html-viewsource-base="https://github.com/bw2/ConfigArgParse/tree/${git_sha}" \
+    --template-dir=./apidocs_templates \
     --intersphinx=https://docs.python.org/3/objects.inv \
     --make-html \
     --quiet \
