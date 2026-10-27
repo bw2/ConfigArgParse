@@ -1966,6 +1966,16 @@ class ArgumentParser(argparse.ArgumentParser):
                     )
                     % (key, value)
                 )
+            # argparse ends option parsing at the first bare '--', so one taken
+            # from a list would turn the user's own command line options after
+            # it into positional args, and hide them from the checks that let
+            # them override config file and env var values
+            if "--" in args:
+                self.error(
+                    "%s can't have '--' as a list element, since it would end "
+                    "option parsing" % key
+                )
+                return []
         elif isinstance(value, str):
             args.append("%s=%s" % (command_line_key, value))
         else:

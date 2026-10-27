@@ -1,3 +1,5 @@
+import contextlib
+import io
 import unittest
 
 import configargparse
@@ -83,3 +85,34 @@ class TestEndOfOptions(unittest.TestCase):
             parser.get_items_for_config_file_output(settings, result),
             {"level": "warning"},
         )
+
+    def test_list_element_cannot_end_option_parsing(self):
+        # otherwise the user's --level would become a positional arg, and the
+        # config file's level would be used instead of it
+        for source, kwargs in (
+            (
+                "environment",
+                {
+                    "env_vars": {"ITEMS": '["a", "--"]'},
+                    "config_file_contents": "level = config",
+                },
+            ),
+            (
+                "config",
+                {"env_vars": {}, "config_file_contents": "items = [a, --]"},
+            ),
+            (
+                "environment nested list",
+                {"env_vars": {"PAIR": '[["a", "--"]]'}},
+            ),
+        ):
+            with self.subTest(source=source):
+                parser = configargparse.ArgumentParser()
+                parser.add_argument("--items", nargs="+", env_var="ITEMS")
+                parser.add_argument("--pair", nargs=2, action="append", env_var="PAIR")
+                parser.add_argument("--level")
+                parser.add_argument("files", nargs="*")
+                stderr = io.StringIO()
+                with self.assertRaises(SystemExit), contextlib.redirect_stderr(stderr):
+                    parser.parse_args(["--level", "debug"], **kwargs)
+                self.assertIn("can't have '--' as a list element", stderr.getvalue())
