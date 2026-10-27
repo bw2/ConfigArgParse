@@ -49,5 +49,6 @@ docs/_build
 .idea
 .claude
 .memory
+.code_review*
 
 .eggs/
