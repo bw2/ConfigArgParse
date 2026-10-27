@@ -1,0 +1,13 @@
+/* The project name in the header links to the GitHub repo, so color it like a link */
+.navbar-brand a.projecthome {
+    color: #337ab7;
+}
+
+.navbar-brand a.projecthome:hover {
+    color: #23527c;
+}
+
+.github-link-bar {
+    padding: 5px 15px 0 15px;
+    text-align: right;
+}
