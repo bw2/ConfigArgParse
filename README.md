@@ -148,6 +148,11 @@ variable) are handled in a special way to support booleans and lists:
   In your python code this key must be defined as a boolean flag
   (eg. action="store_true" or similar).
 
+- `key = false` is handled as if "--key" was not specified. It still counts as
+  setting the key, though, so a `key = true` from a lower-priority source (eg.
+  a config file, when `key = false` comes from an environment variable) is
+  ignored.
+
 - `key = [value1, value2, ...]` is handled as if "--key value1 --key value2"
   etc. was specified on the command line. In your python code this key must
   be defined as a list (eg. action="append").

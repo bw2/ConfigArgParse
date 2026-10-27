@@ -1369,10 +1369,15 @@ class ArgumentParser(argparse.ArgumentParser):
         # add env var settings to the commandline that aren't there already
         env_var_args = []
         env_var_settings = OrderedDict()
-        env_var_actions = set()
-        # A false flag value generates no tokens, but still overrides the
-        # same action in lower-priority sources. Track supplied actions too.
-        supplied_actions = set()
+        env_var_flag_actions = set()
+        # A flag set to false (eg. FOO=false for a store_true arg) adds no args
+        # to the command line, so already_on_command_line() can't tell it was
+        # set, yet it should still keep lower-priority sources from setting
+        # that flag (see issue #105). So remember the flags each source sets.
+        # Only flags: an append arg set to an empty list also adds no args, but
+        # it has never overridden lower-priority sources, and making it do so
+        # would leave it None rather than an empty list.
+        flag_actions_set_by_higher_priority_sources = set()
         actions_with_env_var_values = [
             a
             for a in self._actions
@@ -1401,15 +1406,15 @@ class ArgumentParser(argparse.ArgumentParser):
                         value = [elem.strip() for elem in value[1:-1].split(",")]
             env_var_args += self.convert_item_to_command_line_arg(action, key, value)
             env_var_settings[key] = (action, env_vars[key])
-            env_var_actions.add(action)
+            if isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
+                env_var_flag_actions.add(action)
 
         idx = self._find_insertion_index(args)
         if self._reject_write_out_config_file_args(
             env_var_args, "in an environment variable", self._reachable_parsers()
         ):
             args = args[:idx] + env_var_args + args[idx:]
-
-            supplied_actions.update(env_var_actions)
+            flag_actions_set_by_higher_priority_sources.update(env_var_flag_actions)
             if env_var_settings:
                 self._source_to_settings[_ENV_VAR_SOURCE_KEY] = env_var_settings
 
@@ -1447,12 +1452,12 @@ class ArgumentParser(argparse.ArgumentParser):
 
                 # add each config item to the commandline unless it's there already
                 config_args = []
-                config_actions = set()
+                config_file_flag_actions = set()
                 for key, value in config_items.items():
                     if key in known_config_keys:
                         action = known_config_keys[key]
                         discard_this_key = (
-                            action in supplied_actions
+                            action in flag_actions_set_by_higher_priority_sources
                             or already_on_command_line(
                                 args,
                                 self._option_strings_that_override(action),
@@ -1483,8 +1488,8 @@ class ArgumentParser(argparse.ArgumentParser):
                         config_args += self.convert_item_to_command_line_arg(
                             action, key, value
                         )
-                        if action is not None:
-                            config_actions.add(action)
+                        if isinstance(action, ACTION_TYPES_THAT_DONT_NEED_A_VALUE):
+                            config_file_flag_actions.add(action)
                         source_key = "%s|%s" % (
                             _CONFIG_FILE_SOURCE_KEY,
                             source_label,
@@ -1501,7 +1506,9 @@ class ArgumentParser(argparse.ArgumentParser):
                 ):
                     args = args[:idx] + config_args + args[idx:]
                     # Update between sources, not between entries in one file.
-                    supplied_actions.update(config_actions)
+                    flag_actions_set_by_higher_priority_sources.update(
+                        config_file_flag_actions
+                    )
         finally:
             # Close every stream exactly once, regardless of whether parsing
             # succeeded or aborted partway through (e.g. a custom parser

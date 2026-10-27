@@ -4607,7 +4607,7 @@ class TestFalseFlagPrecedence(unittest.TestCase):
         self.assertFalse(result.first)
         self.assertFalse(result.second)
 
-    def test_supplied_actions_reset_between_parses(self):
+    def test_flag_actions_reset_between_parses(self):
         parser = configargparse.ArgumentParser()
         parser.add_argument("--feature", action="store_true", env_var="FEATURE")
         self.assertFalse(
@@ -4629,6 +4629,34 @@ class TestFalseFlagPrecedence(unittest.TestCase):
         )
         self.assertEqual(result.items, ["one", "two"])
         self.assertNotIn("environment_variables", parser.get_source_to_settings_dict())
+
+    def test_empty_list_does_not_override_lower_priority_list(self):
+        # only flags are tracked, so an empty list still falls back to lower
+        # priority sources, as it did before false flags were tracked
+        parser = configargparse.ArgumentParser()
+        parser.add_argument("--item", action="append", env_var="ITEM")
+        result = parser.parse_args(
+            [], env_vars={"ITEM": "[]"}, config_file_contents="item = [a]"
+        )
+        self.assertEqual(result.item, ["a"])
+
+        with tempfile.TemporaryDirectory() as directory:
+            lower = pathlib.Path(directory) / "default.ini"
+            higher = pathlib.Path(directory) / "user.ini"
+            lower.write_text("item = [a]\n")
+            higher.write_text("item = []\n")
+            parser = configargparse.ArgumentParser(default_config_files=[lower, higher])
+            parser.add_argument("--item", action="append")
+            self.assertEqual(parser.parse_args([], env_vars={}).item, ["a"])
+
+    def test_zero_count_overrides_lower_priority_count(self):
+        # a count arg is a flag too, and "0" is one of its false values
+        parser = configargparse.ArgumentParser()
+        parser.add_argument("-v", "--verbose", action="count", env_var="VERBOSE")
+        result = parser.parse_args(
+            [], env_vars={"VERBOSE": "0"}, config_file_contents="verbose = 3"
+        )
+        self.assertIsNone(result.verbose)
 
 
 ################################################################################
