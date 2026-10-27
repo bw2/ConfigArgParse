@@ -4465,6 +4465,155 @@ class TestConfigparserDefaultSection(TestCase):
                 )
 
 
+class TestFalseFlagPrecedence(unittest.TestCase):
+    false_values = ("false", "no", "off", "0", "FALSE")
+    actions = (("store_true", False), ("store_false", True))
+
+    def test_environment_overrides_config(self):
+        for action_name, expected in self.actions:
+            for value in self.false_values:
+                for config_key in ("feature", "alias"):
+                    with self.subTest(action=action_name, value=value, key=config_key):
+                        parser = configargparse.ArgumentParser()
+                        action = parser.add_argument(
+                            "--feature",
+                            "--alias",
+                            action=action_name,
+                            env_var="FEATURE",
+                        )
+                        result = parser.parse_args(
+                            [],
+                            env_vars={"FEATURE": value},
+                            config_file_contents=config_key + "=true",
+                        )
+                        self.assertIs(result.feature, expected)
+                        self.assertEqual(
+                            parser.get_source_to_settings_dict(),
+                            {"environment_variables": {"FEATURE": (action, value)}},
+                        )
+                        self.assertIn("Environment Variables:", parser.format_values())
+                        self.assertIn(value, parser.format_values())
+                        self.assertNotIn("Config File", parser.format_values())
+
+    def test_later_config_overrides_earlier_config(self):
+        with tempfile.TemporaryDirectory() as directory:
+            lower = pathlib.Path(directory) / "default.ini"
+            higher = pathlib.Path(directory) / "user.ini"
+            lower.write_text("feature=true\n")
+            for action_name, expected in self.actions:
+                for value in self.false_values:
+                    with self.subTest(action=action_name, value=value):
+                        higher.write_text("alias=" + value + "\n")
+                        parser = configargparse.ArgumentParser(
+                            default_config_files=[lower, higher]
+                        )
+                        action = parser.add_argument(
+                            "--feature", "--alias", action=action_name
+                        )
+                        self.assertIs(
+                            parser.parse_args([], env_vars={}).feature, expected
+                        )
+                        self.assertEqual(
+                            parser.get_source_to_settings_dict(),
+                            {"config_file|" + str(higher): {"alias": (action, value)}},
+                        )
+                        self.assertNotIn(str(lower), parser.format_values())
+
+    def test_command_line_overrides_false_environment_and_config(self):
+        for action_name, expected in self.actions:
+            for value in self.false_values:
+                for option in ("-f", "--feature", "--alias"):
+                    with self.subTest(action=action_name, value=value, option=option):
+                        parser = configargparse.ArgumentParser()
+                        parser.add_argument(
+                            "-f",
+                            "--feature",
+                            "--alias",
+                            action=action_name,
+                            env_var="FEATURE",
+                        )
+                        result = parser.parse_args(
+                            [option],
+                            env_vars={"FEATURE": value},
+                            config_file_contents="feature=false",
+                        )
+                        self.assertIs(result.feature, not expected)
+                        self.assertEqual(
+                            parser.get_source_to_settings_dict(),
+                            {"command_line": {"": (None, [option])}},
+                        )
+
+    def test_false_does_not_replace_custom_default(self):
+        for action_name, _ in self.actions:
+            with self.subTest(action=action_name):
+                parser = configargparse.ArgumentParser()
+                parser.add_argument(
+                    "--feature", action=action_name, default="unset", env_var="FEATURE"
+                )
+                result = parser.parse_args(
+                    [],
+                    env_vars={"FEATURE": "false"},
+                    config_file_contents="feature=true",
+                )
+                self.assertEqual(result.feature, "unset")
+
+    def test_false_does_not_select_mutually_exclusive_member(self):
+        parser = configargparse.ArgumentParser()
+        group = parser.add_mutually_exclusive_group(required=True)
+        group.add_argument("--feature", action="store_true", env_var="FEATURE")
+        group.add_argument("--other", action="store_true")
+        result = parser.parse_args(
+            [],
+            env_vars={"FEATURE": "false"},
+            config_file_contents="feature=true\nother=true",
+        )
+        self.assertFalse(result.feature)
+        self.assertTrue(result.other)
+        # Two active members within a single source must still conflict.
+        with self.assertRaises(SystemExit), captured_output():
+            parser.parse_args(
+                [], env_vars={}, config_file_contents="feature=true\nother=true"
+            )
+        # A false value alone must not satisfy a required group.
+        with self.assertRaises(SystemExit), captured_output():
+            parser.parse_args([], env_vars={"FEATURE": "false"})
+
+    def test_shared_environment_variable_overrides_both_actions(self):
+        parser = configargparse.ArgumentParser()
+        parser.add_argument("--first", action="store_true", env_var="FEATURE")
+        parser.add_argument("--second", action="store_true", env_var="FEATURE")
+        result = parser.parse_args(
+            [],
+            env_vars={"FEATURE": "false"},
+            config_file_contents="first=true\nsecond=true",
+        )
+        self.assertFalse(result.first)
+        self.assertFalse(result.second)
+
+    def test_supplied_actions_reset_between_parses(self):
+        parser = configargparse.ArgumentParser()
+        parser.add_argument("--feature", action="store_true", env_var="FEATURE")
+        self.assertFalse(
+            parser.parse_args(
+                [], env_vars={"FEATURE": "false"}, config_file_contents="feature=true"
+            ).feature
+        )
+        self.assertTrue(
+            parser.parse_args(
+                [], env_vars={}, config_file_contents="feature=true"
+            ).feature
+        )
+
+    def test_empty_environment_value_still_falls_back_to_config(self):
+        parser = configargparse.ArgumentParser()
+        parser.add_argument("--items", nargs="+", env_var="ITEMS")
+        result = parser.parse_args(
+            [], env_vars={"ITEMS": ""}, config_file_contents="items=[one,two]"
+        )
+        self.assertEqual(result.items, ["one", "two"])
+        self.assertNotIn("environment_variables", parser.get_source_to_settings_dict())
+
+
 ################################################################################
 # since configargparse should work as a drop-in replacement for argparse
 # in all situations, run argparse unittests on configargparse by modifying
