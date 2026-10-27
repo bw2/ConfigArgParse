@@ -907,14 +907,14 @@ class IniConfigParser(ConfigFileParser):
                 # Handle lists
                 if self.split_ml_text_to_list:
                     # Multi-line format
-                    config.set(
-                        section_name, key, "\n" + "\n".join(str(v) for v in value)
-                    )
+                    value = "\n" + "\n".join(str(v) for v in value)
                 else:
                     # Python list syntax
-                    config.set(section_name, key, str(value))
+                    value = str(value)
             else:
-                config.set(section_name, key, str(value))
+                value = str(value)
+            # parse() expands %(name)s references, so escape every %
+            config.set(section_name, key, value.replace("%", "%%"))
 
         stream = StringIO()
         config.write(stream)

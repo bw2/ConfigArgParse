@@ -3568,6 +3568,23 @@ class TestIniConfigParserSerialize(unittest.TestCase):
         result = parser.serialize(items)
         self.assertIn("key1", result)
 
+    def test_serialized_percent_values_read_back_unchanged(self):
+        for split_ml_text_to_list in (False, True):
+            parser = configargparse.IniConfigParser(["section"], split_ml_text_to_list)
+            for value in (
+                "%Y-%m-%d",
+                "50%",
+                "100%%",
+                "%(asctime)s %(message)s",
+                ["50%", "%(x)s"],
+            ):
+                with self.subTest(split=split_ml_text_to_list, value=value):
+                    contents = parser.serialize({"key": value})
+                    self.assertEqual(
+                        parser.parse(StringIO(contents)),
+                        OrderedDict([("key", value)]),
+                    )
+
 
 class TestCompositeConfigParser(unittest.TestCase):
     def setUp(self):
