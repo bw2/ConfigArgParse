@@ -249,6 +249,7 @@ class DefaultConfigFileParser(ConfigFileParser):
         # see ConfigFileParser.serialize docstring
         r = StringIO()
         for key, value in items.items():
+            original_value = value
             if isinstance(value, list):
                 # handle special case of lists
                 value = "[" + ", ".join(map(str, value)) + "]"
@@ -268,6 +269,8 @@ class DefaultConfigFileParser(ConfigFileParser):
                         "config_file_parser_class that supports multi-line "
                         "values, such as YAMLConfigFileParser.".format(key, value)
                     )
+            if isinstance(original_value, list):
+                value = json.dumps(original_value, default=str)
             r.write("{} = {}\n".format(key, value))
         return r.getvalue()
 
