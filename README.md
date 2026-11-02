@@ -158,9 +158,12 @@ variable) are handled in a special way to support booleans and lists:
   etc. was specified on the command line. In your python code this key must
   be defined as a list (eg. action="append"). For an arg defined with nargs
   (eg. nargs="+"), the elements are passed after "--key" as separate args, so
-  none of them can start with '-' (or another of the parser's prefix_chars)
-  other than a negative number or a lone '-', since argparse would read such
-  an element as an option rather than as a value.
+  none of them can be '--', start with '-' (or another of the parser's
+  prefix_chars), or start with one of the parser's fromfile_prefix_chars,
+  since argparse would read such an element as the end of options, as an
+  option, or as the name of a file of args, rather than as a value. A lone '-'
+  is allowed, and so is a negative number, unless the parser has an option
+  that looks like one (eg. "-1").
 
 ## Config File Syntax
 

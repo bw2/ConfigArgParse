@@ -1,11 +1,30 @@
 import contextlib
 import io
+import json
+import os
+import tempfile
 import unittest
 
 import configargparse
 
 
 class TestEndOfOptions(unittest.TestCase):
+    def parse_args_expecting_exit_and_return_error_line(self, parser, args, **kwargs):
+        """Runs parse_args, checks that it exits, and returns what it printed last.
+
+        Args:
+            parser: the parser to run.
+            args: the command line args.
+            **kwargs: passed on to parse_args.
+
+        Returns:
+            str: the last line written to stderr, which holds the error message.
+        """
+        stderr = io.StringIO()
+        with self.assertRaises(SystemExit), contextlib.redirect_stderr(stderr):
+            parser.parse_args(args, **kwargs)
+        return stderr.getvalue().strip().splitlines()[-1]
+
     def test_positional_option_names_do_not_override_other_sources(self):
         for source in ("environment", "config"):
             for prefix in ("-", "+"):
@@ -106,18 +125,24 @@ class TestEndOfOptions(unittest.TestCase):
                 {"env_vars": {"PAIR": '[["a", "--"]]'}},
             ),
         ):
-            with self.subTest(source=source):
-                parser = configargparse.ArgumentParser()
-                parser.add_argument("--items", nargs="+", env_var="ITEMS")
-                parser.add_argument("--pair", nargs=2, action="append", env_var="PAIR")
-                parser.add_argument("--level")
-                parser.add_argument("files", nargs="*")
-                stderr = io.StringIO()
-                with self.assertRaises(SystemExit), contextlib.redirect_stderr(stderr):
-                    parser.parse_args(["--level", "debug"], **kwargs)
-                self.assertIn(
-                    "can't have a list element that starts with '-'", stderr.getvalue()
-                )
+            # argparse ends option parsing at '--' whatever the prefix chars are
+            for prefix in ("-", "+"):
+                with self.subTest(source=source, prefix=prefix):
+                    parser = configargparse.ArgumentParser(prefix_chars=prefix)
+                    parser.add_argument(
+                        prefix * 2 + "items", nargs="+", env_var="ITEMS"
+                    )
+                    parser.add_argument(
+                        prefix * 2 + "pair", nargs=2, action="append", env_var="PAIR"
+                    )
+                    parser.add_argument(prefix * 2 + "level")
+                    parser.add_argument("files", nargs="*")
+                    self.assertIn(
+                        "can't have '--' as a list element",
+                        self.parse_args_expecting_exit_and_return_error_line(
+                            parser, [prefix * 2 + "level", "debug"], **kwargs
+                        ),
+                    )
 
     def test_list_element_cannot_be_read_as_an_option(self):
         # otherwise an env var or config file list element could set an option
@@ -154,12 +179,9 @@ class TestEndOfOptions(unittest.TestCase):
                         prefix * 2 + "pair", nargs=2, action="append", env_var="PAIR"
                     )
                     parser.add_argument(prefix * 2 + "admin", action="store_true")
-                    stderr = io.StringIO()
-                    with self.assertRaises(SystemExit), contextlib.redirect_stderr(
-                        stderr
-                    ):
-                        parser.parse_args([], **kwargs)
-                    error_line = stderr.getvalue().strip().splitlines()[-1]
+                    error_line = self.parse_args_expecting_exit_and_return_error_line(
+                        parser, [], **kwargs
+                    )
                     self.assertIn(
                         "can't have a list element that starts with '%s'" % prefix,
                         error_line,
@@ -167,6 +189,56 @@ class TestEndOfOptions(unittest.TestCase):
                     # the error must not show the element, which may be a secret
                     self.assertNotIn("admin", error_line)
                     self.assertNotIn("%sc" % prefix, error_line)
+
+    def test_list_element_cannot_name_a_file_of_args(self):
+        # argparse would replace it with the args in that file, which could set
+        # any option
+        with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as f:
+            f.write("--admin\n")
+        try:
+            for source, kwargs in (
+                (
+                    "environment",
+                    {"env_vars": {"ITEMS": json.dumps(["b", "@" + f.name])}},
+                ),
+                (
+                    "environment nested list",
+                    {"env_vars": {"PAIR": json.dumps([["a", "@" + f.name]])}},
+                ),
+                (
+                    "config",
+                    {
+                        "env_vars": {},
+                        "config_file_contents": "items = "
+                        + json.dumps(["b", "@" + f.name]),
+                    },
+                ),
+            ):
+                with self.subTest(source=source):
+                    parser = configargparse.ArgumentParser(fromfile_prefix_chars="@")
+                    parser.add_argument("--items", nargs="+", env_var="ITEMS")
+                    parser.add_argument(
+                        "--pair", nargs=2, action="append", env_var="PAIR"
+                    )
+                    parser.add_argument("--admin", action="store_true")
+                    error_line = self.parse_args_expecting_exit_and_return_error_line(
+                        parser, [], **kwargs
+                    )
+                    self.assertIn(
+                        "can't have a list element that starts with '@', since it "
+                        "would read command line args from a file",
+                        error_line,
+                    )
+                    # the error must not show the element, which may be a secret
+                    self.assertNotIn(os.path.basename(f.name), error_line)
+        finally:
+            os.remove(f.name)
+
+        # a parser that doesn't read files of args takes such an element as is
+        parser = configargparse.ArgumentParser()
+        parser.add_argument("--items", nargs="+", env_var="ITEMS")
+        result = parser.parse_args([], env_vars={"ITEMS": '["@oncall", "b"]'})
+        self.assertEqual(result.items, ["@oncall", "b"])
 
     def test_list_element_can_be_a_negative_number_or_a_lone_dash(self):
         parser = configargparse.ArgumentParser()
@@ -184,9 +256,9 @@ class TestEndOfOptions(unittest.TestCase):
         parser = configargparse.ArgumentParser()
         parser.add_argument("-1", dest="one", action="store_true")
         parser.add_argument("--numbers", nargs="+", env_var="NUMBERS")
-        stderr = io.StringIO()
-        with self.assertRaises(SystemExit), contextlib.redirect_stderr(stderr):
-            parser.parse_args([], env_vars={"NUMBERS": '["2", "-1"]'})
         self.assertIn(
-            "can't have a list element that starts with '-'", stderr.getvalue()
+            "can't have a list element that starts with '-'",
+            self.parse_args_expecting_exit_and_return_error_line(
+                parser, [], env_vars={"NUMBERS": '["2", "-1"]'}
+            ),
         )

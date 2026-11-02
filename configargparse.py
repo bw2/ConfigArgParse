@@ -255,8 +255,15 @@ class DefaultConfigFileParser(ConfigFileParser):
                 # and it escapes newlines. ensure_ascii=False writes non-ASCII
                 # text as is, the way other values are written, so the file stays
                 # readable. default=str writes an element that JSON can't
-                # represent, such as a Path, as its str().
-                value = json.dumps(value, default=str, ensure_ascii=False)
+                # represent, such as a Path, as its str(). parse() reads
+                # whitespace followed by '#' or ';' as the start of a comment,
+                # even inside a JSON string, so those two chars are written as
+                # JSON escape codes there, which json.loads reads back as is.
+                value = re.sub(
+                    r"(?<=\s)[#;]",
+                    lambda match: "\\u%04x" % ord(match.group()),
+                    json.dumps(value, default=str, ensure_ascii=False),
+                )
             else:
                 # render it the way this has always rendered it: str() differs
                 # for an Enum on Python before 3.11
@@ -413,7 +420,8 @@ class ConfigparserConfigFileParser(ConfigFileParser):
                 # other elements as they are, because
                 # convert_item_to_command_line_arg() passes some inner lists on
                 # whole, as str() of the list (e.g. for nargs="+" with
-                # type=json.loads, or for an unknown key). A tuple is written as
+                # type=json.loads, or for an unknown key). A tuple that is the
+                # whole value, rather than an element of a list, is written as
                 # its str() below, as DefaultConfigFileParser writes it, so it
                 # reads back as that string, which e.g. type=ast.literal_eval
                 # turns back into the tuple.
@@ -1978,18 +1986,16 @@ class ArgumentParser(argparse.ArgumentParser):
             # argparse must read each of these as a value. One that it reads as
             # an option instead would set that option from a config file or env
             # var that isn't meant to set it (eg. "-c other.ini" would read
-            # another config file). A bare '--' would end option parsing, which
-            # turns the user's own command line options after it into
-            # positional args and hides them from the checks that let them
-            # override config file and env var values. The error doesn't show
-            # the element, since it may be a secret.
+            # another config file), and one that names a file of args would be
+            # replaced with that file's args, which could set any option. A bare
+            # '--' would end option parsing, which turns the user's own command
+            # line options after it into positional args and hides them from
+            # the checks that let them override config file and env var values.
+            # The error doesn't show the element, since it may be a secret.
             for arg in separate_value_args:
-                if not self._argparse_reads_arg_as_a_value(arg):
-                    self.error(
-                        "%s can't have a list element that starts with '%s' "
-                        "(other than a negative number or a lone '%s'), since "
-                        "argparse wouldn't read it as a value" % (key, arg[0], arg[0])
-                    )
+                problem = self._describe_why_argparse_wont_read_arg_as_a_value(arg)
+                if problem:
+                    self.error("%s can't have %s" % (key, problem))
                     return []
         elif isinstance(value, str):
             args.append("%s=%s" % (command_line_key, value))
@@ -2000,8 +2006,8 @@ class ArgumentParser(argparse.ArgumentParser):
 
         return args
 
-    def _argparse_reads_arg_as_a_value(self, arg):
-        """Returns whether argparse reads the given command line arg as a value.
+    def _describe_why_argparse_wont_read_arg_as_a_value(self, arg):
+        """Says why argparse may not read the given command line arg as a value.
 
         This is stricter than argparse, which also reads some other args that
         start with a prefix char as values, such as one that contains a space.
@@ -2010,18 +2016,33 @@ class ArgumentParser(argparse.ArgumentParser):
             arg (str): a command line arg.
 
         Returns:
-            bool: False if argparse may read it as an option, or as the '--'
-            that ends option parsing.
+            str: what's wrong with it, worded to follow "<key> can't have", or
+            None if argparse reads it as a value.
         """
-        if len(arg) < 2 or arg[0] not in self.prefix_chars:
-            return True
+        # argparse ends option parsing at '--' whatever the prefix chars are
+        if arg == "--":
+            return "'--' as a list element, since it would end option parsing"
+        if not arg:
+            return None
+        if arg[0] in (self.fromfile_prefix_chars or ""):
+            return (
+                "a list element that starts with '%s', since it would read "
+                "command line args from a file" % arg[0]
+            )
+        if len(arg) == 1 or arg[0] not in self.prefix_chars:
+            return None
         # argparse reads a negative number as a value unless the parser has an
         # option that looks like one. This uses argparse's own pattern for a
         # negative number, which differs by python version (from 3.14 it also
         # matches eg. "-1e5").
-        return bool(
+        if (
             self._negative_number_matcher.match(arg)
             and not self._has_negative_number_optionals
+        ):
+            return None
+        return (
+            "a list element that starts with '%s', since argparse may read it as "
+            "an option rather than as a value" % arg[0]
         )
 
     def get_possible_config_keys(self, action):

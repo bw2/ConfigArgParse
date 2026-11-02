@@ -1513,6 +1513,7 @@ class TestMisc(TestCase):
             "--several",
             "x, y",
             "line1\nline2",
+            "echo hi # note",
         ]
         init_parser()
         self.parse(command_line_args + ["-w", cfg_f.name])
@@ -1522,7 +1523,7 @@ class TestMisc(TestCase):
         ns = self.parse(["-c", cfg_f.name])
         self.assertEqual(ns.appended, ["a,b", "café"])
         self.assertEqual(ns.appended_groups, [["a,b", "c"], ["d"]])
-        self.assertEqual(ns.several, ["x, y", "line1\nline2"])
+        self.assertEqual(ns.several, ["x, y", "line1\nline2", "echo hi # note"])
         os.remove(cfg_f.name)
 
     def testWriteOutConfigFileArg_CantBeSetFromAConfigFile(self):
@@ -3020,6 +3021,8 @@ class TestConfigFileParsers(TestCase):
             ["café", "naïve"],
             # JSON escapes these, so they can't start a new key
             ["line1\nline2", "x\rother = injected"],
+            # parse() reads whitespace followed by these as a comment's start
+            ["issue #12", "a ;b", "c\N{NO-BREAK SPACE}#d"],
         ]
         for values in cases:
             with self.subTest(values=values):
