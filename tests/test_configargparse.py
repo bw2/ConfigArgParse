@@ -1364,7 +1364,9 @@ class TestMisc(TestCase):
         expected_config_file_contents = "config-file-settable-arg = 1\n"
         expected_config_file_contents += "config-file-settable-flag = true\n"
         expected_config_file_contents += "config-file-settable-custom = custom_value\n"
-        expected_config_file_contents += "config-file-settable-list = [a, b, c, d]\n"
+        expected_config_file_contents += (
+            'config-file-settable-list = ["a", "b", "c", "d"]\n'
+        )
         expected_config_file_contents += "config-file-settable-arg2 = 3\n"
 
         self.assertEqual(cfg_f.read().strip(), expected_config_file_contents.strip())
@@ -1411,7 +1413,9 @@ class TestMisc(TestCase):
         self.assertTrue(self.parser._exit_method_called)
 
         cfg_f.seek(0)
-        expected_config_file_contents = "config-file-settable-list = [a, b, c, d]\n"
+        expected_config_file_contents = (
+            'config-file-settable-list = ["a", "b", "c", "d"]\n'
+        )
         expected_config_file_contents += "arg1 = 10\n"
         expected_config_file_contents += "config-file-settable-flag = true\n"
         expected_config_file_contents += "arg3 = bla3\n"
@@ -1463,7 +1467,9 @@ class TestMisc(TestCase):
         cfg_f.seek(0)
         expected_config_file_contents = "config-file-settable-arg = 1\n"
         expected_config_file_contents += "config-file-settable-flag = true\n"
-        expected_config_file_contents += "config-file-settable-list = [a, b, c, d]\n"
+        expected_config_file_contents += (
+            'config-file-settable-list = ["a", "b", "c", "d"]\n'
+        )
         expected_config_file_contents += "config-file-settable-arg2 = 3\n"
 
         self.assertEqual(cfg_f.read().strip(), expected_config_file_contents.strip())
@@ -2959,6 +2965,20 @@ class TestMisc(TestCase):
 class TestConfigFileParsers(TestCase):
     """Test ConfigFileParser subclasses in isolation"""
 
+    def testDefaultConfigFileParser_ListRoundtrip(self):
+        parser = configargparse.DefaultConfigFileParser()
+        cases = [
+            ["a,b", "c"],
+            [" padded ", ""],
+            ['"quoted"', "back\\slash"],
+            ["1", "true", "null"],
+            [["a,b"], ["c"]],
+        ]
+        for values in cases:
+            with self.subTest(values=values):
+                rendered = parser.serialize({"files": values})
+                self.assertEqual(parser.parse(StringIO(rendered))["files"], values)
+
     def testDefaultConfigFileParser_Basic(self):
         p = configargparse.DefaultConfigFileParser()
         self.assertGreater(len(p.get_syntax_description()), 0)
@@ -3038,8 +3058,8 @@ class TestConfigFileParsers(TestCase):
         # test serialize
         output_config_str = p.serialize(parsed_obj)
         self.assertEqual(
-            "\n".join(l.replace(": ", " = ") for l in config_lines if l.startswith("_"))
-            + "\n",
+            '_a = 3\n_b = c\n_list_arg1 = ["a", "b", "c"]\n'
+            "_str_arg = true\n_list_arg2 = [1, 2, 3]\n",
             output_config_str,
         )
 
