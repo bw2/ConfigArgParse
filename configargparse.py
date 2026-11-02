@@ -249,17 +249,21 @@ class DefaultConfigFileParser(ConfigFileParser):
         # see ConfigFileParser.serialize docstring
         r = StringIO()
         for key, value in items.items():
-            original_value = value
             if isinstance(value, list):
-                # handle special case of lists
-                value = "[" + ", ".join(map(str, value)) + "]"
+                # write lists as JSON, which parse() reads back unchanged: it
+                # quotes each string, so a comma in one doesn't split it in two,
+                # and it escapes newlines. ensure_ascii=False writes non-ASCII
+                # text as is, the way other values are written, so the file stays
+                # readable. default=str writes an element that JSON can't
+                # represent, such as a Path, as its str().
+                value = json.dumps(value, default=str, ensure_ascii=False)
             else:
                 # render it the way this has always rendered it: str() differs
                 # for an Enum on Python before 3.11
                 value = "{}".format(value)
             # this format puts one key on each line, so a newline in a key or a
             # value would silently turn into extra keys when the file is read
-            # back in (see parse() above). There's no way to quote it, so say so
+            # back in (see parse() above). Only a list can be quoted, so say so
             # instead of writing a file that means something else.
             for field in (str(key), value):
                 if "\n" in field or "\r" in field:
@@ -269,8 +273,6 @@ class DefaultConfigFileParser(ConfigFileParser):
                         "config_file_parser_class that supports multi-line "
                         "values, such as YAMLConfigFileParser.".format(key, value)
                     )
-            if isinstance(original_value, list):
-                value = json.dumps(original_value, default=str)
             r.write("{} = {}\n".format(key, value))
         return r.getvalue()
 

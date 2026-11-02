@@ -1481,6 +1481,50 @@ class TestMisc(TestCase):
         )
         cfg_f.close()
 
+    def testWriteOutConfigFileArgs_ListValuesReadBackUnchanged(self):
+        """A written out config file must give back the same list values.
+
+        Lists used to be written as [a,b, c], which split an element with a
+        comma in it, and garbled the lists of lists that append with nargs="+"
+        stores.
+        """
+        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        cfg_f.close()
+
+        def init_parser():
+            self.initParser(
+                args_for_setting_config_path=["-c"],
+                args_for_writing_out_config_file=["-w"],
+            )
+            self.add_arg("--appended", action="append")
+            self.add_arg("--appended-groups", action="append", nargs="+")
+            self.add_arg("--several", nargs="+")
+
+        command_line_args = [
+            "--appended",
+            "a,b",
+            "--appended",
+            "café",
+            "--appended-groups",
+            "a,b",
+            "c",
+            "--appended-groups",
+            "d",
+            "--several",
+            "x, y",
+            "line1\nline2",
+        ]
+        init_parser()
+        self.parse(command_line_args + ["-w", cfg_f.name])
+        self.assertTrue(self.parser._exit_method_called)
+
+        init_parser()
+        ns = self.parse(["-c", cfg_f.name])
+        self.assertEqual(ns.appended, ["a,b", "café"])
+        self.assertEqual(ns.appended_groups, [["a,b", "c"], ["d"]])
+        self.assertEqual(ns.several, ["x, y", "line1\nline2"])
+        os.remove(cfg_f.name)
+
     def testWriteOutConfigFileArg_CantBeSetFromAConfigFile(self):
         """A config file must not be able to trigger writing out a config file.
 
@@ -2973,11 +3017,24 @@ class TestConfigFileParsers(TestCase):
             ['"quoted"', "back\\slash"],
             ["1", "true", "null"],
             [["a,b"], ["c"]],
+            ["café", "naïve"],
+            # JSON escapes these, so they can't start a new key
+            ["line1\nline2", "x\rother = injected"],
         ]
         for values in cases:
             with self.subTest(values=values):
                 rendered = parser.serialize({"files": values})
-                self.assertEqual(parser.parse(StringIO(rendered))["files"], values)
+                # newline=None reads a lone \r as a line break, the way open()
+                # does when parse_args reads a config file
+                self.assertEqual(
+                    parser.parse(StringIO(rendered, newline=None)), {"files": values}
+                )
+
+    def testDefaultConfigFileParser_ListWritesNonAsciiTextAsIs(self):
+        # config files are meant to be edited by hand, so non-ASCII text must be
+        # written as is rather than as a JSON escape code
+        parser = configargparse.DefaultConfigFileParser()
+        self.assertEqual(parser.serialize({"files": ["café"]}), 'files = ["café"]\n')
 
     def testDefaultConfigFileParser_Basic(self):
         p = configargparse.DefaultConfigFileParser()
@@ -3013,19 +3070,15 @@ class TestConfigFileParsers(TestCase):
 
     def testDefaultConfigFileParser_SerializeRejectsNewlines(self):
         # this format puts one key per line, so a newline in a value would come
-        # back as extra keys rather than as part of the value
+        # back as extra keys rather than as part of the value. A list is written
+        # as JSON, which escapes newlines (see
+        # testDefaultConfigFileParser_ListRoundtrip), so it isn't rejected.
         p = configargparse.DefaultConfigFileParser()
         self.assertRaisesRegex(
             ValueError,
             "can't contain newlines",
             p.serialize,
             OrderedDict([("a", "3\nb = 4")]),
-        )
-        self.assertRaisesRegex(
-            ValueError,
-            "can't contain newlines",
-            p.serialize,
-            OrderedDict([("a", ["3", "4\nb = 5"])]),
         )
         self.assertRaisesRegex(
             ValueError,
