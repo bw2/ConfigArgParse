@@ -156,7 +156,11 @@ variable) are handled in a special way to support booleans and lists:
 
 - `key = [value1, value2, ...]` is handled as if "--key value1 --key value2"
   etc. was specified on the command line. In your python code this key must
-  be defined as a list (eg. action="append").
+  be defined as a list (eg. action="append"). For an arg defined with nargs
+  (eg. nargs="+"), the elements are passed after "--key" as separate args, so
+  none of them can start with '-' (or another of the parser's prefix_chars)
+  other than a negative number or a lone '-', since argparse would read such
+  an element as an option rather than as a value.
 
 ## Config File Syntax
 

@@ -1951,18 +1951,22 @@ class ArgumentParser(argparse.ArgumentParser):
                 or (isinstance(action.nargs, int) and action.nargs > 1)
             )
 
+            # the list elements that go on the command line as args of their own,
+            # after command_line_key, rather than as command_line_key=element
+            separate_value_args = []
             if action is None or isinstance(action, argparse._AppendAction):
                 for list_elem in value:
                     if accepts_list_and_has_nargs and isinstance(list_elem, list):
+                        sub_elems = [str(sub_elem) for sub_elem in list_elem]
                         args.append(command_line_key)
-                        for sub_elem in list_elem:
-                            args.append(str(sub_elem))
+                        args += sub_elems
+                        separate_value_args += sub_elems
                     else:
                         args.append("%s=%s" % (command_line_key, str(list_elem)))
             elif accepts_list_and_has_nargs:
+                separate_value_args = [str(list_elem) for list_elem in value]
                 args.append(command_line_key)
-                for list_elem in value:
-                    args.append(str(list_elem))
+                args += separate_value_args
             else:
                 self.error(
                     (
@@ -1971,16 +1975,22 @@ class ArgumentParser(argparse.ArgumentParser):
                     )
                     % (key, value)
                 )
-            # argparse ends option parsing at the first bare '--', so one taken
-            # from a list would turn the user's own command line options after
-            # it into positional args, and hide them from the checks that let
-            # them override config file and env var values
-            if "--" in args:
-                self.error(
-                    "%s can't have '--' as a list element, since it would end "
-                    "option parsing" % key
-                )
-                return []
+            # argparse must read each of these as a value. One that it reads as
+            # an option instead would set that option from a config file or env
+            # var that isn't meant to set it (eg. "-c other.ini" would read
+            # another config file). A bare '--' would end option parsing, which
+            # turns the user's own command line options after it into
+            # positional args and hides them from the checks that let them
+            # override config file and env var values. The error doesn't show
+            # the element, since it may be a secret.
+            for arg in separate_value_args:
+                if not self._argparse_reads_arg_as_a_value(arg):
+                    self.error(
+                        "%s can't have a list element that starts with '%s' "
+                        "(other than a negative number or a lone '%s'), since "
+                        "argparse wouldn't read it as a value" % (key, arg[0], arg[0])
+                    )
+                    return []
         elif isinstance(value, str):
             args.append("%s=%s" % (command_line_key, value))
         else:
@@ -1989,6 +1999,30 @@ class ArgumentParser(argparse.ArgumentParser):
             )
 
         return args
+
+    def _argparse_reads_arg_as_a_value(self, arg):
+        """Returns whether argparse reads the given command line arg as a value.
+
+        This is stricter than argparse, which also reads some other args that
+        start with a prefix char as values, such as one that contains a space.
+
+        Args:
+            arg (str): a command line arg.
+
+        Returns:
+            bool: False if argparse may read it as an option, or as the '--'
+            that ends option parsing.
+        """
+        if len(arg) < 2 or arg[0] not in self.prefix_chars:
+            return True
+        # argparse reads a negative number as a value unless the parser has an
+        # option that looks like one. This uses argparse's own pattern for a
+        # negative number, which differs by python version (from 3.14 it also
+        # matches eg. "-1e5").
+        return bool(
+            self._negative_number_matcher.match(arg)
+            and not self._has_negative_number_optionals
+        )
 
     def get_possible_config_keys(self, action):
         """This method decides which actions can be set in a config file and

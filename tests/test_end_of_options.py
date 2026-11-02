@@ -115,4 +115,78 @@ class TestEndOfOptions(unittest.TestCase):
                 stderr = io.StringIO()
                 with self.assertRaises(SystemExit), contextlib.redirect_stderr(stderr):
                     parser.parse_args(["--level", "debug"], **kwargs)
-                self.assertIn("can't have '--' as a list element", stderr.getvalue())
+                self.assertIn(
+                    "can't have a list element that starts with '-'", stderr.getvalue()
+                )
+
+    def test_list_element_cannot_be_read_as_an_option(self):
+        # otherwise an env var or config file list element could set an option
+        # that isn't meant to be set from there, or read another config file
+        for prefix in ("-", "+"):
+            for source, kwargs in (
+                (
+                    "environment",
+                    {"env_vars": {"ITEMS": '["b", "%sadmin"]' % (prefix * 2)}},
+                ),
+                (
+                    "environment config file arg",
+                    {"env_vars": {"ITEMS": '["b", "%sc", "other.ini"]' % prefix}},
+                ),
+                (
+                    "environment nested list",
+                    {"env_vars": {"PAIR": '[["a", "%sadmin"]]' % (prefix * 2)}},
+                ),
+                (
+                    "config",
+                    {
+                        "env_vars": {},
+                        "config_file_contents": "items = [b, %sadmin]" % (prefix * 2),
+                    },
+                ),
+            ):
+                with self.subTest(prefix=prefix, source=source):
+                    parser = configargparse.ArgumentParser(prefix_chars=prefix)
+                    parser.add_argument(prefix + "c", is_config_file=True)
+                    parser.add_argument(
+                        prefix * 2 + "items", nargs="+", env_var="ITEMS"
+                    )
+                    parser.add_argument(
+                        prefix * 2 + "pair", nargs=2, action="append", env_var="PAIR"
+                    )
+                    parser.add_argument(prefix * 2 + "admin", action="store_true")
+                    stderr = io.StringIO()
+                    with self.assertRaises(SystemExit), contextlib.redirect_stderr(
+                        stderr
+                    ):
+                        parser.parse_args([], **kwargs)
+                    error_line = stderr.getvalue().strip().splitlines()[-1]
+                    self.assertIn(
+                        "can't have a list element that starts with '%s'" % prefix,
+                        error_line,
+                    )
+                    # the error must not show the element, which may be a secret
+                    self.assertNotIn("admin", error_line)
+                    self.assertNotIn("%sc" % prefix, error_line)
+
+    def test_list_element_can_be_a_negative_number_or_a_lone_dash(self):
+        parser = configargparse.ArgumentParser()
+        parser.add_argument("--numbers", nargs="+", type=float, env_var="NUMBERS")
+        parser.add_argument("--files", nargs="+", env_var="FILES")
+        result = parser.parse_args(
+            [], env_vars={"NUMBERS": '["-5", "-1.5", "2"]', "FILES": '["-", "a"]'}
+        )
+        self.assertEqual(result.numbers, [-5.0, -1.5, 2.0])
+        self.assertEqual(result.files, ["-", "a"])
+
+    def test_list_element_cannot_be_a_negative_number_that_is_also_an_option(self):
+        # with an option that looks like a negative number, argparse reads
+        # "-1" as that option rather than as a value
+        parser = configargparse.ArgumentParser()
+        parser.add_argument("-1", dest="one", action="store_true")
+        parser.add_argument("--numbers", nargs="+", env_var="NUMBERS")
+        stderr = io.StringIO()
+        with self.assertRaises(SystemExit), contextlib.redirect_stderr(stderr):
+            parser.parse_args([], env_vars={"NUMBERS": '["2", "-1"]'})
+        self.assertIn(
+            "can't have a list element that starts with '-'", stderr.getvalue()
+        )

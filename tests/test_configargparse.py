@@ -1642,7 +1642,7 @@ class TestMisc(TestCase):
         self.add_arg("--files", nargs="*")
 
         self.assertParseArgsRaises(
-            "write-config can only be set on the command line",
+            "files can't have a list element that starts with '-'",
             args=[],
             config_file_contents="files = [--write-config, %s]" % cfg_f.name,
         )
@@ -1661,7 +1661,7 @@ class TestMisc(TestCase):
         self.add_arg("--files", nargs="*", env_var="FILES")
 
         self.assertParseArgsRaises(
-            "write-config can only be set on the command line",
+            "FILES can't have a list element that starts with '-'",
             args=[],
             env_vars={"FILES": json.dumps(["--write-config", cfg_f.name])},
         )
@@ -1688,7 +1688,7 @@ class TestMisc(TestCase):
             self.add_arg("--files", nargs="+")
 
             self.assertParseArgsRaises(
-                "can only be set on the command line",
+                "files can't have a list element that starts with '-'",
                 args=[],
                 config_file_contents="files = [a, %s]"
                 % (value_form.replace("%s", cfg_f.name)),
@@ -2081,7 +2081,7 @@ class TestMisc(TestCase):
         )
 
         self.assertParseArgsRaises(
-            "can only be set on the command line",
+            "extra can't have a list element that starts with '-'",
             args=["go", "--"],
             config_file_contents="extra = [-w, %s]" % cfg_f.name,
         )
@@ -2230,7 +2230,7 @@ class TestMisc(TestCase):
         ).add_parser("inner", args_for_writing_out_config_file=["-w"])
 
         self.assertParseArgsRaises(
-            "can only be set on the command line",
+            "pair can't have a list element that starts with '-'",
             args=["outer", "inner", "--"],
             config_file_contents="pair = [a, b, -w, %s]" % cfg_f.name,
         )
@@ -2380,7 +2380,7 @@ class TestMisc(TestCase):
 
         self.assertEqual(len(self.parser._reachable_parsers()), 2)
         self.assertParseArgsRaises(
-            "can only be set on the command line",
+            "pair can't have a list element that starts with '-'",
             args=["deploy", "--"],
             config_file_contents="pair = [x, -w, %s]" % cfg_f.name,
         )
@@ -2403,7 +2403,7 @@ class TestMisc(TestCase):
         self.add_arg("++files", nargs="+")
 
         self.assertParseArgsRaises(
-            "can only be set on the command line",
+            "files can't have a list element that starts with '-'",
             args=[],
             config_file_contents="files = [a, -=%s]" % cfg_f.name,
         )
@@ -2470,7 +2470,7 @@ class TestMisc(TestCase):
         self.add_arg("--files", nargs="+")
 
         self.assertParseArgsRaises(
-            "can only be set on the command line",
+            "files can't have a list element that starts with '-'",
             args=[],
             config_file_contents="files = [a, -v=w, %s]" % cfg_f.name,
         )
@@ -2546,7 +2546,7 @@ class TestMisc(TestCase):
         self.add_arg("--files", nargs="+")
 
         self.assertParseArgsRaises(
-            "can only be set on the command line",
+            "files can't have a list element that starts with '-'",
             args=[],
             config_file_contents="files = [a, -force=w, %s]" % cfg_f.name,
         )
