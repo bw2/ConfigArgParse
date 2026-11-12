@@ -4422,6 +4422,108 @@ class TestStoreFalseConfigOutput(unittest.TestCase):
                 self.assertEqual(contents, expected_contents)
 
 
+@unittest.skipUnless(hasattr(argparse, "BooleanOptionalAction"), "requires Python 3.9+")
+class TestBooleanOptionalAliases(unittest.TestCase):
+    aliases = (
+        ("-f", "--feature"),
+        ("--feature", "-f"),
+        ("-f", "-F", "--feature"),
+        ("-f", "--feature", "--enabled"),
+        ("--feature", "--enabled", "-f"),
+        ("--feature",),
+    )
+
+    def make_parser(self, aliases):
+        parser = configargparse.ArgumentParser()
+        parser.add_argument(
+            *aliases,
+            action=argparse.BooleanOptionalAction,
+            dest="feature",
+            env_var="FEATURE",
+        )
+        return parser
+
+    def test_boolean_values_from_environment_and_config(self):
+        values = (
+            ("true", True),
+            ("yes", True),
+            ("on", True),
+            ("1", True),
+            ("false", False),
+            ("no", False),
+            ("off", False),
+            ("0", False),
+        )
+        for aliases in self.aliases:
+            for value, expected in values:
+                for source in ("environment", "config"):
+                    with self.subTest(aliases=aliases, value=value, source=source):
+                        parser = self.make_parser(aliases)
+                        kwargs = {"env_vars": {}}
+                        if source == "environment":
+                            kwargs["env_vars"] = {"FEATURE": value}
+                        else:
+                            kwargs["config_file_contents"] = "feature=" + value
+                        self.assertIs(parser.parse_args([], **kwargs).feature, expected)
+
+    def test_environment_precedence_and_command_line_overrides(self):
+        for aliases in self.aliases:
+            parser = self.make_parser(aliases)
+            positive_options = [
+                option for option in aliases if not option.startswith("--no-")
+            ]
+            negative_options = [
+                "--no-" + option[2:] for option in aliases if option.startswith("--")
+            ]
+            for value, config_value, expected in (
+                ("false", "true", False),
+                ("true", "false", True),
+            ):
+                for option in (None, *positive_options, *negative_options):
+                    with self.subTest(aliases=aliases, value=value, option=option):
+                        args = [] if option is None else [option]
+                        wanted = (
+                            expected
+                            if option is None
+                            else not option.startswith("--no-")
+                        )
+                        result = parser.parse_args(
+                            args,
+                            env_vars={"FEATURE": value},
+                            config_file_contents="feature=" + config_value,
+                        )
+                        self.assertIs(result.feature, wanted)
+            self.assertIsNone(parser.parse_args([], env_vars={}).feature)
+            self.assertTrue(
+                parser.parse_args(
+                    [], env_vars={}, config_file_contents="feature=true"
+                ).feature
+            )
+            self.assertFalse(
+                parser.parse_args([], env_vars={"FEATURE": "false"}).feature
+            )
+            self.assertIsNone(parser.parse_args([], env_vars={}).feature)
+
+    def test_saved_configuration_round_trip(self):
+        for aliases in self.aliases:
+            for option in ("--feature", "--no-feature"):
+                with self.subTest(aliases=aliases, option=option):
+                    parser = self.make_parser(aliases)
+                    namespace = parser.parse_args([option], env_vars={})
+                    with tempfile.TemporaryDirectory() as directory:
+                        path = os.path.join(directory, "settings.conf")
+                        with captured_output():
+                            parser.write_config_file(namespace, [path])
+                        with open(path) as config_file:
+                            contents = config_file.read()
+                    self.assertIs(
+                        self.make_parser(aliases)
+                        .parse_args([], env_vars={}, config_file_contents=contents)
+                        .feature,
+                        namespace.feature,
+                    )
+
+
 class TestConfigparserDefaultSection(TestCase):
     def test_default_only_values(self):
         parser = configargparse.ConfigparserConfigFileParser()

@@ -1938,7 +1938,16 @@ class ArgumentParser(argparse.ArgumentParser):
                     pass
                 else:
                     # --no-foo
-                    args.append(action.option_strings[1])
+                    # Short aliases may come before the generated negative option.
+                    negative_option = next(
+                        (
+                            option
+                            for option in action.option_strings
+                            if option.startswith("--no-")
+                        ),
+                        None,
+                    )
+                    args.append(negative_option or action.option_strings[1])
             elif isinstance(action, argparse._CountAction):
                 # For count actions, repeat the flag the number of times specified
                 args += [action.option_strings[0]] * int(value)
