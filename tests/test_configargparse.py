@@ -4523,6 +4523,30 @@ class TestBooleanOptionalAliases(unittest.TestCase):
                         namespace.feature,
                     )
 
+    def test_no_prefixed_config_key_sets_the_opposite_value(self):
+        for aliases in (("-f", "--feature"), ("--feature",)):
+            for key in ("no-feature", "--no-feature"):
+                for value, expected in (("true", False), ("false", True)):
+                    with self.subTest(aliases=aliases, key=key, value=value):
+                        namespace = self.make_parser(aliases).parse_args(
+                            [],
+                            env_vars={},
+                            config_file_contents="%s = %s" % (key, value),
+                        )
+                        self.assertIs(namespace.feature, expected)
+
+    def test_short_only_aliases_reject_false_values(self):
+        for aliases in (("-f",), ("-f", "-F")):
+            with self.subTest(aliases=aliases):
+                parser = replace_error_method(self.make_parser(aliases))
+                self.assertIs(
+                    parser.parse_args([], env_vars={"FEATURE": "true"}).feature, True
+                )
+                with self.assertRaisesRegex(
+                    argparse.ArgumentError, "FEATURE can't set feature to False"
+                ):
+                    parser.parse_args([], env_vars={"FEATURE": "false"})
+
 
 class TestConfigparserDefaultSection(TestCase):
     def test_default_only_values(self):

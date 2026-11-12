@@ -1930,24 +1930,21 @@ class ArgumentParser(argparse.ArgumentParser):
                 if not is_boolean_optional_action(action):
                     args.append(command_line_key)
                 else:
-                    # --foo
-                    args.append(action.option_strings[0])
+                    args.append(
+                        self._get_option_string_that_sets_boolean_optional_action(
+                            action, key, True
+                        )
+                    )
             elif value.lower() in ("false", "no", "off", "0"):
                 # don't append when set to "false" / "no"
                 if not is_boolean_optional_action(action):
                     pass
                 else:
-                    # --no-foo
-                    # Short aliases may come before the generated negative option.
-                    negative_option = next(
-                        (
-                            option
-                            for option in action.option_strings
-                            if option.startswith("--no-")
-                        ),
-                        None,
+                    args.append(
+                        self._get_option_string_that_sets_boolean_optional_action(
+                            action, key, False
+                        )
                     )
-                    args.append(negative_option or action.option_strings[1])
             elif isinstance(action, argparse._CountAction):
                 # For count actions, repeat the flag the number of times specified
                 args += [action.option_strings[0]] * int(value)
@@ -2014,6 +2011,45 @@ class ArgumentParser(argparse.ArgumentParser):
             )
 
         return args
+
+    def _get_option_string_that_sets_boolean_optional_action(self, action, key, value):
+        """Picks the option string that sets a BooleanOptionalAction arg to the
+        value given for it in a config file or env var.
+
+        argparse adds a '--no-' form after each '--' option string of a
+        BooleanOptionalAction, and sets the arg to False for the option strings
+        that start with '--no-' and to True for the rest. A short alias can
+        come first, so the '--no-' forms aren't at a fixed position. A config
+        file key that names a '--no-' form (eg. 'no-feature' for
+        '--no-feature') means the opposite value, so 'no-feature = true' sets
+        the arg to False, just as '--no-feature' would on the command line.
+
+        Args:
+            action: The argparse.BooleanOptionalAction to set.
+            key: The config file key or env var name the value came from.
+            value: The boolean value given for that key.
+
+        Returns:
+            str: the option string to add to the command line
+        """
+        key_names_a_no_option_string = any(
+            key in (option_string, option_string[2:])
+            for option_string in action.option_strings
+            if option_string.startswith("--no-")
+        )
+        value_to_set = not value if key_names_a_no_option_string else value
+        option_strings_that_set_value = [
+            option_string
+            for option_string in action.option_strings
+            if option_string.startswith("--no-") != value_to_set
+        ]
+        if not option_strings_that_set_value:
+            # eg. an arg with only short option strings has no '--no-' form
+            self.error(
+                "%s can't set %s to %s: none of %s does"
+                % (key, action.dest, value_to_set, "/".join(action.option_strings))
+            )
+        return option_strings_that_set_value[0]
 
     def _describe_why_argparse_wont_read_arg_as_a_value(self, arg):
         """Says why argparse may not read the given command line arg as a value.

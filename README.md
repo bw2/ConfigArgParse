@@ -154,6 +154,10 @@ variable) are handled in a special way to support booleans and lists:
   from a lower-priority source (eg. a config file, when `key = false` comes
   from an environment variable) is ignored.
 
+- For an arg defined with action=argparse.BooleanOptionalAction, a config
+  file can also use the `no-key` form: `no-key = true` is handled as if
+  "--no-key" was specified, and `no-key = false` as if "--key" was specified.
+
 - `key = [value1, value2, ...]` is handled as if "--key value1 --key value2"
   etc. was specified on the command line. In your python code this key must
   be defined as a list (eg. action="append"). For an arg defined with nargs
