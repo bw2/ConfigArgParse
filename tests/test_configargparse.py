@@ -1740,6 +1740,8 @@ class TestMisc(TestCase):
             "-write-conf",
             "-wr",
             "-wr=PATH",
+            "-v=w",
+            "-force=w",
         ]
 
         for allow_abbrev in (True, False):
@@ -1763,6 +1765,7 @@ class TestMisc(TestCase):
                 for p in (parser, reference):
                     p.add_argument("-v", action="store_true")
                     p.add_argument("-x", action="store_true")
+                    p.add_argument("-force", action="store_true")
                     p.add_argument("--write", action="store_true")
                     p.add_argument("--name")
                     p.add_argument("-n", dest="nn")
@@ -2086,6 +2089,13 @@ class TestMisc(TestCase):
             args=["go", "--"],
             config_file_contents="extra = [-w, %s]" % cfg_f.name,
         )
+        # the list element is rejected before the write-out check runs, so check
+        # directly that the write-out check finds the subcommand's arg
+        self.assertTrue(
+            self.parser._names_a_write_out_config_file_arg(
+                "-w", self.parser._reachable_parsers()
+            )
+        )
 
         with open(cfg_f.name) as f:
             self.assertEqual(f.read(), "original contents")
@@ -2234,6 +2244,13 @@ class TestMisc(TestCase):
             "pair can't have a list element that starts with '-'",
             args=["outer", "inner", "--"],
             config_file_contents="pair = [a, b, -w, %s]" % cfg_f.name,
+        )
+        # the list element is rejected before the write-out check runs, so check
+        # directly that the write-out check finds the inner subcommand's arg
+        self.assertTrue(
+            self.parser._names_a_write_out_config_file_arg(
+                "-w", self.parser._reachable_parsers()
+            )
         )
 
         with open(cfg_f.name) as f:
@@ -2393,7 +2410,10 @@ class TestMisc(TestCase):
     def testWriteOutConfigFileArg_CantBeSetFromAConfigFileByPrefixCharAlone(self):
         # argparse looks a single-prefix-char arg up by the part before any '=',
         # and takes any option starting with it, so a lone '-' reaches a short
-        # option when it is the only candidate
+        # option when it is the only candidate. A list element like this is
+        # rejected for starting with '-' before the write-out check runs, so
+        # testWriteOutConfigFileArg_RejectionCoversEveryFormArgparseAccepts is
+        # what tests the write-out check on this form.
         cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
         cfg_f.write("original contents")
         cfg_f.close()
@@ -2461,7 +2481,10 @@ class TestMisc(TestCase):
     def testWriteOutConfigFileArg_CantBeSetByAFlagWithMoreOptionsAfterIt(self):
         # before Python 3.11 argparse reads whatever follows the '=' of a
         # single-dash flag that takes no value as more short options, so '-v=w'
-        # reaches '-w' there
+        # reaches '-w' there. A list element like this is rejected for starting
+        # with '-' before the write-out check runs, so
+        # testWriteOutConfigFileArg_RejectionCoversEveryFormArgparseAccepts is
+        # what tests the write-out check on this form.
         cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
         cfg_f.write("original contents")
         cfg_f.close()
@@ -2537,7 +2560,10 @@ class TestMisc(TestCase):
     def testWriteOutConfigFileArg_CantBeSetAfterAMultiLetterFlagAndAnEquals(self):
         # before Python 3.11.9 and 3.12.3, argparse reads what follows the '='
         # of a single-dash flag that takes no value as more short options, so
-        # '-force=w' reaches '-w' there
+        # '-force=w' reaches '-w' there. A list element like this is rejected
+        # for starting with '-' before the write-out check runs, so
+        # testWriteOutConfigFileArg_RejectionCoversEveryFormArgparseAccepts is
+        # what tests the write-out check on this form.
         cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
         cfg_f.write("original contents")
         cfg_f.close()
@@ -4546,6 +4572,39 @@ class TestBooleanOptionalAliases(unittest.TestCase):
                     argparse.ArgumentError, "FEATURE can't set feature to False"
                 ):
                     parser.parse_args([], env_vars={"FEATURE": "false"})
+
+    def test_negative_forms_that_dont_start_with_two_dashes(self):
+        # From Python 3.15, argparse also adds '-nofeature' after '-feature' and
+        # '++no-feature' after '++feature'. Earlier versions add no negative
+        # form for these, so a false value can't be set there.
+        for prefix_chars, option in (("-", "-feature"), ("+", "++feature")):
+            with self.subTest(option=option):
+                parser = replace_error_method(
+                    configargparse.ArgumentParser(prefix_chars=prefix_chars)
+                )
+                action = parser.add_argument(
+                    option,
+                    action=argparse.BooleanOptionalAction,
+                    dest="feature",
+                    env_var="FEATURE",
+                )
+                self.assertIs(
+                    parser.parse_args([], env_vars={"FEATURE": "true"}).feature, True
+                )
+                if len(action.option_strings) == 1:
+                    with self.assertRaisesRegex(
+                        argparse.ArgumentError, "FEATURE can't set feature to False"
+                    ):
+                        parser.parse_args([], env_vars={"FEATURE": "false"})
+                    continue
+                self.assertIs(
+                    parser.parse_args([], env_vars={"FEATURE": "false"}).feature, False
+                )
+                if option == "++feature":
+                    namespace = parser.parse_args(
+                        [], env_vars={}, config_file_contents="no-feature = true"
+                    )
+                    self.assertIs(namespace.feature, False)
 
 
 class TestConfigparserDefaultSection(TestCase):

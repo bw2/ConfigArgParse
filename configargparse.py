@@ -2016,11 +2016,12 @@ class ArgumentParser(argparse.ArgumentParser):
         """Picks the option string that sets a BooleanOptionalAction arg to the
         value given for it in a config file or env var.
 
-        argparse adds a '--no-' form after each '--' option string of a
-        BooleanOptionalAction, and sets the arg to False for the option strings
-        that start with '--no-' and to True for the rest. A short alias can
-        come first, so the '--no-' forms aren't at a fixed position. A config
-        file key that names a '--no-' form (eg. 'no-feature' for
+        argparse adds a negative form after some option strings of a
+        BooleanOptionalAction ('--no-foo' after '--foo', and from Python 3.15
+        also '++no-foo' after '++foo' and '-nofoo' after '-foo'), and sets the
+        arg to False for the negative forms and to True for the rest. A short
+        alias can come first, so the negative forms aren't at a fixed position.
+        A config file key that names a negative form (eg. 'no-feature' for
         '--no-feature') means the opposite value, so 'no-feature = true' sets
         the arg to False, just as '--no-feature' would on the command line.
 
@@ -2032,19 +2033,31 @@ class ArgumentParser(argparse.ArgumentParser):
         Returns:
             str: the option string to add to the command line
         """
-        key_names_a_no_option_string = any(
-            key in (option_string, option_string[2:])
-            for option_string in action.option_strings
-            if option_string.startswith("--no-")
+        # Python 3.15+ lists the negative forms. Before that, argparse sets the
+        # arg to False for exactly the option strings that start with '--no-'.
+        negative_option_strings = getattr(action, "neg_option_strings", None)
+        if negative_option_strings is None:
+            negative_option_strings = [
+                option_string
+                for option_string in action.option_strings
+                if option_string.startswith("--no-")
+            ]
+        # the config keys get_possible_config_keys() gives a negative form are
+        # the form itself and, when it starts with a doubled prefix char, the
+        # form without that prefix (eg. '--no-foo' and 'no-foo')
+        key_names_a_negative_option_string = any(
+            key == option_string
+            or (option_string[0] == option_string[1] and key == option_string[2:])
+            for option_string in negative_option_strings
         )
-        value_to_set = not value if key_names_a_no_option_string else value
+        value_to_set = not value if key_names_a_negative_option_string else value
         option_strings_that_set_value = [
             option_string
             for option_string in action.option_strings
-            if option_string.startswith("--no-") != value_to_set
+            if (option_string in negative_option_strings) != value_to_set
         ]
         if not option_strings_that_set_value:
-            # eg. an arg with only short option strings has no '--no-' form
+            # eg. an arg with only short option strings has no negative form
             self.error(
                 "%s can't set %s to %s: none of %s does"
                 % (key, action.dest, value_to_set, "/".join(action.option_strings))
