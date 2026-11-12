@@ -2287,7 +2287,7 @@ class ArgumentParser(argparse.ArgumentParser):
         """Prints the format_values() string (to sys.stdout or another file)."""
         file.write(self.format_values())
 
-    def format_help(self):
+    def format_help(self, formatter=None):
         msg = ""
         added_config_file_help = False
         added_env_var_help = False
@@ -2373,9 +2373,14 @@ class ArgumentParser(argparse.ArgumentParser):
         text_width = max(self._get_formatter()._width, 11)
         msg = textwrap.fill(msg, text_width)
 
-        return argparse.ArgumentParser.format_help(self) + (
-            "\n{}\n".format(msg) if msg != "" else ""
-        )
+        # Python 3.15+ print_help() passes a formatter that knows which file the
+        # help goes to, so that color is only used where that file supports it.
+        # Earlier versions' format_help() takes no formatter.
+        if formatter is None:
+            help_text = argparse.ArgumentParser.format_help(self)
+        else:
+            help_text = argparse.ArgumentParser.format_help(self, formatter=formatter)
+        return help_text + ("\n{}\n".format(msg) if msg != "" else "")
 
 
 def add_argument(self, *args, **kwargs):

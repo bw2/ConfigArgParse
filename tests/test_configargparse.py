@@ -4990,6 +4990,11 @@ else:
 
     exec(compile(test_argparse_source_code, test_argparse_source_file, "exec"))
 
+    # Python 3.15+ TestLazyImports checks which modules importing argparse
+    # pulls in, which says nothing about configargparse, and its subprocess
+    # scripts would call configargparse.ArgumentParser without importing it
+    globals().pop("TestLazyImports", None)
+
     # print argparse unittest source code
     def print_source_code(source_code, line_numbers, context_lines=10):
         for n in line_numbers:
