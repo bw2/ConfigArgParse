@@ -49,7 +49,7 @@ function toggleSideBarCollapse() {
 }
 
 function updateSideBarCollapse() {
-    let link = document.querySelector('#collapseSideBar a')
+    let link = document.querySelector('#collapse-sidebar a')
     // Since this script is called before the page finishes the parsing,
     // link is undefined when it's first called. 
     if (link!=undefined){
