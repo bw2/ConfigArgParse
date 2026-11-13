@@ -39,7 +39,9 @@ pip install ConfigArgParse
 - user can provide a config file via a normal-looking command line arg
   (eg. -c path/to/config.txt) rather than the argparse-style @config.txt
 - one or more default config file paths can be specified
-  (eg. `['/etc/bla.conf', '~/.my_config']`)
+  (eg. `['/etc/bla.conf', '~/.my_config']`). They are read in order, so values
+  in later files take precedence, and a wildcard path such as
+  `/etc/app/conf.d/*.conf` reads the files it matches in alphabetical order
 - all argparse functionality is fully supported, so this module can
   serve as a drop-in replacement (verified by argparse unittests).
 - env vars and config file keys & syntax are automatically documented
@@ -102,29 +104,27 @@ DBSNP_PATH=/data/dbsnp/variants_v2.vcf python config_test.py --my-config config.
 Here is the result:
 
 ```bash
-Namespace(dbsnp='/data/dbsnp/variants_v2.vcf', genome='HCMV', my_config='config.txt', v=False, vcf=['f1.vcf', 'f2.vcf'])
+Namespace(my_config='config.txt', genome='HCMV', v=False, dbsnp='/data/dbsnp/variants_v2.vcf', vcf=['f1.vcf', 'f2.vcf'])
 ----------
 usage: config_test.py [-h] -c MY_CONFIG --genome GENOME [-v] [-d DBSNP]
                       vcf [vcf ...]
 
-Args that start with '--' (eg. --genome) can also be set in a config file
-(/etc/app/conf.d/*.conf or ~/.my_settings or specified via -c). Config file
-syntax allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
-https://goo.gl/R74nmi). If an arg is specified in more than one place, then
-commandline values override environment variables which override config file
-values which override defaults.
-
 positional arguments:
   vcf                   variant file(s)
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  -c MY_CONFIG, --my-config MY_CONFIG
+  -c, --my-config MY_CONFIG
                         config file path
   --genome GENOME       path to genome file
   -v                    verbose
-  -d DBSNP, --dbsnp DBSNP
-                        known variants .vcf [env var: DBSNP_PATH]
+  -d, --dbsnp DBSNP     known variants .vcf [env var: DBSNP_PATH]
+
+Args that start with '--' can also be set in a config file
+(/etc/app/conf.d/*.conf or ~/.my_settings or specified via -c). Config file
+syntax allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
+https://goo.gl/R74nmi). In general, command-line values override environment
+variables which override config file values which override defaults.
 
 ----------
 Command Line Args:   --my-config config.txt f1.vcf f2.vcf
@@ -231,7 +231,7 @@ module syntax (https://docs.python.org/3.7/library/configparser.html). In
 particular the following configparser options are set:
 
 ```python
-config = configparser.ArgParser(
+config = configparser.ConfigParser(
     delimiters=("=",":"),
     allow_no_value=False,
     comment_prefixes=("#",";"),
@@ -279,11 +279,12 @@ import configargparse
 import yaml
 
 parser = configargparse.ArgParser(
+    default_config_files=['config.ini'],
     config_file_parser_class=configargparse.ConfigparserConfigFileParser
 )
 parser.add_argument('--system1_settings', type=yaml.safe_load)
 
-args = parser.parse_args() # now args.system1 is a valid python dict
+args = parser.parse_args() # now args.system1_settings is a valid python dict
 ```
 
 #### *IniConfigParser* - INI parser with support for sections.
@@ -298,6 +299,10 @@ With the following additions:
 - Optional support for quoting strings in config file
   (useful when text must not be converted to list or when text
   should contain trailing whitespaces).
+
+Like `ConfigparserConfigFileParser`, it lowercases all keys, so an option whose
+name contains uppercase letters (e.g. `--outputDir`) can't be set from this kind
+of config file.
 
 This config parser can be used to integrate with `setup.cfg` files.
 
@@ -330,9 +335,10 @@ If you use `IniConfigParser(sections, split_ml_text_to_list=True)`:
 
 ```
 # the same rules are applicable with the following changes:
-[my-software]
+[my_super_tool]
 # how to specify a list arg (eg. arg which has action="append")
-repeatable-option = # Just enter one value per line (the list literal format can also be used)
+# Just enter one value per line (the list literal format can also be used)
+repeatable-option =
    https://docs.python.org/3/objects.inv
    https://twistedmatrix.com/documents/current/api/objects.inv
 # how to specify a multiline text (you have to quote it):
@@ -349,7 +355,7 @@ Usage:
 import configargparse
 parser = configargparse.ArgParser(
          default_config_files=['setup.cfg', 'my_super_tool.ini'],
-         config_file_parser_class=configargparse.IniConfigParser(['tool:my_super_tool', 'my_super_tool']),
+         config_file_parser_class=configargparse.IniConfigParser(['tool:my_super_tool', 'my_super_tool'], split_ml_text_to_list=False),
      )
 ...
 ```
@@ -366,7 +372,7 @@ Example:
 
 ```toml
 # this is a comment
-[tool.my-software] # TOML section table.
+[tool.my_super_tool] # TOML section table.
 # how to specify a key-value pair
 format-string = "restructuredtext" # strings must be quoted
 # how to set an arg which has action="store_true"
@@ -408,7 +414,7 @@ import configargparse
 my_tool_sections = ['tool.my_super_tool', 'tool:my_super_tool', 'my_super_tool']
                  # pyproject.toml like section, setup.cfg like section, custom section
 parser = configargparse.ArgParser(
-         default_config_files=['setup.cfg', 'my_super_tool.ini'],
+         default_config_files=['pyproject.toml', 'setup.cfg', 'my_super_tool.ini'],
          config_file_parser_class=configargparse.CompositeConfigParser(
             [configargparse.TomlConfigParser(my_tool_sections),
              configargparse.IniConfigParser(my_tool_sections, split_ml_text_to_list=True)]

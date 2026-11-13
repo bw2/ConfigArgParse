@@ -26,10 +26,14 @@ mkdir -p "${docs_folder}"
 # We generate the docs for the argparse module too, such that we can document 
 # the methods inherited from argparse.ArgumentParser, not only the methods that configargparse overrides.
 # And it help to have a better vision of the whole thing also.
-curl https://raw.githubusercontent.com/python/cpython/3.9/Lib/argparse.py > ./argparse.py
-echo "__docformat__ = 'restructuredtext'" >> ./argparse.py
 # Delete the file when the script exits
 trap "rm -f ./argparse.py" EXIT
+# Download it from a fixed release and check it is that release's file, since
+# pydoctor renders its docstrings into the published pages
+cpython_release_tag="v3.9.25"
+curl -fsSL "https://raw.githubusercontent.com/python/cpython/${cpython_release_tag}/Lib/argparse.py" > ./argparse.py
+echo '1f549e2f7f896f884a9de998a05d7dadb930594262a43d59517b06ff3ee6fc51  argparse.py' | shasum -a 256 -c -
+echo "__docformat__ = 'restructuredtext'" >> ./argparse.py
 
 pydoctor \
     --project-name="ConfigArgParse ${project_version}" \
@@ -42,6 +46,17 @@ pydoctor \
     --project-base-dir=.\
     --docformat=google \
     --html-output="${docs_folder}" \
-    ./argparse.py ./configargparse.py || true
+    ./argparse.py ./configargparse.py || [ $? -eq 2 ]
+# pydoctor exits with 2 when some docstrings can't be parsed, which happens in
+# the downloaded argparse.py, after it has written the docs. Any other failure
+# stops this script, and so does a run that wrote no docs.
+test -f "${docs_folder}index.html"
+
+# pydoctor links each object to its source under --html-viewsource-base, but
+# argparse.py isn't in this repository, so point its links at the file in the
+# CPython release it came from. Only a line was added at its end above, so the
+# line numbers still match.
+sed -i.bak "s#https://github.com/bw2/ConfigArgParse/tree/${git_sha}/argparse.py#https://github.com/python/cpython/blob/${cpython_release_tag}/Lib/argparse.py#g" "${docs_folder}"*.html
+rm -f "${docs_folder}"*.html.bak
 
 echo "API docs generated in ${docs_folder}"

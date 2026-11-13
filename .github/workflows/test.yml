@@ -45,22 +45,18 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Legacy Python on Ubuntu
-            os: ubuntu-latest
+          - os: ubuntu-latest
             python-version: '3.6'
             use-docker: true
-          - name: Legacy Python on Ubuntu
-            os: ubuntu-latest
+          - os: ubuntu-latest
             python-version: '3.7'
             use-docker: true
-          - name: Legacy Python on Ubuntu
-            os: ubuntu-latest
+          - os: ubuntu-latest
             python-version: '3.8'
             use-docker: true
           # setup-python has no Python 3.9 for the Ubuntu version that
           # ubuntu-latest now points to, so run it in Docker instead
-          - name: Legacy Python on Ubuntu
-            os: ubuntu-latest
+          - os: ubuntu-latest
             python-version: '3.9'
             use-docker: true
 
@@ -89,7 +85,7 @@ jobs:
         if: ${{ matrix.use-docker }}
         run: |
           docker run --rm -v ${{ github.workspace }}:/app -w /app python:${{ matrix.python-version }} bash -c "
-            python -m pip install --upgrade pip setuptools wheel tox
+            python -m pip install --upgrade pip setuptools wheel
             python -m pip install '.[test]'
             pytest --cov-branch --cov-context=test --cov=.
           "
@@ -97,7 +93,7 @@ jobs:
       - name: Run tests
         if: ${{ !matrix.use-docker }}
         run: |
-          python -m pip install --upgrade pip setuptools wheel tox
+          python -m pip install --upgrade pip setuptools wheel
           python -m pip install '.[test]'
           pytest --cov-branch --cov-context=test --cov=.
 
