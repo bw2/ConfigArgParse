@@ -29,7 +29,9 @@ Don’t forget to sync your fork once in a while to work from the latest revisio
 Pre-commit checks
 ~~~~~~~~~~~~~~~~~
 
-- Run unit tests: ``pytest``. 
+- Run unit tests: ``pytest``.
+- Check the formatting, as CI does: ``black . --check``.
+- Check the docstrings, as CI does: ``pydoctor ./configargparse.py --intersphinx=https://docs.python.org/3/objects.inv --docformat=google -W``.
 
 Review process 
 ~~~~~~~~~~~~~~
@@ -51,8 +53,8 @@ Release process
 
 The following is a high level overview and might not match the current state of things.
 
-- Edit setup.py to update the version number and create a PR with this change  (suggested branch name format: ``release-1.5.1``)
-- Once that PR is approved and merged, the *owner* should push a new tag with the same name as the version i.e. ``1.5.1`` by running `git pull; git tag 1.5.1; git push --tags`. 
+- The version number comes from the git tag (through setuptools-scm), so no file needs editing.
+- The *owner* should push a new tag with the same name as the version i.e. ``1.5.1`` by running `git pull; git tag 1.5.1; git push --tags`.
   This will trigger the PyPi release process. Monitor the process in the GitHub action UI...
 
 ---

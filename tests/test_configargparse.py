@@ -1,8 +1,9 @@
 import argparse
 from collections import OrderedDict
 import configargparse
-from contextlib import contextmanager
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 import functools
+import importlib.util
 import inspect
 import json
 import logging
@@ -33,11 +34,10 @@ else:
 # set COLUMNS to get expected wrapping
 os.environ["COLUMNS"] = "80"
 
-# enable logging to simplify debugging
-logger = logging.getLogger()
-logger.level = logging.DEBUG
-stream_handler = logging.StreamHandler(sys.stdout)
-logger.addHandler(stream_handler)
+# YAMLConfigFileParser reads and writes YAML with PyYAML, an optional dependency
+skip_unless_pyyaml_is_installed = unittest.skipUnless(
+    importlib.util.find_spec("yaml") is not None, "PyYAML not installed"
+)
 
 
 def replace_error_method(arg_parser):
@@ -48,7 +48,7 @@ def replace_error_method(arg_parser):
     def error_method(self, message):
         raise argparse.ArgumentError(None, message)
 
-    def exit_method(self, status, message=None):
+    def exit_method(self, status=0, message=None):
         self._exit_method_called = True
 
     arg_parser._exit_method_called = False
@@ -64,12 +64,68 @@ def captured_output():
     swap stdout and stderr for StringIO so we can do asserts on outputs.
     """
     new_out, new_err = StringIO(), StringIO()
-    old_out, old_err = sys.stdout, sys.stderr
-    try:
-        sys.stdout, sys.stderr = new_out, new_err
-        yield sys.stdout, sys.stderr
-    finally:
-        sys.stdout, sys.stderr = old_out, old_err
+    with redirect_stdout(new_out), redirect_stderr(new_err):
+        yield new_out, new_err
+
+
+def write_config_file_and_read_it_back(parser, namespace):
+    """Write a config file for a namespace to a temp dir and read it back.
+
+    The "Wrote config file to ..." message that write_config_file() prints is
+    captured so it doesn't show up in the test run's output.
+
+    Args:
+        parser: The parser whose write_config_file() writes the file.
+        namespace: The parsed namespace to write out.
+
+    Returns:
+        The contents of the written config file.
+    """
+    with tempfile.TemporaryDirectory() as directory:
+        path = os.path.join(directory, "written_config_file.conf")
+        with captured_output():
+            parser.write_config_file(namespace, [path])
+        with open(path) as config_file:
+            return config_file.read()
+
+
+class TrackingStringIO(StringIO):
+    """A StringIO that adds itself to a given list when created.
+
+    This lets a test check afterwards, through each stream's .closed
+    attribute, that the parser closed every stream it opened.
+
+    Args:
+        text: The stream's contents.
+        opened_streams: The list this stream appends itself to.
+    """
+
+    def __init__(self, text, opened_streams):
+        super().__init__(text)
+        opened_streams.append(self)
+
+
+class PathLikeThatFailsIfCalled:
+    """An object that is both os.PathLike and callable.
+
+    A default_config_files entry like this must be read as a path, so calling
+    it fails the test.
+
+    Args:
+        path: The path that __fspath__() returns.
+    """
+
+    def __init__(self, path):
+        self.path = path
+
+    def __fspath__(self):
+        return self.path
+
+    def __call__(self):
+        raise AssertionError(
+            "a PathLike default_config_files entry was called instead of being "
+            "read as a path"
+        )
 
 
 class TestCase(unittest.TestCase):
@@ -89,6 +145,96 @@ class TestCase(unittest.TestCase):
             argparse.ArgumentError, regex, self.parse, args=args, **kwargs
         )
 
+    def make_temp_file_holding_contents(self, contents="", suffix=""):
+        """Create a temp file holding the given text.
+
+        The file is removed when the test finishes, even if it fails.
+
+        Args:
+            contents: The text to write to the file.
+            suffix: The end of the file name, e.g. ".ini".
+
+        Returns:
+            The path of the new file.
+        """
+        with tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False) as f:
+            f.write(contents)
+        self.addCleanup(os.remove, f.name)
+        return f.name
+
+    def make_unused_path_in_a_new_temp_dir(self):
+        """Return a path that nothing exists at yet, for the parser to create.
+
+        The path is in a new temp directory, which is removed along with
+        anything in it when the test finishes, even if it fails.
+
+        Returns:
+            The path, which doesn't exist yet.
+        """
+        temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(temp_dir.cleanup)
+        return os.path.join(temp_dir.name, "config_file")
+
+    def write_config_file_with_the_write_out_arg_and_read_it_back(
+        self, option, add_arg_kwargs, args, env_vars=None
+    ):
+        """Write a config file for one option with '-w', then read it back.
+
+        The option is added to a parser with the '-w' write-out arg, which
+        parses args plus '-w <path>'. It is then added, without its default, to
+        a new parser that reads the written file as a default config file.
+
+        Args:
+            option: The option string, e.g. "--size".
+            add_arg_kwargs: Keyword args for add_argument().
+            args: The command line args, without the write-out arg.
+            env_vars: The env vars for the first parse, if any.
+
+        Returns:
+            A tuple of the written file's contents, the option's value from the
+            first parse, and its value read back from the written file.
+        """
+        output_path = self.make_unused_path_in_a_new_temp_dir()
+        self.initParser(args_for_writing_out_config_file=["-w"])
+        dest = self.add_arg(option, **add_arg_kwargs).dest
+        with captured_output():
+            parsed_namespace = self.parse(
+                args=args + ["-w", output_path], env_vars=env_vars or {}
+            )
+        with open(output_path) as output_file:
+            written_contents = output_file.read()
+
+        self.initParser(default_config_files=[output_path])
+        self.add_arg(
+            option, **{k: v for k, v in add_arg_kwargs.items() if k != "default"}
+        )
+        return (
+            written_contents,
+            getattr(parsed_namespace, dest),
+            getattr(self.parse(args=[], env_vars={}), dest),
+        )
+
+    def make_file_holding_original_contents(self):
+        """Create a temp file holding the text "original contents".
+
+        The file is removed when the test finishes, even if it fails.
+
+        Returns:
+            The path of the new file.
+        """
+        return self.make_temp_file_holding_contents("original contents")
+
+    def assert_file_still_holds_original_contents(self, path, msg=None):
+        """Assert that a file made by make_file_holding_original_contents()
+        was not overwritten.
+
+        Args:
+            path: The path of the file to check.
+            msg: Optional message to show if the assertion fails.
+        """
+        with open(path) as f:
+            self.assertEqual(f.read(), "original contents", msg=msg)
+
 
 class TestBasicUseCases(TestCase):
     def setUp(self):
@@ -106,28 +252,13 @@ class TestBasicUseCases(TestCase):
             self.add_arg("--foo", action="store_true", default=False)
 
         # make sure required args are enforced
+        self.assertParseArgsRaises("the following arguments are required", args="")
         self.assertParseArgsRaises(
-            (
-                "too few arg"
-                if sys.version_info.major < 3
-                else "the following arguments are required"
-            ),
-            args="",
-        )
-        self.assertParseArgsRaises(
-            (
-                "argument -y/--arg-y is required"
-                if sys.version_info.major < 3
-                else "the following arguments are required: -y/--arg-y"
-            ),
+            "the following arguments are required: -y/--arg-y",
             args="-x --arg-z 11 file1.txt",
         )
         self.assertParseArgsRaises(
-            (
-                "argument --arg-z is required"
-                if sys.version_info.major < 3
-                else "the following arguments are required: --arg-z"
-            ),
+            "the following arguments are required: --arg-z",
             args="file1.txt file2.txt file3.txt -x -y 1",
         )
 
@@ -198,55 +329,43 @@ class TestBasicUseCases(TestCase):
     def testBasicCase2(self, use_groups=False):
 
         ## Test command line, config file and env var values
-        default_config_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        default_config_file.flush()
+        default_config_file_path = self.make_temp_file_holding_contents()
 
         p = self.initParser(
             default_config_files=[
                 "/etc/settings.ini",
                 "/home/jeff/.user_settings",
-                default_config_file.name,
+                default_config_file_path,
             ]
         )
         p.add_arg("vcf", nargs="+", help="Variant file(s)")
-        if not use_groups:
-            self.add_arg("--genome", help="Path to genome file", required=True)
-            self.add_arg("-v", dest="verbose", action="store_true")
-            self.add_arg("-g", "--my-cfg-file", required=True, is_config_file=True)
-            self.add_arg("-d", "--dbsnp", env_var="DBSNP_PATH")
-            self.add_arg(
-                "-f",
-                "--format",
-                choices=["BED", "MAF", "VCF", "WIG", "R"],
-                dest="fmt",
-                metavar="FRMT",
-                env_var="OUTPUT_FORMAT",
-                default="BED",
-            )
-        else:
-            g = p.add_argument_group(title="g1")
-            g.add_arg("--genome", help="Path to genome file", required=True)
-            g.add_arg("-v", dest="verbose", action="store_true")
-            g.add_arg("-g", "--my-cfg-file", required=True, is_config_file=True)
-            g = p.add_argument_group(title="g2")
-            g.add_arg("-d", "--dbsnp", env_var="DBSNP_PATH")
-            g.add_arg(
-                "-f",
-                "--format",
-                choices=["BED", "MAF", "VCF", "WIG", "R"],
-                dest="fmt",
-                metavar="FRMT",
-                env_var="OUTPUT_FORMAT",
-                default="BED",
-            )
+        parser_or_argument_group_g1 = (
+            p.add_argument_group(title="g1") if use_groups else p
+        )
+        parser_or_argument_group_g1.add_arg(
+            "--genome", help="Path to genome file", required=True
+        )
+        parser_or_argument_group_g1.add_arg("-v", dest="verbose", action="store_true")
+        parser_or_argument_group_g1.add_arg(
+            "-g", "--my-cfg-file", required=True, is_config_file=True
+        )
+        parser_or_argument_group_g2 = (
+            p.add_argument_group(title="g2") if use_groups else p
+        )
+        parser_or_argument_group_g2.add_arg("-d", "--dbsnp", env_var="DBSNP_PATH")
+        parser_or_argument_group_g2.add_arg(
+            "-f",
+            "--format",
+            choices=["BED", "MAF", "VCF", "WIG", "R"],
+            dest="fmt",
+            metavar="FRMT",
+            env_var="OUTPUT_FORMAT",
+            default="BED",
+        )
 
         # make sure required args are enforced
         self.assertParseArgsRaises(
-            (
-                "too few arg"
-                if sys.version_info.major < 3
-                else "the following arguments are required: vcf, -g/--my-cfg-file"
-            ),
+            "the following arguments are required: vcf, -g/--my-cfg-file",
             args="--genome hg19",
         )
         self.assertParseArgsRaises(
@@ -255,10 +374,9 @@ class TestBasicUseCases(TestCase):
         )
 
         # check values after setting args on command line
-        config_file2 = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        config_file2.flush()
+        config_file2_path = self.make_temp_file_holding_contents()
 
-        ns = self.parse(args="--genome hg19 -g %s bla.vcf " % config_file2.name)
+        ns = self.parse(args="--genome hg19 -g %s bla.vcf " % config_file2_path)
         self.assertEqual(ns.genome, "hg19")
         self.assertEqual(ns.verbose, False)
         self.assertIsNone(ns.dbsnp)
@@ -273,9 +391,9 @@ class TestBasicUseCases(TestCase):
         )
 
         # check precedence: args > env > config > default using the --format arg
-        default_config_file.write("--format MAF")
-        default_config_file.flush()
-        ns = self.parse(args="--genome hg19 -g %s f.vcf " % config_file2.name)
+        with open(default_config_file_path, "w") as f:
+            f.write("--format MAF")
+        ns = self.parse(args="--genome hg19 -g %s f.vcf " % config_file2_path)
         self.assertEqual(ns.fmt, "MAF")
         self.assertRegex(
             self.format_values(),
@@ -284,9 +402,9 @@ class TestBasicUseCases(TestCase):
             "  --format: \\s+ MAF\n",
         )
 
-        config_file2.write("--format VCF")
-        config_file2.flush()
-        ns = self.parse(args="--genome hg19 -g %s f.vcf " % config_file2.name)
+        with open(config_file2_path, "w") as f:
+            f.write("--format VCF")
+        ns = self.parse(args="--genome hg19 -g %s f.vcf " % config_file2_path)
         self.assertEqual(ns.fmt, "VCF")
         self.assertRegex(
             self.format_values(),
@@ -297,7 +415,7 @@ class TestBasicUseCases(TestCase):
 
         ns = self.parse(
             env_vars={"OUTPUT_FORMAT": "R", "DBSNP_PATH": "/a/b.vcf"},
-            args="--genome hg19 -g %s f.vcf " % config_file2.name,
+            args="--genome hg19 -g %s f.vcf " % config_file2_path,
         )
         self.assertEqual(ns.fmt, "R")
         self.assertEqual(ns.dbsnp, "/a/b.vcf")
@@ -315,7 +433,7 @@ class TestBasicUseCases(TestCase):
                 "DBSNP_PATH": "/a/b.vcf",
                 "ANOTHER_VAR": "something",
             },
-            args="--genome hg19 -g %s --format WIG f.vcf" % config_file2.name,
+            args="--genome hg19 -g %s --format WIG f.vcf" % config_file2_path,
         )
         self.assertEqual(ns.fmt, "WIG")
         self.assertEqual(ns.dbsnp, "/a/b.vcf")
@@ -326,60 +444,50 @@ class TestBasicUseCases(TestCase):
             "  DBSNP_PATH: \\s+ /a/b.vcf\n",
         )
 
+        short_g = SHORT_OPT_METAVAR.format(metavar="MY_CFG_FILE")
+        short_d = SHORT_OPT_METAVAR.format(metavar="DBSNP")
+        short_f = SHORT_OPT_METAVAR.format(metavar="FRMT")
+        help_lines_for_the_options_in_group_g1 = (
+            "  --genome GENOME \\s+ Path to genome file\n"
+            "  -v\n"
+            f"  -g{short_g}, --my-cfg-file MY_CFG_FILE\n"
+        )
+        help_lines_for_the_options_in_group_g2 = (
+            f"  -d{short_d}, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n"
+            f"  -f{short_f}, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n"
+        )
         if not use_groups:
-            short_g = SHORT_OPT_METAVAR.format(metavar="MY_CFG_FILE")
-            short_d = SHORT_OPT_METAVAR.format(metavar="DBSNP")
-            short_f = SHORT_OPT_METAVAR.format(metavar="FRMT")
-            self.assertRegex(
-                self.format_help(),
-                "usage: .*\\s+\\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?"
-                "\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n"
-                "positional arguments:\n"
-                "  vcf \\s+ Variant file\\(s\\)\n\n"
-                "%s:\n"
-                "  -h, --help \\s+ show this help message and exit\n"
-                "  --genome GENOME \\s+ Path to genome file\n"
-                "  -v\n"
-                f"  -g{short_g}, --my-cfg-file MY_CFG_FILE\n"
-                f"  -d{short_d}, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n"
-                f"  -f{short_f}, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n"
-                % OPTIONAL_ARGS_STRING
-                + 7 * r"(.+\s*)",
+            option_and_group_sections = (
+                help_lines_for_the_options_in_group_g1
+                + help_lines_for_the_options_in_group_g2
             )
         else:
-            short_g = SHORT_OPT_METAVAR.format(metavar="MY_CFG_FILE")
-            short_d = SHORT_OPT_METAVAR.format(metavar="DBSNP")
-            short_f = SHORT_OPT_METAVAR.format(metavar="FRMT")
-            self.assertRegex(
-                self.format_help(),
-                "usage: .*\\s+\\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?"
-                "\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n"
-                "positional arguments:\n"
-                "  vcf \\s+ Variant file\\(s\\)\n\n"
-                "%s:\n"
-                "  -h, --help \\s+ show this help message and exit\n\n"
-                "g1:\n"
-                "  --genome GENOME \\s+ Path to genome file\n"
-                "  -v\n"
-                f"  -g{short_g}, --my-cfg-file MY_CFG_FILE\n\n"
-                "g2:\n"
-                f"  -d{short_d}, --dbsnp DBSNP\\s+\\[env var: DBSNP_PATH\\]\n"
-                f"  -f{short_f}, --format FRMT\\s+\\[env var: OUTPUT_FORMAT\\]\n\n"
-                % OPTIONAL_ARGS_STRING
-                + 7 * r"(.+\s*)",
+            option_and_group_sections = (
+                "\ng1:\n"
+                + help_lines_for_the_options_in_group_g1
+                + "\ng2:\n"
+                + help_lines_for_the_options_in_group_g2
             )
+        self.assertRegex(
+            self.format_help(),
+            "usage: .*\\s+\\[-h\\] --genome GENOME \\[-v\\] -g MY_CFG_FILE\n?"
+            "\\s+\\[-d DBSNP\\]\\s+\\[-f FRMT\\]\\s+vcf \\[vcf ...\\]\n\n"
+            "positional arguments:\n"
+            "  vcf \\s+ Variant file\\(s\\)\n\n"
+            "%s:\n"
+            "  -h, --help \\s+ show this help message and exit\n" % OPTIONAL_ARGS_STRING
+            + option_and_group_sections
+            + 7 * r"(.+\s*)",
+        )
 
         self.assertParseArgsRaises(
             "invalid choice: 'ZZZ'",
-            args="--genome hg19 -g %s --format ZZZ f.vcf" % config_file2.name,
+            args="--genome hg19 -g %s --format ZZZ f.vcf" % config_file2_path,
         )
         self.assertParseArgsRaises(
             "unrecognized arguments: --bla",
-            args="--bla --genome hg19 -g %s f.vcf" % config_file2.name,
+            args="--bla --genome hg19 -g %s f.vcf" % config_file2_path,
         )
-
-        default_config_file.close()
-        config_file2.close()
 
     def testBasicCase2_WithGroups(self):
         self.testBasicCase2(use_groups=True)
@@ -395,9 +503,7 @@ class TestBasicUseCases(TestCase):
         self.add_arg("--config", is_config_file=True)
         self.add_arg("--arg1", default=1, type=int)
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False) as config_file:
-            config_file.write("arg1 2")
-            config_file_path = config_file.name
+        config_file_path = self.make_temp_file_holding_contents("arg1 2")
 
         with captured_output() as (out, _):
             args = self.parse("--config {}".format(config_file_path))
@@ -407,20 +513,17 @@ class TestBasicUseCases(TestCase):
             self.assertEqual(output, expected_output)
 
     def testIgnoreHelpArgs(self):
-        p = self.initParser()
+        self.initParser()
         self.add_arg("--arg1")
         args, _ = self.parse_known("--arg2 --help", ignore_help_args=True)
         self.assertEqual(args.arg1, None)
         self.add_arg("--arg2")
         args, _ = self.parse_known("--arg2 3 --help", ignore_help_args=True)
         self.assertEqual(args.arg2, "3")
-        self.assertRaisesRegex(
-            TypeError,
-            "exit",
-            self.parse_known,
-            "--arg2 3 --help",
-            ignore_help_args=False,
-        )
+        self.assertIs(self.parser._exit_method_called, False)
+        with captured_output():
+            self.parse_known("--arg2 3 --help", ignore_help_args=False)
+        self.assertIs(self.parser._exit_method_called, True)
 
     def testPositionalAndConfigVarLists(self):
         self.initParser()
@@ -434,6 +537,52 @@ class TestBasicUseCases(TestCase):
 
         self.assertEqual(ns.arg, ["Shell", "someword", "anotherword"])
         self.assertEqual(ns.a, "positional_value")
+
+    @unittest.skipUnless(
+        hasattr(argparse.ArgumentParser, "parse_intermixed_args"),
+        "requires Python 3.7+",
+    )
+    def testParseIntermixedArgs_ReadsConfigFilesAndEnvVarsThatTheCommandLineOverrides(
+        self,
+    ):
+        config_file_path = self.make_temp_file_holding_contents(
+            "genome = hg38\ntag = [from_config]\n"
+        )
+        self.initParser(default_config_files=[config_file_path])
+        self.add_arg("--genome")
+        self.add_arg("--threads", env_var="THREADS")
+        self.add_arg("--tag", action="append", env_var="TAG")
+        self.add_arg("vcf", nargs="*")
+
+        ns = self.parser.parse_intermixed_args(
+            args=["a.vcf", "--tag", "from_command_line", "b.vcf"],
+            env_vars={"THREADS": "4", "TAG": "from_env_var"},
+        )
+        self.assertEqual(ns.genome, "hg38")
+        self.assertEqual(ns.threads, "4")
+        # the command line value replaces the env var's and the config file's,
+        # rather than being appended to them
+        self.assertEqual(ns.tag, ["from_command_line"])
+        self.assertEqual(ns.vcf, ["a.vcf", "b.vcf"])
+
+        ns, unknown_args = self.parser.parse_known_intermixed_args(
+            args=["a.vcf", "b.vcf", "--unknown"], env_vars={}
+        )
+        self.assertEqual(ns.genome, "hg38")
+        self.assertEqual(ns.tag, ["from_config"])
+        self.assertEqual(ns.vcf, ["a.vcf", "b.vcf"])
+        self.assertEqual(unknown_args, ["--unknown"])
+
+        ns = self.parser.parse_intermixed_args(
+            args=["a.vcf", "--genome", "hg19"],
+            config_file_contents="genome = chm13\n",
+            env_vars={},
+        )
+        self.assertEqual(ns.genome, "hg19")
+        ns = self.parser.parse_intermixed_args(
+            args=["a.vcf"], config_file_contents="genome = chm13\n", env_vars={}
+        )
+        self.assertEqual(ns.genome, "chm13")
 
     def testCustomActionWithNargsAndConfigVarList(self):
         # https://github.com/bw2/ConfigArgParse/issues/354
@@ -461,8 +610,49 @@ class TestBasicUseCases(TestCase):
             config_file_contents="""arg = [foo, bar]""",
         )
 
+    def testNargs1TakesAListFromAConfigFileOrEnvVar(self):
+        """argparse stores an nargs=1 value as a one-element list."""
+        self.initParser()
+        self.add_arg("--x", nargs=1, env_var="X")
+        self.add_arg("--y", nargs=1, action="append")
+        ns = self.parse(
+            args="", config_file_contents='y = [["a"], ["b"]]', env_vars={"X": "[c]"}
+        )
+        self.assertEqual(ns.x, ["c"])
+        self.assertEqual(ns.y, [["a"], ["b"]])
+
+    def testFormatValuesListsAPositionalDefaultOnlyWhenItWasntGiven(self):
+        self.initParser()
+        self.add_arg("--genome", default="hg19")
+        self.add_arg("vcf", nargs="?", default="default.vcf")
+        self.add_arg("bams", nargs="*", default=["default.bam"])
+        self.parse(args=["given.vcf", "given.bam"], env_vars={})
+        self.assertEqual(
+            self.format_values(),
+            "Command Line Args:   given.vcf given.bam\n"
+            "Defaults:\n"
+            "  --genome:          hg19\n",
+        )
+        self.parse(args=[], env_vars={})
+        self.assertEqual(
+            self.format_values(),
+            "Defaults:\n"
+            "  --genome:          hg19\n"
+            "  vcf:               default.vcf\n"
+            "  bams:              ['default.bam']\n",
+        )
+
+    def testMissingOptionValueIsAUsageErrorWithAConfigFilePathArg(self):
+        # the parser that looks for the config file path hits the error first,
+        # and before Python 3.9 its parse_known_args() then returns None
+        self.initParser(args_for_setting_config_path=["-c", "--config"])
+        self.add_arg("--foo")
+        for args in (["-c"], ["--foo"], ["--foo", "-c", "x.ini"]):
+            with self.subTest(args=args):
+                self.assertParseArgsRaises("expected one argument", args=args)
+
     def testMutuallyExclusiveArgs(self):
-        config_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
+        config_file_path = self.make_temp_file_holding_contents()
 
         p = self.parser
         g = p.add_argument_group(title="group1")
@@ -492,14 +682,14 @@ class TestBasicUseCases(TestCase):
             env_var="BAM_FORMAT",
         )
 
-        ns = self.parse(args="--genome hg19 -f1 %s --bam" % config_file.name)
+        ns = self.parse(args="--genome hg19 -f1 %s --bam" % config_file_path)
         self.assertEqual(ns.genome, "hg19")
         self.assertEqual(ns.verbose, False)
         self.assertEqual(ns.fmt, "BAM")
 
         ns = self.parse(
             env_vars={"BAM_FORMAT": "true"},
-            args="--genome hg19 -f1 %s" % config_file.name,
+            args="--genome hg19 -f1 %s" % config_file_path,
         )
         self.assertEqual(ns.genome, "hg19")
         self.assertEqual(ns.verbose, False)
@@ -530,7 +720,6 @@ class TestBasicUseCases(TestCase):
             "  --genome GENOME       Path to genome file\n"
             "  -v\n\n" % OPTIONAL_ARGS_STRING,
         )
-        config_file.close()
 
     def testMutuallyExclusiveArgsOverriddenByOtherSources(self):
         # a config file or env var value for one member of a mutually exclusive
@@ -582,20 +771,15 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.mode, "giga")
 
         # a config file given on the command line overrides a default config file
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            default_config_path = os.path.join(tmp_dir, "default.ini")
-            with open(default_config_path, "w") as f:
-                f.write("mega = true\n")
-            user_config_path = os.path.join(tmp_dir, "user.ini")
-            with open(user_config_path, "w") as f:
-                f.write("giga = true\n")
+        default_config_path = self.make_temp_file_holding_contents("mega = true\n")
+        user_config_path = self.make_temp_file_holding_contents("giga = true\n")
 
-            init_parser(default_config_files=[default_config_path])
-            self.add_arg("-c", "--config", is_config_file=True)
-            ns = self.parse(args=[], env_vars={})
-            self.assertEqual(ns.mode, "mega")
-            ns = self.parse(args=["-c", user_config_path], env_vars={})
-            self.assertEqual(ns.mode, "giga")
+        init_parser(default_config_files=[default_config_path])
+        self.add_arg("-c", "--config", is_config_file=True)
+        ns = self.parse(args=[], env_vars={})
+        self.assertEqual(ns.mode, "mega")
+        ns = self.parse(args=["-c", user_config_path], env_vars={})
+        self.assertEqual(ns.mode, "giga")
 
         # members set together within a single source still conflict
         init_parser()
@@ -634,13 +818,8 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.feature, True)
 
     def testSubParsers(self):
-        config_file1 = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        config_file1.write("--i = B")
-        config_file1.flush()
-
-        config_file2 = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        config_file2.write("p = 10")
-        config_file2.flush()
+        config_file1_path = self.make_temp_file_holding_contents("--i = B")
+        config_file2_path = self.make_temp_file_holding_contents("p = 10")
 
         parser = configargparse.ArgumentParser(prog="myProg")
         subparsers = parser.add_subparsers(title="actions")
@@ -661,14 +840,12 @@ class TestBasicUseCases(TestCase):
         )
         update_p.add_argument("-config2", is_config_file=True, required=True)
 
-        ns = parser.parse_args(args="create -p 2 -config " + config_file1.name)
+        ns = parser.parse_args(args="create -p 2 -config " + config_file1_path)
         self.assertEqual(ns.p, 2)
         self.assertEqual(ns.i, "B")
 
-        ns = parser.parse_args(args="update -config2 " + config_file2.name)
+        ns = parser.parse_args(args="update -config2 " + config_file2_path)
         self.assertEqual(ns.p, 10)
-        config_file1.close()
-        config_file2.close()
 
     def testSubParserEnvVar(self):
         """Test that env vars work with subparsers (issue #350)."""
@@ -688,16 +865,13 @@ class TestBasicUseCases(TestCase):
         self.assertEqual(ns.action, "appliance")
 
         # Test both parent and subparser env vars via real os.environ
-        os.environ["TENANT"] = "test-tenant"
-        os.environ["TOKEN"] = "test-token"
-        try:
+        with mock.patch.dict(
+            os.environ, {"TENANT": "test-tenant", "TOKEN": "test-token"}
+        ):
             ns = parser.parse_args(args=["appliance"])
             self.assertEqual(ns.tenant, "test-tenant")
             self.assertEqual(ns.token, "test-token")
             self.assertEqual(ns.action, "appliance")
-        finally:
-            del os.environ["TENANT"]
-            del os.environ["TOKEN"]
 
     def testAddArgsErrors(self):
         self.assertRaisesRegex(
@@ -796,11 +970,7 @@ class TestBasicUseCases(TestCase):
 
         # -x is not a long arg so can't be set via config file
         self.assertParseArgsRaises(
-            (
-                "argument -x is required"
-                if sys.version_info.major < 3
-                else "the following arguments are required: -x, --y"
-            ),
+            "the following arguments are required: -x, --y",
             args="",
             config_file_contents="-x 3",
         )
@@ -808,11 +978,7 @@ class TestBasicUseCases(TestCase):
             "invalid float value: 'abc'", args="-x 5", config_file_contents="y: abc"
         )
         self.assertParseArgsRaises(
-            (
-                "argument --y is required"
-                if sys.version_info.major < 3
-                else "the following arguments are required: --y"
-            ),
+            "the following arguments are required: --y",
             args="-x 5",
             config_file_contents="z: 1",
         )
@@ -938,7 +1104,7 @@ class TestBasicUseCases(TestCase):
         self.assertTrue(result_namespace.boolean_store_false)
 
     def testConfigOrEnvValueErrors(self):
-        # error should occur when a flag arg is set to something other than "true" or "false"
+        # flag args accept yes/no as well as true/false
         self.initParser()
         self.add_arg("--height", env_var="HEIGHT", required=True)
         self.add_arg("--do-it", dest="x", env_var="FLAG1", action="store_true")
@@ -960,26 +1126,23 @@ class TestBasicUseCases(TestCase):
             args="",
             env_vars={"VERBOSE": "bla"},
         )
-        ns = self.parse(
-            "", config_file_contents="verbose=true", env_vars={"HEIGHT": "true"}
-        )
+        ns = self.parse("", config_file_contents="verbose=true", env_vars={})
         self.assertEqual(ns.verbose, True)
-        ns = self.parse("", config_file_contents="verbose", env_vars={"HEIGHT": "true"})
+        ns = self.parse("", config_file_contents="verbose", env_vars={})
         self.assertEqual(ns.verbose, True)
-        ns = self.parse("", env_vars={"HEIGHT": "true", "VERBOSE": "true"})
+        ns = self.parse("", env_vars={"VERBOSE": "true"})
         self.assertEqual(ns.verbose, True)
-        ns = self.parse("", env_vars={"HEIGHT": "true", "VERBOSE": "false"})
+        ns = self.parse("", env_vars={"VERBOSE": "false"})
         self.assertEqual(ns.verbose, False)
-        ns = self.parse(
-            "", config_file_contents="--verbose", env_vars={"HEIGHT": "true"}
-        )
+        ns = self.parse("", config_file_contents="--verbose", env_vars={})
         self.assertEqual(ns.verbose, True)
 
-        # error should occur is non-append arg is given a list value
+        # a list value in an append arg's env var sets each list element,
+        # converted by the arg's type
         self.initParser()
         self.add_arg("-f", "--file", env_var="FILES", action="append", type=int)
-        ns = self.parse("", env_vars={"file": "[1,2,3]", "VERBOSE": "true"})
-        self.assertIsNone(ns.file)
+        ns = self.parse("", env_vars={"FILES": "[1,2,3]"})
+        self.assertEqual(ns.file, [1, 2, 3])
 
     def testValuesStartingWithDash(self):
         self.initParser()
@@ -1189,11 +1352,9 @@ class TestMisc(TestCase):
         self.add_arg("--x", required=True)
 
         # verify parsing from config file
-        config_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        config_file.write("x=bla")
-        config_file.flush()
+        config_file_path = self.make_temp_file_holding_contents("x=bla")
 
-        ns = self.parse(args="-c %s" % config_file.name)
+        ns = self.parse(args="-c %s" % config_file_path)
         self.assertEqual(ns.x, "bla")
 
     def testConstructor_ConfigFileArgs(self):
@@ -1201,34 +1362,25 @@ class TestMisc(TestCase):
         #   args_for_setting_config_path
         #   config_arg_is_required
         #   config_arg_help_message
-        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        temp_cfg.write("genome=hg19")
-        temp_cfg.flush()
+        default_config_file_path = self.make_temp_file_holding_contents("genome=hg19")
 
         self.initParser(
             args_for_setting_config_path=["-c", "--config"],
             config_arg_is_required=True,
             config_arg_help_message="my config file",
-            default_config_files=[temp_cfg.name],
+            default_config_files=[default_config_file_path],
         )
         self.add_arg("--genome", help="Path to genome file", required=True)
-        self.assertParseArgsRaises(
-            (
-                "argument -c/--config is required"
-                if sys.version_info.major < 3
-                else "arguments are required: -c/--config"
-            ),
-            args="",
-        )
+        self.assertParseArgsRaises("arguments are required: -c/--config", args="")
 
-        temp_cfg2 = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        ns = self.parse("-c " + temp_cfg2.name)
+        override_config_file_path = self.make_temp_file_holding_contents()
+        ns = self.parse("-c " + override_config_file_path)
         self.assertEqual(ns.genome, "hg19")
 
-        # temp_cfg2 config file should override default config file values
-        temp_cfg2.write("genome=hg20")
-        temp_cfg2.flush()
-        ns = self.parse("-c " + temp_cfg2.name)
+        # the -c config file should override default config file values
+        with open(override_config_file_path, "w") as f:
+            f.write("genome=hg20")
+        ns = self.parse("-c " + override_config_file_path)
         self.assertEqual(ns.genome, "hg20")
 
         short_c = SHORT_OPT_METAVAR.format(metavar="CONFIG_FILE")
@@ -1253,24 +1405,24 @@ class TestMisc(TestCase):
             argparse.ArgumentError,
             "unrecognized arguments",
             self.parse,
+            args=[],
             config_file_contents="arg1 = 3",
         )
-        ns, args = self.parse_known(config_file_contents="arg1 = 3")
-        self.assertEqual(getattr(ns, "arg1", ""), "")
+        ns, args = self.parse_known(args=[], config_file_contents="arg1 = 3")
+        self.assertEqual(args, ["--arg1=3"])
 
         # test ignore_unknown_config_file_keys=True
         self.initParser(ignore_unknown_config_file_keys=True)
-        ns = self.parse(args="", config_file_contents="arg1 = 3")
-        self.assertEqual(getattr(ns, "arg1", ""), "")
-        ns, args = self.parse_known(config_file_contents="arg1 = 3")
-        self.assertEqual(getattr(ns, "arg1", ""), "")
+        # parses without an "unrecognized arguments" error
+        self.parse(args="", config_file_contents="arg1 = 3")
+        ns, args = self.parse_known(args=[], config_file_contents="arg1 = 3")
+        self.assertEqual(args, [])
 
     def test_AbbrevConfigFileArgs(self):
         """Tests that abbreviated values don't get pulled from config file."""
-        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        temp_cfg.write("a2a = 0.5\n")
-        temp_cfg.write("a3a = 0.5\n")
-        temp_cfg.flush()
+        config_file_path = self.make_temp_file_holding_contents(
+            "a2a = 0.5\na3a = 0.5\n"
+        )
 
         self.initParser()
 
@@ -1284,7 +1436,7 @@ class TestMisc(TestCase):
 
         self.add_arg("--hello", type=int, required=False)
 
-        command = "-c {} --hello 2".format(temp_cfg.name)
+        command = "-c {} --hello 2".format(config_file_path)
 
         known, unknown = self.parse_known(command)
 
@@ -1331,58 +1483,97 @@ class TestMisc(TestCase):
         parser = argparse.ArgumentParser("format_help_prog")
         self.assertRegex(parser.format_help(), "usage: format_help_prog .*")
 
-    def testConstructor_WriteOutConfigFileArgs(self):
-        # Test constructor args:
-        #   args_for_writing_out_config_file
-        #   write_out_config_file_arg_help_message
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        self.initParser(
-            args_for_writing_out_config_file=["-w"],
-            write_out_config_file_arg_help_message="write config",
+    def assert_write_out_config_file_arg_writes_expected_contents(
+        self,
+        write_out_config_file_arg,
+        other_command_line_args,
+        expected_config_file_contents,
+        **parse_kwargs,
+    ):
+        """Parse args that ask to write out a config file, then check the file.
+
+        Also checks that pointing the write-out arg at a path that can't be
+        written to raises a ValueError. self.parser must already be set up
+        with write_out_config_file_arg in its args_for_writing_out_config_file.
+
+        Args:
+            write_out_config_file_arg: The arg that writes out a config file,
+                e.g. "-w".
+            other_command_line_args: The rest of the command line, as one
+                string.
+            expected_config_file_contents: What the written file should hold,
+                apart from leading and trailing whitespace.
+            **parse_kwargs: Passed on to the parse that writes the file, e.g.
+                env_vars or config_file_contents.
+        """
+        config_file_path = self.make_temp_file_holding_contents()
+        command_line_args = "%s %s %s" % (
+            write_out_config_file_arg,
+            config_file_path,
+            other_command_line_args,
         )
-
-        self.add_arg("-not-config-file-settable")
-        self.add_arg("--config-file-settable-arg", type=int)
-        self.add_arg("--config-file-settable-arg2", type=int, default=3)
-        self.add_arg("--config-file-settable-flag", action="store_true")
-        self.add_arg("--config-file-settable-custom")
-        self.add_arg("-l", "--config-file-settable-list", action="append")
-
-        # write out a config file
-        command_line_args = "-w %s " % cfg_f.name
-        command_line_args += "--config-file-settable-arg 1 "
-        command_line_args += "--config-file-settable-flag "
-        command_line_args += "--config-file-settable-custom custom_value "
-        command_line_args += "-l a -l b -l c -l d "
 
         self.assertFalse(self.parser._exit_method_called)
-
-        ns = self.parse(command_line_args)
+        self.parse(command_line_args, **parse_kwargs)
         self.assertTrue(self.parser._exit_method_called)
 
-        cfg_f.seek(0)
-        expected_config_file_contents = "config-file-settable-arg = 1\n"
-        expected_config_file_contents += "config-file-settable-flag = true\n"
-        expected_config_file_contents += "config-file-settable-custom = custom_value\n"
-        expected_config_file_contents += (
-            'config-file-settable-list = ["a", "b", "c", "d"]\n'
-        )
-        expected_config_file_contents += "config-file-settable-arg2 = 3\n"
-
-        self.assertEqual(cfg_f.read().strip(), expected_config_file_contents.strip())
+        with open(config_file_path) as f:
+            self.assertEqual(f.read().strip(), expected_config_file_contents.strip())
         self.assertRaisesRegex(
             ValueError,
             "Couldn't open / for writing:",
             self.parse,
-            args=command_line_args + " -w /",
+            args="%s %s /" % (command_line_args, write_out_config_file_arg),
         )
-        cfg_f.close()
+
+    def testConstructor_WriteOutConfigFileArgs(self):
+        """Test constructor args args_for_writing_out_config_file and
+        write_out_config_file_arg_help_message, with a short and a long arg.
+
+        There was a bug where the long version of the
+        args_for_writing_out_config_file was being dumped into the resultant
+        output config file
+        """
+        for write_out_config_file_arg in ("-w", "--write-config"):
+            with self.subTest(write_out_config_file_arg=write_out_config_file_arg):
+                self.initParser(
+                    args_for_writing_out_config_file=[write_out_config_file_arg],
+                    write_out_config_file_arg_help_message="write config",
+                )
+
+                self.add_arg("-not-config-file-settable")
+                self.add_arg("--config-file-settable-arg", type=int)
+                self.add_arg("--config-file-settable-arg2", type=int, default=3)
+                self.add_arg("--config-file-settable-flag", action="store_true")
+                self.add_arg("--config-file-settable-custom")
+                self.add_arg("-l", "--config-file-settable-list", action="append")
+
+                self.assertRegex(
+                    self.format_help(),
+                    write_out_config_file_arg + r" CONFIG_OUTPUT_PATH\s+write config",
+                )
+                self.assert_write_out_config_file_arg_writes_expected_contents(
+                    write_out_config_file_arg,
+                    other_command_line_args=(
+                        "-not-config-file-settable some_value "
+                        "--config-file-settable-arg 1 "
+                        "--config-file-settable-flag "
+                        "--config-file-settable-custom custom_value "
+                        "-l a -l b -l c -l d"
+                    ),
+                    expected_config_file_contents=(
+                        "config-file-settable-arg = 1\n"
+                        "config-file-settable-flag = true\n"
+                        "config-file-settable-custom = custom_value\n"
+                        'config-file-settable-list = ["a", "b", "c", "d"]\n'
+                        "config-file-settable-arg2 = 3\n"
+                    ),
+                )
 
     def testConstructor_WriteOutConfigFileArgs2(self):
         # Test constructor args:
         #   args_for_writing_out_config_file
         #   write_out_config_file_arg_help_message
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
         self.initParser(
             args_for_writing_out_config_file=["-w"],
             write_out_config_file_arg_help_message="write config",
@@ -1399,87 +1590,23 @@ class TestMisc(TestCase):
         )
         self.add_arg("-l", "--config-file-settable-list", action="append")
 
-        # write out a config file
-        command_line_args = "-w %s " % cfg_f.name
-        command_line_args += "-l a -l b -l c -l d "
-
-        self.assertFalse(self.parser._exit_method_called)
-
-        ns = self.parse(
-            command_line_args,
+        self.assertRegex(self.format_help(), r"-w CONFIG_OUTPUT_PATH\s+write config")
+        self.assert_write_out_config_file_arg_writes_expected_contents(
+            "-w",
+            other_command_line_args=(
+                "-not-config-file-settable some_value -l a -l b -l c -l d"
+            ),
+            expected_config_file_contents=(
+                'config-file-settable-list = ["a", "b", "c", "d"]\n'
+                "arg1 = 10\n"
+                "config-file-settable-flag = true\n"
+                "arg3 = bla3\n"
+                "arg4 = bla4\n"
+                "arg2 = 3\n"
+            ),
             env_vars={"ARG1": "10", "FLAG_ARG": "true", "SOME_OTHER_ENV_VAR": "2"},
             config_file_contents="arg3 = bla3\narg4 = bla4",
         )
-        self.assertTrue(self.parser._exit_method_called)
-
-        cfg_f.seek(0)
-        expected_config_file_contents = (
-            'config-file-settable-list = ["a", "b", "c", "d"]\n'
-        )
-        expected_config_file_contents += "arg1 = 10\n"
-        expected_config_file_contents += "config-file-settable-flag = true\n"
-        expected_config_file_contents += "arg3 = bla3\n"
-        expected_config_file_contents += "arg4 = bla4\n"
-        expected_config_file_contents += "arg2 = 3\n"
-
-        self.assertEqual(cfg_f.read().strip(), expected_config_file_contents.strip())
-        self.assertRaisesRegex(
-            ValueError,
-            "Couldn't open / for writing:",
-            self.parse,
-            args=command_line_args + " -w /",
-        )
-        cfg_f.close()
-
-    def testConstructor_WriteOutConfigFileArgsLong(self):
-        """Test config writing with long version of arg
-
-        There was a bug where the long version of the
-        args_for_writing_out_config_file was being dumped into the resultant
-        output config file
-        """
-        # Test constructor args:
-        #   args_for_writing_out_config_file
-        #   write_out_config_file_arg_help_message
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        self.initParser(
-            args_for_writing_out_config_file=["--write-config"],
-            write_out_config_file_arg_help_message="write config",
-        )
-
-        self.add_arg("-not-config-file-settable")
-        self.add_arg("--config-file-settable-arg", type=int)
-        self.add_arg("--config-file-settable-arg2", type=int, default=3)
-        self.add_arg("--config-file-settable-flag", action="store_true")
-        self.add_arg("-l", "--config-file-settable-list", action="append")
-
-        # write out a config file
-        command_line_args = "--write-config %s " % cfg_f.name
-        command_line_args += "--config-file-settable-arg 1 "
-        command_line_args += "--config-file-settable-flag "
-        command_line_args += "-l a -l b -l c -l d "
-
-        self.assertFalse(self.parser._exit_method_called)
-
-        ns = self.parse(command_line_args)
-        self.assertTrue(self.parser._exit_method_called)
-
-        cfg_f.seek(0)
-        expected_config_file_contents = "config-file-settable-arg = 1\n"
-        expected_config_file_contents += "config-file-settable-flag = true\n"
-        expected_config_file_contents += (
-            'config-file-settable-list = ["a", "b", "c", "d"]\n'
-        )
-        expected_config_file_contents += "config-file-settable-arg2 = 3\n"
-
-        self.assertEqual(cfg_f.read().strip(), expected_config_file_contents.strip())
-        self.assertRaisesRegex(
-            ValueError,
-            "Couldn't open / for writing:",
-            self.parse,
-            args=command_line_args + " --write-config /",
-        )
-        cfg_f.close()
 
     def testWriteOutConfigFileArgs_ListValuesReadBackUnchanged(self):
         """A written out config file must give back the same list values.
@@ -1488,8 +1615,7 @@ class TestMisc(TestCase):
         comma in it, and garbled the lists of lists that append with nargs="+"
         stores.
         """
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.close()
+        config_file_path = self.make_temp_file_holding_contents()
 
         def init_parser():
             self.initParser(
@@ -1516,15 +1642,14 @@ class TestMisc(TestCase):
             "echo hi # note",
         ]
         init_parser()
-        self.parse(command_line_args + ["-w", cfg_f.name])
+        self.parse(command_line_args + ["-w", config_file_path])
         self.assertTrue(self.parser._exit_method_called)
 
         init_parser()
-        ns = self.parse(["-c", cfg_f.name])
+        ns = self.parse(["-c", config_file_path])
         self.assertEqual(ns.appended, ["a,b", "café"])
         self.assertEqual(ns.appended_groups, [["a,b", "c"], ["d"]])
         self.assertEqual(ns.several, ["x, y", "line1\nline2", "echo hi # note"])
-        os.remove(cfg_f.name)
 
     def testWriteOutConfigFileArg_CantBeSetFromAConfigFile(self):
         """A config file must not be able to trigger writing out a config file.
@@ -1533,62 +1658,39 @@ class TestMisc(TestCase):
         an attacker controls could otherwise destroy an arbitrary file without
         the user passing any command line args at all.
         """
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
+        # argparse resolves an unambiguous abbreviation of a long option, so an
+        # abbreviated key reaches the same arg, and rejecting only the exact
+        # key would leave the same file overwrite open
+        for key in ("write-config", "write-conf"):
+            with self.subTest(key=key):
+                victim_path = self.make_file_holding_original_contents()
 
-        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
-        self.add_arg("--name", default="world")
+                self.initParser(
+                    args_for_writing_out_config_file=["-w", "--write-config"]
+                )
+                self.add_arg("--name", default="world")
 
-        self.assertParseArgsRaises(
-            "write-config can only be set on the command line",
-            args=[],
-            config_file_contents="name = attacker\nwrite-config = %s" % cfg_f.name,
-        )
-        self.assertFalse(self.parser._exit_method_called)
+                self.assertParseArgsRaises(
+                    "%s can only be set on the command line" % key,
+                    args=[],
+                    config_file_contents="name = attacker\n%s = %s"
+                    % (key, victim_path),
+                )
+                self.assertFalse(self.parser._exit_method_called)
 
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
-
-    def testWriteOutConfigFileArg_CantBeSetFromAConfigFileByAbbreviation(self):
-        """An abbreviated config file key reaches the same arg, so it's rejected too.
-
-        argparse resolves an unambiguous abbreviation of a long option, so
-        rejecting only the exact key would leave the same file overwrite open.
-        """
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
-
-        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
-        self.add_arg("--name", default="world")
-
-        self.assertParseArgsRaises(
-            "write-conf can only be set on the command line",
-            args=[],
-            config_file_contents="name = attacker\nwrite-conf = %s" % cfg_f.name,
-        )
-        self.assertFalse(self.parser._exit_method_called)
-
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
+                self.assert_file_still_holds_original_contents(victim_path)
 
     def testWriteOutConfigFileArg_ConfigFileCantRedirectTheUsersOwnPath(self):
         """A config file must not be able to change where the user asked to write.
 
-        Config file args are spliced in after any positional args, so a config
-        file entry could otherwise win the last-one-wins store and send the
-        output to a path of its choosing instead of the one the user gave.
+        Config file args are inserted just before a '--' separator, which here
+        is after the user's own -w, so a config file entry could otherwise win
+        the last-one-wins store and send the output to a path of its choosing
+        instead of the one the user gave.
         """
-        users_path = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        users_path.close()
-        os.remove(users_path.name)
+        users_path = self.make_unused_path_in_a_new_temp_dir()
 
-        victims_path = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        victims_path.write("original contents")
-        victims_path.close()
+        victim_path = self.make_file_holding_original_contents()
 
         self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
         self.add_arg("--name", default="world")
@@ -1596,14 +1698,12 @@ class TestMisc(TestCase):
 
         self.assertParseArgsRaises(
             "write-config can only be set on the command line",
-            args=["-w", users_path.name, "--", "extra"],
-            config_file_contents="write-config = %s" % victims_path.name,
+            args=["-w", users_path, "--", "extra"],
+            config_file_contents="write-config = %s" % victim_path,
         )
 
-        with open(victims_path.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        self.assertFalse(os.path.exists(users_path.name))
-        os.remove(victims_path.name)
+        self.assert_file_still_holds_original_contents(victim_path)
+        self.assertFalse(os.path.exists(users_path))
 
     def testWriteOutConfigFileArg_UnrelatedArgsDontMakeItReachable(self):
         """An unrelated arg that merely looks similar must not enable the write.
@@ -1611,9 +1711,7 @@ class TestMisc(TestCase):
         The config file is the only thing naming the write-out arg here, so it
         must be rejected no matter what else the command line contains.
         """
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
+        victim_path = self.make_file_holding_original_contents()
 
         self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
         self.add_arg("-week", action="store_true")
@@ -1622,41 +1720,13 @@ class TestMisc(TestCase):
         self.assertParseArgsRaises(
             "write-config can only be set on the command line",
             args=["-week", "--name", "bob"],
-            config_file_contents="write-config = %s" % cfg_f.name,
+            config_file_contents="write-config = %s" % victim_path,
         )
 
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
-
-    def testWriteOutConfigFileArg_CantBeSetFromAConfigFileValue(self):
-        """A config file value must not be able to set it either.
-
-        A list value becomes several command line args, so a value can name an
-        arg just as a key can.
-        """
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
-
-        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
-        self.add_arg("--files", nargs="*")
-
-        self.assertParseArgsRaises(
-            "files can't have a list element that starts with '-'",
-            args=[],
-            config_file_contents="files = [--write-config, %s]" % cfg_f.name,
-        )
-        self.assertFalse(self.parser._exit_method_called)
-
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
+        self.assert_file_still_holds_original_contents(victim_path)
 
     def testWriteOutConfigFileArg_CantBeSetFromAnEnvVarValue(self):
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
+        victim_path = self.make_file_holding_original_contents()
 
         self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
         self.add_arg("--files", nargs="*", env_var="FILES")
@@ -1664,25 +1734,33 @@ class TestMisc(TestCase):
         self.assertParseArgsRaises(
             "FILES can't have a list element that starts with '-'",
             args=[],
-            env_vars={"FILES": json.dumps(["--write-config", cfg_f.name])},
+            env_vars={"FILES": json.dumps(["--write-config", victim_path])},
         )
         self.assertFalse(self.parser._exit_method_called)
 
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
+        self.assert_file_still_holds_original_contents(victim_path)
 
     def testWriteOutConfigFileArg_CantBeSetFromAConfigFileValueInAnyForm(self):
-        """Every form argparse accepts must be rejected, not just the plain one.
+        """No form of the write-out arg can be set from a config file list value.
 
-        A list value is passed through as command line args verbatim, so it can
-        carry the option with its value attached, or bundled behind another
-        short option.
+        A list value becomes several command line args, so a value can name an
+        arg just as a key can. Each form here would be read as an option, and a
+        list element that argparse would read as an option is rejected outright
+        (unlike a negative number or a lone '-', see
+        tests/test_list_elements_are_read_as_values.py), before any write-out
+        check runs, so none of them can reach the write-out arg.
+        testWriteOutConfigFileArg_RejectionCoversEveryFormArgparseAccepts
+        covers how the write-out check itself matches each form.
         """
-        for value_form in ("-w%s", "-vw%s", "--write-config=%s", "--write-conf"):
-            cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-            cfg_f.write("original contents")
-            cfg_f.close()
+        for value_form in (
+            "--write-config, %s",
+            "-w%s",
+            "-vw%s",
+            "--write-config=%s",
+            "--write-conf",
+            "-v=w",
+        ):
+            victim_path = self.make_file_holding_original_contents()
 
             self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
             self.add_arg("-v", action="store_true")
@@ -1692,12 +1770,11 @@ class TestMisc(TestCase):
                 "files can't have a list element that starts with '-'",
                 args=[],
                 config_file_contents="files = [a, %s]"
-                % (value_form.replace("%s", cfg_f.name)),
+                % (value_form.replace("%s", victim_path)),
             )
+            self.assertFalse(self.parser._exit_method_called, msg=value_form)
 
-            with open(cfg_f.name) as f:
-                self.assertEqual(f.read(), "original contents", msg=value_form)
-            os.remove(cfg_f.name)
+            self.assert_file_still_holds_original_contents(victim_path, msg=value_form)
 
     def testWriteOutConfigFileArg_RejectionCoversEveryFormArgparseAccepts(self):
         """Whatever argparse binds to the write-out arg has to be rejected.
@@ -1823,14 +1900,10 @@ class TestMisc(TestCase):
         self.assertEqual(extras, ["--write=something"])
         self.assertFalse(self.parser._exit_method_called)
 
+    @skip_unless_pyyaml_is_installed
     def testWriteOutConfigFileArg_ConfigFileKeysThatArentStringsStillWork(self):
         # YAML maps 'on' to a bool, and ignore_unknown_config_file_keys=True is
         # there to tolerate exactly that kind of foreign key
-        try:
-            import yaml  # noqa: F401
-        except ImportError:
-            self.skipTest("PyYAML not installed")
-
         self.initParser(
             args_for_writing_out_config_file=["-w", "--write-config"],
             config_file_parser_class=configargparse.YAMLConfigFileParser,
@@ -1856,8 +1929,8 @@ class TestMisc(TestCase):
         self.assertFalse(self.parser._exit_method_called)
 
     def testWriteOutConfigFileArg_ConfigValuesThatLookLikeOptionsStillWork(self):
-        # only a value that actually names the write-out arg is rejected: a
-        # leading '-' on its own, or a negative number, still parses
+        # a plain value is passed as --key=value, so it can't be read as an
+        # option: a lone '-' or a negative number still parses
         self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
         self.add_arg("--dash-value")
         self.add_arg("--num", type=int)
@@ -1870,9 +1943,7 @@ class TestMisc(TestCase):
     def testWriteOutConfigFileArg_CantBeSetFromAConfigFileByPrefixAlone(self):
         # '--' on its own is argparse's end-of-options separator, but '--=path'
         # is an abbreviation that matches every long option
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
+        victim_path = self.make_file_holding_original_contents()
 
         self.initParser(
             add_help=False, args_for_writing_out_config_file=["-w", "--write-config"]
@@ -1882,59 +1953,10 @@ class TestMisc(TestCase):
         self.assertParseArgsRaises(
             "can only be set on the command line",
             args=[],
-            config_file_contents="- = %s" % cfg_f.name,
+            config_file_contents="- = %s" % victim_path,
         )
 
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
-
-    def testWriteOutConfigFileArg_ConfigFileCantReadArgsFromAFile(self):
-        """A config file must not be able to use @file expansion.
-
-        argparse expands an @file arg into the args that file contains, and it
-        does so after the config file's args have been checked, so the file's
-        contents could name any arg at all.
-        """
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
-        args_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        args_f.write("--write-config\n%s\n" % cfg_f.name)
-        args_f.close()
-
-        self.initParser(
-            args_for_writing_out_config_file=["-w", "--write-config"],
-            fromfile_prefix_chars="@",
-        )
-        self.add_arg("--files", nargs="+")
-
-        self.assertParseArgsRaises(
-            "would read command line args from a file",
-            args=[],
-            config_file_contents="files = [a, @%s]" % args_f.name,
-        )
-
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-
-        # and the same by way of an environment variable
-        self.initParser(
-            args_for_writing_out_config_file=["-w", "--write-config"],
-            fromfile_prefix_chars="@",
-        )
-        self.add_arg("--files", nargs="+", env_var="FILES")
-
-        self.assertParseArgsRaises(
-            "would read command line args from a file",
-            args=[],
-            env_vars={"FILES": json.dumps(["a", "@" + args_f.name])},
-        )
-
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
-        os.remove(args_f.name)
+        self.assert_file_still_holds_original_contents(victim_path)
 
     def testWriteOutConfigFileArg_AnArgSharingItsDestCantChooseThePath(self):
         """Only the write-out arg itself decides where the config file goes.
@@ -1962,9 +1984,7 @@ class TestMisc(TestCase):
             self.add_arg("rest", nargs="*")
             return "output", ["--", "extra"]
 
-        victims_path = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        victims_path.write("original contents")
-        victims_path.close()
+        victim_path = self.make_file_holding_original_contents()
 
         for build_parser in (
             sharing_the_dest_on_one_parser,
@@ -1974,34 +1994,27 @@ class TestMisc(TestCase):
             # write-out arg, which is where a value from one could otherwise win
             # the last-one-wins store
             config_key, rest_of_command_line = build_parser()
-            config_file_contents = "%s = %s" % (config_key, victims_path.name)
+            config_file_contents = "%s = %s" % (config_key, victim_path)
 
             # with nothing on the command line asking for it, nothing is written
             self.parse(
                 args=rest_of_command_line, config_file_contents=config_file_contents
             )
             self.assertFalse(self.parser._exit_method_called, msg=config_key)
-            with open(victims_path.name) as f:
-                self.assertEqual(f.read(), "original contents", msg=config_key)
+            self.assert_file_still_holds_original_contents(victim_path, msg=config_key)
 
             # and when it is asked for, it goes where the command line said
-            users_path = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-            users_path.close()
-            os.remove(users_path.name)
+            users_path = self.make_unused_path_in_a_new_temp_dir()
 
             build_parser()
             self.parse(
-                args=["-w", users_path.name] + rest_of_command_line,
+                args=["-w", users_path] + rest_of_command_line,
                 config_file_contents=config_file_contents,
             )
             self.assertTrue(self.parser._exit_method_called, msg=config_key)
 
-            with open(victims_path.name) as f:
-                self.assertEqual(f.read(), "original contents", msg=config_key)
-            self.assertTrue(os.path.exists(users_path.name), msg=config_key)
-            os.remove(users_path.name)
-
-        os.remove(victims_path.name)
+            self.assert_file_still_holds_original_contents(victim_path, msg=config_key)
+            self.assertTrue(os.path.exists(users_path), msg=config_key)
 
     def testWriteOutConfigFileArg_ASubparserArgSharingItsDestCantChooseThePath(self):
         """A subcommand parses into the same namespace, and loads its own env vars.
@@ -2010,13 +2023,9 @@ class TestMisc(TestCase):
         from the environment without the parent ever seeing it. It still must
         not decide where the config file gets written.
         """
-        victims_path = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        victims_path.write("original contents")
-        victims_path.close()
+        victim_path = self.make_file_holding_original_contents()
 
-        users_path = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        users_path.close()
-        os.remove(users_path.name)
+        users_path = self.make_unused_path_in_a_new_temp_dir()
 
         self.initParser(args_for_writing_out_config_file=["-w"])
         self.add_arg("--name", default="world")
@@ -2027,26 +2036,20 @@ class TestMisc(TestCase):
             env_var="WRITE_OUT_CONFIG_TO",
         )
 
-        with mock.patch.dict(os.environ, {"WRITE_OUT_CONFIG_TO": victims_path.name}):
-            self.parse(args=["-w", users_path.name, "go"])
+        with mock.patch.dict(os.environ, {"WRITE_OUT_CONFIG_TO": victim_path}):
+            self.parse(args=["-w", users_path, "go"])
         self.assertTrue(self.parser._exit_method_called)
 
-        with open(victims_path.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        self.assertTrue(os.path.exists(users_path.name))
-
-        os.remove(users_path.name)
-        os.remove(victims_path.name)
+        self.assert_file_still_holds_original_contents(victim_path)
+        self.assertTrue(os.path.exists(users_path))
 
     def testWriteOutConfigFileArg_ConfigFileCantReadArgsFromASubparsersFile(self):
-        # the subparser is the one with fromfile_prefix_chars here, and it is
-        # the one that would expand the arg into whatever the file holds
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
-        args_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        args_f.write("-w\n%s\n" % cfg_f.name)
-        args_f.close()
+        # only the subparser has fromfile_prefix_chars here. Config file args go
+        # before the subcommand, but the subcommand can't always be told from
+        # the args (see testWriteOutConfigFileArg_SubcommandsAreTakenTogether),
+        # so every subcommand's args-file characters are checked
+        victim_path = self.make_file_holding_original_contents()
+        args_file_path = self.make_temp_file_holding_contents("-w\n%s\n" % victim_path)
 
         self.initParser()
         self.add_arg("--extra", nargs="*")
@@ -2058,52 +2061,35 @@ class TestMisc(TestCase):
         self.assertParseArgsRaises(
             "would read command line args from a file",
             args=["go", "--"],
-            config_file_contents="extra = [@%s]" % args_f.name,
+            config_file_contents="extra = [@%s]" % args_file_path,
         )
 
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
-        os.remove(args_f.name)
-
     def testWriteOutConfigFileArg_CantBeSetFromAConfigFileOnASubparser(self):
-        """A subcommand's write-out arg is reachable from the parent's config file.
+        """A subcommand's write-out arg can't be set from the parent's config file.
 
-        The parent hands the args it has put together to the subparser, which
-        treats them as its own command line, so the parent has to check them
-        against the subcommand's write-out args too.
+        Config file args go before the subcommand, but which subcommand runs
+        can't always be told from the args (a file of args can name it, see
+        testWriteOutConfigFileArg_CantBeSetWhenAnArgsFileCouldPickTheSubcommand),
+        so they are checked against every subcommand's write-out args too.
         """
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
+        victim_path = self.make_file_holding_original_contents()
 
         self.initParser()
-        self.add_arg("--extra", nargs="*")
         subparsers = self.parser.add_subparsers(dest="cmd")
         subparsers.add_parser(
             "go", args_for_writing_out_config_file=["-w", "--write-config"]
         )
 
+        # the parent has no such arg, so the key becomes --write-config=<path>,
+        # which the check against the subcommand's write-out args turns down
         self.assertParseArgsRaises(
-            "extra can't have a list element that starts with '-'",
+            "can only be set on the command line",
             args=["go", "--"],
-            config_file_contents="extra = [-w, %s]" % cfg_f.name,
+            config_file_contents="write-config = %s" % victim_path,
         )
-        # the list element is rejected before the write-out check runs, so check
-        # directly that the write-out check finds the subcommand's arg
-        self.assertTrue(
-            self.parser._names_a_write_out_config_file_arg(
-                "-w", self.parser._reachable_parsers()
-            )
-        )
-
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
 
     def testWriteOutConfigFileArg_OnASubparserStillWorks(self):
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.close()
+        config_file_path = self.make_temp_file_holding_contents()
 
         self.initParser()
         subparsers = self.parser.add_subparsers(dest="cmd")
@@ -2115,12 +2101,11 @@ class TestMisc(TestCase):
         # the subparser is a parser of its own, so it's the one that exits here
         with captured_output():
             self.assertRaises(
-                SystemExit, self.parse, ["go", "-w", cfg_f.name, "--name", "bob"]
+                SystemExit, self.parse, ["go", "-w", config_file_path, "--name", "bob"]
             )
 
-        with open(cfg_f.name) as f:
+        with open(config_file_path) as f:
             self.assertEqual(f.read(), "name = bob\n")
-        os.remove(cfg_f.name)
 
     def testWriteOutConfigFileArg_OnASubcommandRestrictsTheWholeParser(self):
         """A write-out arg on any subcommand rules that name out everywhere.
@@ -2163,12 +2148,16 @@ class TestMisc(TestCase):
         self.assertEqual(ns.other, "/tmp/report.txt")
         self.assertFalse(self.parser._exit_method_called)
 
-    def testWriteOutConfigFileArg_ArgsFileCharsOnlyMatterWhereTheyCanReachOne(self):
+    def testWriteOutConfigFileArg_SubcommandArgsFileCharOnlyMattersWhenAWriteOutArgIsBelowIt(
+        self,
+    ):
         """An args file only feeds the parser that expands it, and its own subcommands.
 
-        So a value naming one is refused when a write-out arg sits at or below
-        the parser whose args-file character it starts with, and left alone
-        when it can't reach one.
+        So a value starting with a subcommand's args-file character is refused
+        when a write-out arg sits at or below that subcommand, and left alone
+        when it can't reach one. A value starting with the parser's own
+        args-file character is always refused (see
+        tests/test_list_elements_are_read_as_values.py).
         """
         # the subcommand reads args files, but no write-out arg lives under it
         self.initParser(args_for_writing_out_config_file=["-w"])
@@ -2201,12 +2190,8 @@ class TestMisc(TestCase):
         which subparser will run isn't known yet and every one of them has to
         be taken into account.
         """
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
-        args_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        args_f.write("go\n")
-        args_f.close()
+        victim_path = self.make_file_holding_original_contents()
+        args_file_path = self.make_temp_file_holding_contents("go\n")
 
         self.initParser(fromfile_prefix_chars="@")
         self.add_arg("--write-config")
@@ -2215,21 +2200,16 @@ class TestMisc(TestCase):
 
         self.assertParseArgsRaises(
             "can only be set on the command line",
-            args=["@" + args_f.name],
-            config_file_contents="write-config = %s" % cfg_f.name,
+            args=["@" + args_file_path],
+            config_file_contents="write-config = %s" % victim_path,
         )
 
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
-        os.remove(args_f.name)
+        self.assert_file_still_holds_original_contents(victim_path)
 
     def testWriteOutConfigFileArg_CantBeSetOnASubparserBehindAPlainArgparseOne(self):
         # a subparser doesn't have to be one of ours to have one of ours under
         # it, so the search for write-out args walks through it either way
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
+        victim_path = self.make_file_holding_original_contents()
 
         self.initParser()
         self.add_arg("--pair", nargs="+")
@@ -2243,22 +2223,20 @@ class TestMisc(TestCase):
         self.assertParseArgsRaises(
             "pair can't have a list element that starts with '-'",
             args=["outer", "inner", "--"],
-            config_file_contents="pair = [a, b, -w, %s]" % cfg_f.name,
+            config_file_contents="pair = [a, b, -w, %s]" % victim_path,
         )
         # the list element is rejected before the write-out check runs, so check
         # directly that the write-out check finds the inner subcommand's arg
         self.assertTrue(
             self.parser._names_a_write_out_config_file_arg(
-                "-w", self.parser._reachable_parsers()
+                "-w", configargparse._subparsers_of(self.parser)
             )
         )
 
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
+        self.assert_file_still_holds_original_contents(victim_path)
 
     def testWriteOutConfigFileArg_SubcommandsAreTakenTogether(self):
-        """Once these args can reach a subparser, every subcommand is considered.
+        """Every subcommand is considered, whatever the command line looks like.
 
         Which one will run can't be told from the args alone, since a value
         belonging to an earlier option reads exactly like a subcommand name, so
@@ -2266,9 +2244,7 @@ class TestMisc(TestCase):
         on a key named after another subcommand's write-out arg, which is the
         safe direction to be wrong in.
         """
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
+        victim_path = self.make_file_holding_original_contents()
 
         def build():
             self.initParser()
@@ -2286,26 +2262,28 @@ class TestMisc(TestCase):
         self.assertParseArgsRaises(
             "can only be set on the command line",
             args=["--mode", "build", "run", "--"],
-            config_file_contents="write-config = %s" % cfg_f.name,
+            config_file_contents="write-config = %s" % victim_path,
         )
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
+        self.assert_file_still_holds_original_contents(victim_path)
 
-        # and args that stay with the parent are unaffected by any of it
+        # even when the args all stay with the parent and a subcommand without
+        # a write-out arg
+        build()
+        self.assertParseArgsRaises(
+            "can only be set on the command line",
+            args=["--mode", "x", "build"],
+            config_file_contents="write-config = %s" % victim_path,
+        )
+        self.assert_file_still_holds_original_contents(victim_path)
+
+        # while a key that doesn't name any subcommand's write-out arg is
+        # unaffected
         build()
         ns = self.parse(args=["--mode", "x", "build"], config_file_contents="mode = y")
         self.assertEqual(ns.cmd, "build")
         self.assertFalse(self.parser._exit_method_called)
 
-        os.remove(cfg_f.name)
-
     def testWriteOutConfigFileArg_AnyPlainStoreActionSpellingWorks(self):
-        # argparse takes several spellings for the same store action, and all of
-        # them have to end up recording the path
-        for action in ("store", None, argparse._StoreAction):
-            self.initParser()
-            self.add_arg("-w", is_write_out_config_file_arg=True, action=action)
-
         # a program's own store action keeps whatever it does, and records too
         class ExpandUser(argparse._StoreAction):
             def __call__(self_inner, parser, namespace, values, option_string=None):
@@ -2317,18 +2295,33 @@ class TestMisc(TestCase):
                     option_string,
                 )
 
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.close()
+        # a store action reached through the registry is wrapped like any other
+        class MyStore(argparse._StoreAction):
+            pass
 
-        self.initParser()
-        self.add_arg("-w", is_write_out_config_file_arg=True, action=ExpandUser)
-        self.add_arg("--name")
+        # argparse takes several spellings for the same store action, including
+        # a registered name and any callable that returns an action, and all of
+        # them have to end up recording the path
+        for action in (
+            "store",
+            None,
+            argparse._StoreAction,
+            ExpandUser,
+            "mystore",
+            functools.partial(argparse._StoreAction),
+        ):
+            with self.subTest(action=action):
+                config_file_path = self.make_temp_file_holding_contents()
 
-        self.parse(["-w", cfg_f.name, "--name", "bob"])
-        self.assertTrue(self.parser._exit_method_called)
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "name = bob\n")
-        os.remove(cfg_f.name)
+                self.initParser()
+                self.parser.register("action", "mystore", MyStore)
+                self.add_arg("-w", is_write_out_config_file_arg=True, action=action)
+                self.add_arg("--name")
+
+                self.parse(["-w", config_file_path, "--name", "bob"])
+                self.assertTrue(self.parser._exit_method_called)
+                with open(config_file_path) as f:
+                    self.assertEqual(f.read(), "name = bob\n")
 
     def testWriteOutConfigFileArg_EmptyPathIsStillReported(self):
         # an empty path is a path the user asked for, so it fails the way any
@@ -2385,53 +2378,25 @@ class TestMisc(TestCase):
                     values[1:], namespace
                 )
 
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
+        victim_path = self.make_file_holding_original_contents()
 
         self.initParser()
         self.parser.register("action", "parsers", CustomParsers)
-        self.add_arg("--pair", nargs="+")
         self.parser.add_subparsers(
             dest="cmd", parser_class=configargparse.ArgumentParser
-        ).add_parser("deploy", args_for_writing_out_config_file=["-w"])
+        ).add_parser(
+            "deploy", args_for_writing_out_config_file=["-w", "--write-config"]
+        )
 
-        self.assertEqual(len(self.parser._reachable_parsers()), 2)
+        self.assertEqual(len(configargparse._subparsers_of(self.parser)), 2)
+        # only found through the custom dispatcher, so this key is turned down
         self.assertParseArgsRaises(
-            "pair can't have a list element that starts with '-'",
+            "can only be set on the command line",
             args=["deploy", "--"],
-            config_file_contents="pair = [x, -w, %s]" % cfg_f.name,
+            config_file_contents="write-config = %s" % victim_path,
         )
 
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
-
-    def testWriteOutConfigFileArg_CantBeSetFromAConfigFileByPrefixCharAlone(self):
-        # argparse looks a single-prefix-char arg up by the part before any '=',
-        # and takes any option starting with it, so a lone '-' reaches a short
-        # option when it is the only candidate. A list element like this is
-        # rejected for starting with '-' before the write-out check runs, so
-        # testWriteOutConfigFileArg_RejectionCoversEveryFormArgparseAccepts is
-        # what tests the write-out check on this form.
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
-
-        self.initParser(
-            prefix_chars="+-", add_help=False, args_for_writing_out_config_file=["-w"]
-        )
-        self.add_arg("++files", nargs="+")
-
-        self.assertParseArgsRaises(
-            "files can't have a list element that starts with '-'",
-            args=[],
-            config_file_contents="files = [a, -=%s]" % cfg_f.name,
-        )
-
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
+        self.assert_file_still_holds_original_contents(victim_path)
 
     def testWriteOutConfigFileArg_UsesThePathTheActionStored(self):
         """A store action of the program's own may change the path on its way in.
@@ -2440,68 +2405,24 @@ class TestMisc(TestCase):
         arg pointed.
         """
 
-        class Prefixer(argparse._StoreAction):
+        class AppendsIniExtensionToPath(argparse._StoreAction):
             def __call__(self_inner, parser, namespace, values, option_string=None):
                 argparse._StoreAction.__call__(
                     self_inner, parser, namespace, values + ".ini", option_string
                 )
 
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", suffix=".ini", delete=False)
-        cfg_f.close()
+        config_file_path = self.make_temp_file_holding_contents(suffix=".ini")
 
         self.initParser()
-        self.add_arg("-w", is_write_out_config_file_arg=True, action=Prefixer)
-        self.add_arg("--name", default="bob")
-
-        self.parse(["-w", cfg_f.name[: -len(".ini")]])
-        self.assertTrue(self.parser._exit_method_called)
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "name = bob\n")
-        os.remove(cfg_f.name)
-
-    def testWriteOutConfigFileArg_StoreActionRegisteredUnderAName(self):
-        # a store action reached through the registry is wrapped like any other
-        class MyStore(argparse._StoreAction):
-            pass
-
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.close()
-
-        self.initParser()
-        self.parser.register("action", "mystore", MyStore)
-        self.add_arg("-w", is_write_out_config_file_arg=True, action="mystore")
-        self.add_arg("--name", default="bob")
-
-        self.parse(["-w", cfg_f.name])
-        self.assertTrue(self.parser._exit_method_called)
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "name = bob\n")
-        os.remove(cfg_f.name)
-
-    def testWriteOutConfigFileArg_CantBeSetByAFlagWithMoreOptionsAfterIt(self):
-        # before Python 3.11 argparse reads whatever follows the '=' of a
-        # single-dash flag that takes no value as more short options, so '-v=w'
-        # reaches '-w' there. A list element like this is rejected for starting
-        # with '-' before the write-out check runs, so
-        # testWriteOutConfigFileArg_RejectionCoversEveryFormArgparseAccepts is
-        # what tests the write-out check on this form.
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
-
-        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
-        self.add_arg("-v", action="store_true")
-        self.add_arg("--files", nargs="+")
-
-        self.assertParseArgsRaises(
-            "files can't have a list element that starts with '-'",
-            args=[],
-            config_file_contents="files = [a, -v=w, %s]" % cfg_f.name,
+        self.add_arg(
+            "-w", is_write_out_config_file_arg=True, action=AppendsIniExtensionToPath
         )
+        self.add_arg("--name", default="bob")
 
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
+        self.parse(["-w", config_file_path[: -len(".ini")]])
+        self.assertTrue(self.parser._exit_method_called)
+        with open(config_file_path) as f:
+            self.assertEqual(f.read(), "name = bob\n")
 
     def testWriteOutConfigFileArg_RejectionDoesntRelyOnErrorStopping(self):
         """error() is meant to stop the program, but a program can override exit().
@@ -2517,22 +2438,17 @@ class TestMisc(TestCase):
             def error(self_inner, message):
                 self_inner.exit(2, message)
 
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
+        victim_path = self.make_file_holding_original_contents()
 
         parser = KeepsGoing(args_for_writing_out_config_file=["-w", "--write-config"])
-        parser.add_argument("--files", nargs="*")
 
         with captured_output():
             parser.parse_known_args(
                 args=[],
-                config_file_contents="files = [--write-config, %s]" % cfg_f.name,
+                config_file_contents="write-config = %s" % victim_path,
             )
 
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
+        self.assert_file_still_holds_original_contents(victim_path)
 
     def testSubcommandsDispatchedByAPlainChoicesDictStillParse(self):
         # an ordinary program can dispatch its own subcommands with a dict of
@@ -2545,61 +2461,17 @@ class TestMisc(TestCase):
         self.add_arg("command", nargs=argparse.PARSER, choices={"run": handler})
 
         # the dict values aren't parsers, and looking for write-out args must
-        # not trip over them. Behaviour is otherwise exactly as it was before:
-        # a PARSER positional swallows the args added from the config file.
+        # not trip over them. The args added from the config file go before
+        # the subcommand, so the PARSER positional doesn't take them.
         ns = self.parse(["run", "x"], config_file_contents="verbose = true")
-        self.assertFalse(ns.verbose)
-        self.assertEqual(ns.command, ["run", "x", "--verbose"])
+        self.assertTrue(ns.verbose)
+        self.assertEqual(ns.command, ["run", "x"])
 
         self.initParser()
         self.add_arg("--verbose", action="store_true")
         self.add_arg("command", nargs=argparse.PARSER, choices={"run": handler})
         ns = self.parse(["run", "x"])
         self.assertEqual(ns.command, ["run", "x"])
-
-    def testWriteOutConfigFileArg_CantBeSetAfterAMultiLetterFlagAndAnEquals(self):
-        # before Python 3.11.9 and 3.12.3, argparse reads what follows the '='
-        # of a single-dash flag that takes no value as more short options, so
-        # '-force=w' reaches '-w' there. A list element like this is rejected
-        # for starting with '-' before the write-out check runs, so
-        # testWriteOutConfigFileArg_RejectionCoversEveryFormArgparseAccepts is
-        # what tests the write-out check on this form.
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
-
-        self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
-        self.add_arg("-force", action="store_true")
-        self.add_arg("--files", nargs="+")
-
-        self.assertParseArgsRaises(
-            "files can't have a list element that starts with '-'",
-            args=[],
-            config_file_contents="files = [a, -force=w, %s]" % cfg_f.name,
-        )
-
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
-
-    def testWriteOutConfigFileArg_ActionBuiltByACallable(self):
-        # argparse takes any callable that returns an action, not just a class
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.close()
-
-        self.initParser(add_help=False)
-        self.add_arg(
-            "-w",
-            action=functools.partial(argparse._StoreAction),
-            is_write_out_config_file_arg=True,
-        )
-        self.add_arg("--name", default="bob")
-
-        self.parse(["-w", cfg_f.name])
-        self.assertTrue(self.parser._exit_method_called)
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "name = bob\n")
-        os.remove(cfg_f.name)
 
     def testWriteOutConfigFileArg_PathIsForgottenBetweenParses(self):
         """A path from one parse must not still be there for the next one.
@@ -2612,26 +2484,178 @@ class TestMisc(TestCase):
             def exit(self_inner, status=0, message=None):
                 pass
 
-        first = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        first.close()
-        os.remove(first.name)
-        second = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        second.close()
-        os.remove(second.name)
+        first_path = self.make_unused_path_in_a_new_temp_dir()
 
         parser = KeepsGoing(args_for_writing_out_config_file=["-w"])
         parser.add_argument("--name", default="bob")
 
         with captured_output():
-            parser.parse_known_args(["-w", first.name])
-        self.assertTrue(os.path.exists(first.name))
-        os.remove(first.name)
+            parser.parse_known_args(["-w", first_path])
+        self.assertTrue(os.path.exists(first_path))
+        # removed so the check below can tell whether the next parse writes it
+        os.remove(first_path)
 
         # the second parse doesn't ask for one, so nothing is written
         with captured_output():
             parser.parse_known_args([])
-        self.assertFalse(os.path.exists(first.name))
-        self.assertFalse(os.path.exists(second.name))
+        self.assertFalse(os.path.exists(first_path))
+
+    def testWriteOutConfigFileArg_WritesTheStringAValueWasConvertedFrom(self):
+        """str() of a dict from type=json.loads is a string json.loads rejects."""
+        for add_arg_kwargs, args, env_vars in (
+            ({}, ["--settings", '{"a": 1}'], {}),
+            ({"nargs": "+"}, ["--settings", '{"a": 1}', "[2]"], {}),
+            ({"action": "append"}, ["--settings", '{"a": 1}', "--settings", "[2]"], {}),
+            ({"env_var": "SETTINGS"}, [], {"SETTINGS": '{"a": 1}'}),
+        ):
+            with self.subTest(add_arg_kwargs=add_arg_kwargs):
+                _, parsed_value, value_read_back = (
+                    self.write_config_file_with_the_write_out_arg_and_read_it_back(
+                        "--settings",
+                        dict(type=json.loads, **add_arg_kwargs),
+                        args,
+                        env_vars,
+                    )
+                )
+                self.assertEqual(value_read_back, parsed_value)
+
+        # a value changed after parsing is written as it now is
+        self.initParser()
+        self.add_arg("--settings", type=json.loads)
+        ns = self.parse(args=["--settings", '{"a": 1}'])
+        ns.settings = {"b": 2}
+        self.assertEqual(
+            self.parser.get_items_for_config_file_output(
+                self.parser.get_source_to_settings_dict(), ns
+            ),
+            OrderedDict([("settings", "{'b': 2}")]),
+        )
+
+    def testWriteOutConfigFileArg_TupleDefaultOfAMultiValueOptionReadsBack(self):
+        written_contents, _, value_read_back = (
+            self.write_config_file_with_the_write_out_arg_and_read_it_back(
+                "--size", {"nargs": 2, "type": int, "default": (640, 480)}, []
+            )
+        )
+        self.assertEqual(written_contents, "size = [640, 480]\n")
+        self.assertEqual(value_read_back, [640, 480])
+
+    def testWriteOutConfigFileArg_WritesADefaultOnlyWhereItReadsBack(self):
+        """Read back without a default, the option gets that default anyway."""
+        # a string default that type= converts is written as that string
+        written_contents, parsed_value, value_read_back = (
+            self.write_config_file_with_the_write_out_arg_and_read_it_back(
+                "--output", {"type": json.loads, "default": '{"a": 1}'}, []
+            )
+        )
+        self.assertEqual(written_contents, 'output = {"a": 1}\n')
+        self.assertEqual(value_read_back, parsed_value)
+        written_contents, _, value_read_back = (
+            self.write_config_file_with_the_write_out_arg_and_read_it_back(
+                "--output", {"type": argparse.FileType("w"), "default": "-"}, []
+            )
+        )
+        self.assertEqual(written_contents, "output = -\n")
+        self.assertIs(value_read_back, sys.stdout)
+
+        # one that can't be written so it reads back is left out
+        for add_arg_kwargs in (
+            {"type": argparse.FileType("w"), "default": sys.stdout},
+            {"nargs": "+", "default": []},
+        ):
+            with self.subTest(add_arg_kwargs=add_arg_kwargs):
+                written_contents, _, _ = (
+                    self.write_config_file_with_the_write_out_arg_and_read_it_back(
+                        "--output", add_arg_kwargs, []
+                    )
+                )
+                self.assertEqual(written_contents, "")
+
+        # and so is the default of an option in a mutually exclusive group,
+        # which read back would conflict with the member that was set, or with
+        # another member's default
+        for args, expected_items in (
+            (["--fast"], OrderedDict([("fast", "true")])),
+            ([], OrderedDict()),
+        ):
+            with self.subTest(args=args):
+                self.initParser()
+                group = self.parser.add_mutually_exclusive_group()
+                group.add_argument("--fast", action="store_true")
+                group.add_argument("--level", type=int, default=3)
+                group.add_argument("--preset", default="balanced")
+                ns = self.parse(args=args, env_vars={})
+                self.assertEqual(
+                    self.parser.get_items_for_config_file_output(
+                        self.parser.get_source_to_settings_dict(), ns
+                    ),
+                    expected_items,
+                )
+
+    def testWriteOutConfigFileArg_EnumMembersReadBackByNameOrByValue(self):
+        from enum import Enum
+
+        class Color(Enum):
+            RED = "red"
+            GREEN = "green"
+
+        def color_by_name(name):
+            return Color[name]
+
+        for add_arg_kwargs, args, expected_contents in (
+            # a lookup by name takes the name, from the command line or a default
+            ({"type": color_by_name}, ["--color", "GREEN"], "color = GREEN\n"),
+            ({"type": color_by_name, "default": Color.RED}, [], "color = RED\n"),
+            (
+                {"type": color_by_name, "nargs": "+"},
+                ["--color", "GREEN", "RED"],
+                'color = ["GREEN", "RED"]\n',
+            ),
+            # while type=Color takes the value
+            ({"type": Color}, ["--color", "green"], "color = green\n"),
+        ):
+            with self.subTest(add_arg_kwargs=add_arg_kwargs, args=args):
+                written_contents, parsed_value, value_read_back = (
+                    self.write_config_file_with_the_write_out_arg_and_read_it_back(
+                        "--color", add_arg_kwargs, args
+                    )
+                )
+                self.assertEqual(written_contents, expected_contents)
+                self.assertEqual(value_read_back, parsed_value)
+
+    def testWriteOutConfigFileArg_FlagWhoseConstIsAListIsWrittenAsTrue(self):
+        # a flag's value is told apart from its const by identity
+        self.initParser()
+        self.add_arg(
+            "--fast", action="store_const", const=["-O2", "-march=native"], dest="flags"
+        )
+        self.add_arg("--tag", action="append_const", const=["a", "b"], dest="tags")
+        ns = self.parse(args=["--fast", "--tag"])
+        self.assertEqual(
+            self.parser.get_items_for_config_file_output(
+                self.parser.get_source_to_settings_dict(), ns
+            ),
+            OrderedDict([("fast", "true"), ("tag", "true")]),
+        )
+
+    def testWriteOutConfigFileArg_LeavesOutTheConfigFilePathArg(self):
+        """The written file already holds what the config file it names held.
+
+        Read back, a key for the config file path arg would set that arg
+        without the file it names being opened.
+        """
+        config_file_path = self.make_temp_file_holding_contents("genome = hg19\n")
+        output_path = self.make_unused_path_in_a_new_temp_dir()
+        self.initParser(
+            args_for_setting_config_path=["-c", "--config-file"],
+            args_for_writing_out_config_file=["-w"],
+        )
+        self.add_arg("--genome")
+        self.add_arg("--level")
+        with captured_output():
+            self.parse(args=["-c", config_file_path, "--level", "3", "-w", output_path])
+        with open(output_path) as output_file:
+            self.assertEqual(output_file.read(), "level = 3\ngenome = hg19\n")
 
     def testWriteOutConfigFileArg_CantHaveAnEnvVar(self):
         # an env var that sets one would overwrite the path it names, so the
@@ -2649,9 +2673,7 @@ class TestMisc(TestCase):
     def testWriteOutConfigFileArg_IgnoreUnknownConfigFileKeys(self):
         # ignore_unknown_config_file_keys=True discards the key like any other
         # unknown one, so it neither writes the file nor errors
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
+        victim_path = self.make_file_holding_original_contents()
 
         self.initParser(
             args_for_writing_out_config_file=["-w", "--write-config"],
@@ -2659,13 +2681,11 @@ class TestMisc(TestCase):
         )
         self.add_arg("--name", default="world")
 
-        ns = self.parse(args=[], config_file_contents="write-config = %s" % cfg_f.name)
+        ns = self.parse(args=[], config_file_contents="write-config = %s" % victim_path)
         self.assertEqual(ns.name, "world")
         self.assertFalse(self.parser._exit_method_called)
 
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
+        self.assert_file_still_holds_original_contents(victim_path)
 
     def testWriteOutConfigFileArg_CommandLineFormsAllStillWork(self):
         """Every form of the arg that argparse accepts must still write the file."""
@@ -2678,22 +2698,20 @@ class TestMisc(TestCase):
             ["-vw", "%s"],  # bundled with another short option
             ["-vw%s"],  # bundled, with the value attached
         ):
-            cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-            cfg_f.close()
+            config_file_path = self.make_temp_file_holding_contents()
 
             self.initParser(args_for_writing_out_config_file=["-w", "--write-config"])
             self.add_arg("-v", action="store_true")
             self.add_arg("--name")
 
             self.parse(
-                [a.replace("%s", cfg_f.name) for a in command_line_args]
+                [a.replace("%s", config_file_path) for a in command_line_args]
                 + ["--name", "bob"]
             )
             self.assertTrue(self.parser._exit_method_called, msg=str(command_line_args))
 
-            with open(cfg_f.name) as f:
+            with open(config_file_path) as f:
                 self.assertEqual(f.read(), "name = bob\n", msg=str(command_line_args))
-            os.remove(cfg_f.name)
 
     def testWriteOutConfigFileArg_CantBePositional(self):
         """A positional can't be one of these.
@@ -2716,11 +2734,10 @@ class TestMisc(TestCase):
     def testWriteOutConfigFileArg_FromfilePrefixChars(self):
         # argparse expands @file args into the command line, so an arg supplied
         # that way is still a command line arg
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.close()
-        args_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        args_f.write("--write-config\n%s\n" % cfg_f.name)
-        args_f.close()
+        config_file_path = self.make_temp_file_holding_contents()
+        args_file_path = self.make_temp_file_holding_contents(
+            "--write-config\n%s\n" % config_file_path
+        )
 
         self.initParser(
             args_for_writing_out_config_file=["-w", "--write-config"],
@@ -2728,13 +2745,32 @@ class TestMisc(TestCase):
         )
         self.add_arg("--name")
 
-        self.parse(["@" + args_f.name, "--name", "bob"])
+        self.parse(["@" + args_file_path, "--name", "bob"])
         self.assertTrue(self.parser._exit_method_called)
 
-        with open(cfg_f.name) as f:
+        with open(config_file_path) as f:
             self.assertEqual(f.read(), "name = bob\n")
-        os.remove(cfg_f.name)
-        os.remove(args_f.name)
+
+    def testOptionInAnArgsFileOverridesConfigFileAndEnvVarValues(self):
+        args_file_path = self.make_temp_file_holding_contents("--genome\nGRCh38\n")
+        self.initParser(fromfile_prefix_chars="@")
+        self.add_arg("--genome", env_var="GENOME")
+        self.add_arg("--level")
+        for args in (["@" + args_file_path], ["@" + args_file_path, "--level", "1"]):
+            with self.subTest(args=args):
+                ns = self.parse(
+                    args=args, config_file_contents="genome = hg19", env_vars={}
+                )
+                self.assertEqual(ns.genome, "GRCh38")
+                ns = self.parse(args=args, env_vars={"GENOME": "hg19"})
+                self.assertEqual(ns.genome, "GRCh38")
+
+        # an args file that can't be read is a usage error, as in argparse
+        self.assertParseArgsRaises(
+            "No such file",
+            args=["@" + args_file_path + ".missing"],
+            env_vars={},
+        )
 
     def testWriteOutConfigFileArg_OutputFileIsntTruncatedOnFailure(self):
         """Nothing is opened for writing until the contents to write exist."""
@@ -2743,9 +2779,7 @@ class TestMisc(TestCase):
             def serialize(self_inner, items):
                 raise ValueError("can't serialize that")
 
-        cfg_f = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        cfg_f.write("original contents")
-        cfg_f.close()
+        victim_path = self.make_file_holding_original_contents()
 
         self.initParser(
             args_for_writing_out_config_file=["-w"],
@@ -2754,13 +2788,11 @@ class TestMisc(TestCase):
         self.add_arg("--name")
 
         self.assertRaises(
-            ValueError, self.parse, args=["-w", cfg_f.name, "--name", "bob"]
+            ValueError, self.parse, args=["-w", victim_path, "--name", "bob"]
         )
         self.assertFalse(self.parser._exit_method_called)
 
-        with open(cfg_f.name) as f:
-            self.assertEqual(f.read(), "original contents")
-        os.remove(cfg_f.name)
+        self.assert_file_still_holds_original_contents(victim_path)
 
     def testMethodAliases(self):
         p = self.parser
@@ -2812,9 +2844,9 @@ class TestMisc(TestCase):
             args="-g file.txt",
         )
 
-        # test custom 2-arg exception -- both args must be preserved (X5
-        # regression: the previous len(e.args) == 2 OSError shortcut would
-        # silently drop the first arg).
+        # test custom 2-arg exception -- both args must be preserved, not
+        # formatted like an OSError's (errno, strerror) pair, which would
+        # silently drop the first arg.
         class CustomTwoArgError(Exception):
             pass
 
@@ -2831,99 +2863,108 @@ class TestMisc(TestCase):
     def testDoubleDashSeparator(self):
         """Test that -- separator correctly separates optional from positional args
         when config file or env vars are used. Regression test for issue #298."""
-        config_file = tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".conf"
+        config_file_path = self.make_temp_file_holding_contents(
+            "list = [1, 2, 3]\n", suffix=".conf"
         )
-        config_file.write("list = [1, 2, 3]\n")
-        config_file.flush()
-        config_file.close()
 
-        try:
-            # Test with config file and -- separator
-            self.initParser(args_for_setting_config_path=["-c", "--config"])
-            self.parser.add_argument("--list", action="append")
-            self.parser.add_argument("positional_arg", nargs="*")
+        # Test with config file and -- separator
+        self.initParser(args_for_setting_config_path=["-c", "--config"])
+        self.parser.add_argument("--list", action="append")
+        self.parser.add_argument("positional_arg", nargs="*")
 
-            ns = self.parse(args="-c %s -- foo bar" % config_file.name)
+        ns = self.parse(args="-c %s -- foo bar" % config_file_path)
+        self.assertEqual(ns.positional_arg, ["foo", "bar"])
+        self.assertEqual(ns.list, ["1", "2", "3"])
+
+        # Test without -- separator
+        ns = self.parse(args="-c %s foo bar" % config_file_path)
+        self.assertEqual(ns.positional_arg, ["foo", "bar"])
+        self.assertEqual(ns.list, ["1", "2", "3"])
+
+        # Test with env var and -- separator
+        self.initParser()
+        self.parser.add_argument("--list", action="append", env_var="MY_LIST")
+        self.parser.add_argument("positional_arg", nargs="*")
+
+        with mock.patch.dict(os.environ, {"MY_LIST": "[1,2,3]"}):
+            ns = self.parse(args="-- foo bar")
             self.assertEqual(ns.positional_arg, ["foo", "bar"])
             self.assertEqual(ns.list, ["1", "2", "3"])
-
-            # Test without -- separator
-            ns = self.parse(args="-c %s foo bar" % config_file.name)
-            self.assertEqual(ns.positional_arg, ["foo", "bar"])
-            self.assertEqual(ns.list, ["1", "2", "3"])
-
-            # Test with env var and -- separator
-            self.initParser()
-            self.parser.add_argument("--list", action="append", env_var="MY_LIST")
-            self.parser.add_argument("positional_arg", nargs="*")
-
-            old_env = os.environ.get("MY_LIST")
-            try:
-                os.environ["MY_LIST"] = "[1,2,3]"
-                ns = self.parse(args="-- foo bar")
-                self.assertEqual(ns.positional_arg, ["foo", "bar"])
-                self.assertEqual(ns.list, ["1", "2", "3"])
-            finally:
-                if old_env is not None:
-                    os.environ["MY_LIST"] = old_env
-                elif "MY_LIST" in os.environ:
-                    del os.environ["MY_LIST"]
-        finally:
-            os.unlink(config_file.name)
 
     def testRemainderWithConfigFile(self):
         """Test that nargs=REMAINDER works correctly with config files.
         Regression test for issue #285."""
-        config_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".cfg")
-        config_file.write("config_file_option=value_from_config\n")
-        config_file.flush()
-        config_file.close()
+        config_file_path = self.make_temp_file_holding_contents(
+            "config_file_option=value_from_config\n", suffix=".cfg"
+        )
 
-        try:
-            self.initParser()
-            self.parser.add_argument(
-                "--config", is_config_file=True, default=config_file.name
-            )
-            self.parser.add_argument("--config_file_option", nargs="*", default=None)
-            self.parser.add_argument(
-                "remainder_option", nargs=argparse.REMAINDER, default=None
-            )
+        self.initParser()
+        self.parser.add_argument(
+            "--config", is_config_file=True, default=config_file_path
+        )
+        self.parser.add_argument("--config_file_option", nargs="*", default=None)
+        self.parser.add_argument(
+            "remainder_option", nargs=argparse.REMAINDER, default=None
+        )
 
-            ns = self.parse(args=["test"])
-            self.assertEqual(ns.remainder_option, ["test"])
-            self.assertEqual(ns.config_file_option, ["value_from_config"])
+        ns = self.parse(args=["test"])
+        self.assertEqual(ns.remainder_option, ["test"])
+        self.assertEqual(ns.config_file_option, ["value_from_config"])
 
-            ns = self.parse(args=["test", "arg1", "arg2"])
-            self.assertEqual(ns.remainder_option, ["test", "arg1", "arg2"])
-            self.assertEqual(ns.config_file_option, ["value_from_config"])
-        finally:
-            os.unlink(config_file.name)
+        ns = self.parse(args=["test", "arg1", "arg2"])
+        self.assertEqual(ns.remainder_option, ["test", "arg1", "arg2"])
+        self.assertEqual(ns.config_file_option, ["value_from_config"])
+
+    def testOptionWithRemainderNargsTakesEveryArgAfterIt(self):
+        """The args after an option with nargs=REMAINDER are its values, not options."""
+        config_file_path = self.make_temp_file_holding_contents("genome = HCMV\n")
+        self.initParser(default_config_files=[config_file_path])
+        self.add_arg("--genome", env_var="GENOME")
+        self.add_arg("--run", nargs=argparse.REMAINDER)
+
+        # a value that looks like this parser's own option doesn't override
+        # the config file or env var value, which goes before '--run'
+        ns = self.parse(args=["--run", "tool", "--genome", "hg19"], env_vars={})
+        self.assertEqual(ns.genome, "HCMV")
+        self.assertEqual(ns.run, ["tool", "--genome", "hg19"])
+        ns = self.parse(
+            args=["--run", "tool", "--genome", "hg19"], env_vars={"GENOME": "mm10"}
+        )
+        self.assertEqual(ns.genome, "mm10")
+
+        # nor does a '-h' among its values skip the config files
+        ns = self.parse(args=["--run", "grep", "-h", "x"], env_vars={})
+        self.assertEqual(ns.genome, "HCMV")
+        self.assertEqual(ns.run, ["grep", "-h", "x"])
+
+        # or get dropped by ignore_help_args
+        ns, _ = self.parse_known(
+            args=["--run", "du", "-h"], ignore_help_args=True, env_vars={}
+        )
+        self.assertEqual(ns.run, ["du", "-h"])
+
+        # the same option before '--run' still overrides
+        ns = self.parse(args=["--genome", "hg38", "--run", "tool"], env_vars={})
+        self.assertEqual(ns.genome, "hg38")
 
     def testEmptyValuesIgnored(self):
         """Test that empty string values from config files and env vars are ignored
         for args with nargs. Regression test for issue #296."""
         # Test empty value in config file
-        config_file = tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".conf"
+        config_file_path = self.make_temp_file_holding_contents(
+            "test-opt=\n", suffix=".conf"
         )
-        config_file.write("test-opt=\n")
-        config_file.flush()
-        config_file.close()
 
-        try:
-            self.initParser()
-            self.parser.add_argument(
-                "--config", is_config_file=True, default=config_file.name
-            )
-            self.parser.add_argument(
-                "--test-opt", nargs=2, default=["default1", "default2"]
-            )
+        self.initParser()
+        self.parser.add_argument(
+            "--config", is_config_file=True, default=config_file_path
+        )
+        self.parser.add_argument(
+            "--test-opt", nargs=2, default=["default1", "default2"]
+        )
 
-            ns = self.parse(args=[])
-            self.assertEqual(ns.test_opt, ["default1", "default2"])
-        finally:
-            os.unlink(config_file.name)
+        ns = self.parse(args=[])
+        self.assertEqual(ns.test_opt, ["default1", "default2"])
 
         # Test empty environment variable
         self.initParser()
@@ -2931,66 +2972,47 @@ class TestMisc(TestCase):
             "--test-opt", nargs=2, env_var="TEST_OPT", default=["default1", "default2"]
         )
 
-        old_env = os.environ.get("TEST_OPT")
-        try:
-            os.environ["TEST_OPT"] = ""
+        with mock.patch.dict(os.environ, {"TEST_OPT": ""}):
             ns = self.parse(args=[])
             self.assertEqual(ns.test_opt, ["default1", "default2"])
-        finally:
-            if old_env is not None:
-                os.environ["TEST_OPT"] = old_env
-            elif "TEST_OPT" in os.environ:
-                del os.environ["TEST_OPT"]
 
     def testConfigArgOrderWithOptsOnCli(self):
         """Test that config args with nargs/append are parsed correctly when
         optional args are already on the command line."""
-        config_file = tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".conf"
+        config_file_path = self.make_temp_file_holding_contents(
+            "from_config = [x, y]\n", suffix=".conf"
         )
-        config_file.write("from_config = [x, y]\n")
-        config_file.flush()
-        config_file.close()
 
-        try:
-            self.initParser()
-            self.parser.add_argument(
-                "--config", is_config_file=True, default=config_file.name
-            )
-            self.parser.add_argument("--from_config", action="append")
-            self.parser.add_argument("--cli_opt")
-            self.parser.add_argument("positional", nargs="*")
+        self.initParser()
+        self.parser.add_argument(
+            "--config", is_config_file=True, default=config_file_path
+        )
+        self.parser.add_argument("--from_config", action="append")
+        self.parser.add_argument("--cli_opt")
+        self.parser.add_argument("positional", nargs="*")
 
-            ns = self.parse(args="--cli_opt val pos1 pos2")
-            self.assertEqual(ns.positional, ["pos1", "pos2"])
-            self.assertEqual(ns.cli_opt, "val")
-            self.assertEqual(ns.from_config, ["x", "y"])
-        finally:
-            os.unlink(config_file.name)
+        ns = self.parse(args="--cli_opt val pos1 pos2")
+        self.assertEqual(ns.positional, ["pos1", "pos2"])
+        self.assertEqual(ns.cli_opt, "val")
+        self.assertEqual(ns.from_config, ["x", "y"])
 
     def testConfigArgOrderNoOptsOnCli(self):
         """Test that config args are parsed correctly when no optional args
         are on the command line (only positional args)."""
-        config_file = tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".conf"
+        config_file_path = self.make_temp_file_holding_contents(
+            "flag\n", suffix=".conf"
         )
-        config_file.write("flag\n")
-        config_file.flush()
-        config_file.close()
 
-        try:
-            self.initParser()
-            self.parser.add_argument(
-                "--config", is_config_file=True, default=config_file.name
-            )
-            self.parser.add_argument("--flag", action="store_true")
-            self.parser.add_argument("positional")
+        self.initParser()
+        self.parser.add_argument(
+            "--config", is_config_file=True, default=config_file_path
+        )
+        self.parser.add_argument("--flag", action="store_true")
+        self.parser.add_argument("positional")
 
-            ns = self.parse(args="mypos")
-            self.assertEqual(ns.positional, "mypos")
-            self.assertTrue(ns.flag)
-        finally:
-            os.unlink(config_file.name)
+        ns = self.parse(args="mypos")
+        self.assertEqual(ns.positional, "mypos")
+        self.assertTrue(ns.flag)
 
     def testEnvVarArgOrderWithOptsOnCli(self):
         """Test that env var args with nargs/append are parsed correctly when
@@ -3000,18 +3022,11 @@ class TestMisc(TestCase):
         self.parser.add_argument("--cli_opt")
         self.parser.add_argument("positional", nargs="*")
 
-        old_env = os.environ.get("FROM_ENV")
-        try:
-            os.environ["FROM_ENV"] = "[a,b]"
+        with mock.patch.dict(os.environ, {"FROM_ENV": "[a,b]"}):
             ns = self.parse(args="--cli_opt val pos1 pos2")
             self.assertEqual(ns.positional, ["pos1", "pos2"])
             self.assertEqual(ns.cli_opt, "val")
             self.assertEqual(ns.from_env, ["a", "b"])
-        finally:
-            if old_env is not None:
-                os.environ["FROM_ENV"] = old_env
-            elif "FROM_ENV" in os.environ:
-                del os.environ["FROM_ENV"]
 
     def testEnvVarArgOrderNoOptsOnCli(self):
         """Test that env var args are parsed correctly when no optional args
@@ -3020,21 +3035,31 @@ class TestMisc(TestCase):
         self.parser.add_argument("--flag", action="store_true", env_var="MY_FLAG")
         self.parser.add_argument("positional")
 
-        old_env = os.environ.get("MY_FLAG")
-        try:
-            os.environ["MY_FLAG"] = "true"
+        with mock.patch.dict(os.environ, {"MY_FLAG": "true"}):
             ns = self.parse(args="mypos")
             self.assertEqual(ns.positional, "mypos")
             self.assertTrue(ns.flag)
-        finally:
-            if old_env is not None:
-                os.environ["MY_FLAG"] = old_env
-            elif "MY_FLAG" in os.environ:
-                del os.environ["MY_FLAG"]
 
 
 class TestConfigFileParsers(TestCase):
     """Test ConfigFileParser subclasses in isolation"""
+
+    def assert_each_line_parses_to_key_and_value(self, lines_and_expected_key_value):
+        """Parse each line on its own with DefaultConfigFileParser and check
+        the single key and value it gives.
+
+        Args:
+            lines_and_expected_key_value: A list of (line, key, value) tuples,
+                where key and value are what parsing that line should give.
+        """
+        p = configargparse.DefaultConfigFileParser()
+        for line, expected_key, expected_value in lines_and_expected_key_value:
+            with self.subTest(line=line):
+                self.assertDictEqual(
+                    dict(p.parse(StringIO(line))),
+                    {expected_key: expected_value},
+                    msg="Line %r" % line,
+                )
 
     def testDefaultConfigFileParser_ListRoundtrip(self):
         parser = configargparse.DefaultConfigFileParser()
@@ -3080,9 +3105,9 @@ class TestConfigFileParsers(TestCase):
 
         self.assertDictEqual(parsed_obj, {"a": "3"})
 
-    def testDefaultConfigFileParser_SerializeRendersValuesAsBefore(self):
-        # the newline check must not change how a value that isn't a plain
-        # string comes out: str() and format() differ for an Enum before 3.11
+    def testDefaultConfigFileParser_SerializeWritesNonStringValuesWithFormat(self):
+        # a value that isn't a plain string is written with format(), which
+        # differs from str() for an Enum before Python 3.11
         from enum import Enum, IntEnum
 
         class Color(str, Enum):
@@ -3114,6 +3139,17 @@ class TestConfigFileParsers(TestCase):
             "can't contain newlines",
             p.serialize,
             OrderedDict([("a\nb", "3")]),
+        )
+
+    def testDefaultConfigFileParser_FlagWithACommentAfterItIsAFlag(self):
+        p = configargparse.DefaultConfigFileParser()
+        self.assertEqual(
+            p.parse(StringIO("verbose  # be loud\nquiet ; or not\n")),
+            OrderedDict([("verbose", "true"), ("quiet", "true")]),
+        )
+        # after a separator other than whitespace, '#' still starts the value
+        self.assertEqual(
+            p.parse(StringIO("color = #ff0000\n")), OrderedDict([("color", "#ff0000")])
         )
 
     def testDefaultConfigFileParser_All(self):
@@ -3160,303 +3196,194 @@ class TestConfigFileParsers(TestCase):
         self.assertListEqual(parsed_obj["_list_arg2"], [1, 2, 3])
 
     def testDefaultConfigFileParser_BasicValues(self):
-        p = configargparse.DefaultConfigFileParser()
-
         # test the all syntax case
         config_lines = [
-            {
-                "line": "key = value # comment # comment",
-                "expected": ("key", "value", "comment # comment"),
-            },
-            {"line": "key=value#comment ", "expected": ("key", "value#comment", None)},
-            {"line": "key=value", "expected": ("key", "value", None)},
-            {"line": "key =value", "expected": ("key", "value", None)},
-            {"line": "key= value", "expected": ("key", "value", None)},
-            {"line": "key = value", "expected": ("key", "value", None)},
-            {"line": "key  =  value", "expected": ("key", "value", None)},
-            {"line": " key  =  value ", "expected": ("key", "value", None)},
-            {"line": "key:value", "expected": ("key", "value", None)},
-            {"line": "key :value", "expected": ("key", "value", None)},
-            {"line": "key: value", "expected": ("key", "value", None)},
-            {"line": "key : value", "expected": ("key", "value", None)},
-            {"line": "key  :  value", "expected": ("key", "value", None)},
-            {"line": " key  :  value ", "expected": ("key", "value", None)},
-            {"line": "key value", "expected": ("key", "value", None)},
-            {"line": "key  value", "expected": ("key", "value", None)},
-            {"line": " key    value ", "expected": ("key", "value", None)},
+            ("key = value # comment # comment", "key", "value"),
+            ("key=value#comment ", "key", "value#comment"),
+            ("key=value", "key", "value"),
+            ("key =value", "key", "value"),
+            ("key= value", "key", "value"),
+            ("key = value", "key", "value"),
+            ("key  =  value", "key", "value"),
+            (" key  =  value ", "key", "value"),
+            ("key:value", "key", "value"),
+            ("key :value", "key", "value"),
+            ("key: value", "key", "value"),
+            ("key : value", "key", "value"),
+            ("key  :  value", "key", "value"),
+            (" key  :  value ", "key", "value"),
+            ("key value", "key", "value"),
+            ("key  value", "key", "value"),
+            (" key    value ", "key", "value"),
         ]
 
-        for test in config_lines:
-            with self.subTest(test=test):
-                parsed_obj = p.parse(StringIO(test["line"]))
-                parsed_obj = dict(parsed_obj)
-                expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(
-                    parsed_obj, expected, msg="Line %r" % (test["line"])
-                )
+        self.assert_each_line_parses_to_key_and_value(config_lines)
 
     def testDefaultConfigFileParser_QuotedValues(self):
-        p = configargparse.DefaultConfigFileParser()
-
         # test the all syntax case
         config_lines = [
-            {"line": 'key="value"', "expected": ("key", "value", None)},
-            {"line": 'key  =  "value"', "expected": ("key", "value", None)},
-            {"line": ' key  =  "value" ', "expected": ("key", "value", None)},
-            {"line": 'key=" value "', "expected": ("key", " value ", None)},
-            {"line": 'key  =  " value "', "expected": ("key", " value ", None)},
-            {"line": ' key  =  " value " ', "expected": ("key", " value ", None)},
-            {"line": "key='value'", "expected": ("key", "value", None)},
-            {"line": "key  =  'value'", "expected": ("key", "value", None)},
-            {"line": " key  =  'value' ", "expected": ("key", "value", None)},
-            {"line": "key=' value '", "expected": ("key", " value ", None)},
-            {"line": "key  =  ' value '", "expected": ("key", " value ", None)},
-            {"line": " key  =  ' value ' ", "expected": ("key", " value ", None)},
-            {"line": 'key="', "expected": ("key", '"', None)},
-            {"line": 'key  =  "', "expected": ("key", '"', None)},
-            {"line": ' key  =  " ', "expected": ("key", '"', None)},
-            {"line": "key = '\"value\"'", "expected": ("key", '"value"', None)},
-            {"line": "key = \"'value'\"", "expected": ("key", "'value'", None)},
-            {"line": 'key = ""value""', "expected": ("key", '"value"', None)},
-            {"line": "key = ''value''", "expected": ("key", "'value'", None)},
-            {"line": 'key="value', "expected": ("key", '"value', None)},
-            {"line": 'key  =  "value', "expected": ("key", '"value', None)},
-            {"line": ' key  =  "value ', "expected": ("key", '"value', None)},
-            {"line": 'key=value"', "expected": ("key", 'value"', None)},
-            {"line": 'key  =  value"', "expected": ("key", 'value"', None)},
-            {"line": ' key  =  value " ', "expected": ("key", 'value "', None)},
-            {"line": "key='value", "expected": ("key", "'value", None)},
-            {"line": "key  =  'value", "expected": ("key", "'value", None)},
-            {"line": " key  =  'value ", "expected": ("key", "'value", None)},
-            {"line": "key=value'", "expected": ("key", "value'", None)},
-            {"line": "key  =  value'", "expected": ("key", "value'", None)},
-            {"line": " key  =  value ' ", "expected": ("key", "value '", None)},
+            ('key="value"', "key", "value"),
+            ('key  =  "value"', "key", "value"),
+            (' key  =  "value" ', "key", "value"),
+            ('key=" value "', "key", " value "),
+            ('key  =  " value "', "key", " value "),
+            (' key  =  " value " ', "key", " value "),
+            ("key='value'", "key", "value"),
+            ("key  =  'value'", "key", "value"),
+            (" key  =  'value' ", "key", "value"),
+            ("key=' value '", "key", " value "),
+            ("key  =  ' value '", "key", " value "),
+            (" key  =  ' value ' ", "key", " value "),
+            ('key="', "key", '"'),
+            ('key  =  "', "key", '"'),
+            (' key  =  " ', "key", '"'),
+            ("key = '\"value\"'", "key", '"value"'),
+            ("key = \"'value'\"", "key", "'value'"),
+            ('key = ""value""', "key", '"value"'),
+            ("key = ''value''", "key", "'value'"),
+            ('key="value', "key", '"value'),
+            ('key  =  "value', "key", '"value'),
+            (' key  =  "value ', "key", '"value'),
+            ('key=value"', "key", 'value"'),
+            ('key  =  value"', "key", 'value"'),
+            (' key  =  value " ', "key", 'value "'),
+            ("key='value", "key", "'value"),
+            ("key  =  'value", "key", "'value"),
+            (" key  =  'value ", "key", "'value"),
+            ("key=value'", "key", "value'"),
+            ("key  =  value'", "key", "value'"),
+            (" key  =  value ' ", "key", "value '"),
         ]
 
-        for test in config_lines:
-            with self.subTest(test=test):
-                parsed_obj = p.parse(StringIO(test["line"]))
-                parsed_obj = dict(parsed_obj)
-                expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(
-                    parsed_obj, expected, msg="Line %r" % (test["line"])
-                )
+        self.assert_each_line_parses_to_key_and_value(config_lines)
 
     def testDefaultConfigFileParser_BlankValues(self):
-        p = configargparse.DefaultConfigFileParser()
-
         # test the all syntax case
         config_lines = [
-            {"line": "key=", "expected": ("key", "", None)},
-            {"line": "key =", "expected": ("key", "", None)},
-            {"line": "key= ", "expected": ("key", "", None)},
-            {"line": "key = ", "expected": ("key", "", None)},
-            {"line": "key  =  ", "expected": ("key", "", None)},
-            {"line": " key  =   ", "expected": ("key", "", None)},
-            {"line": "key:", "expected": ("key", "", None)},
-            {"line": "key :", "expected": ("key", "", None)},
-            {"line": "key: ", "expected": ("key", "", None)},
-            {"line": "key : ", "expected": ("key", "", None)},
-            {"line": "key  :  ", "expected": ("key", "", None)},
-            {"line": " key  :   ", "expected": ("key", "", None)},
+            ("key=", "key", ""),
+            ("key =", "key", ""),
+            ("key= ", "key", ""),
+            ("key = ", "key", ""),
+            ("key  =  ", "key", ""),
+            (" key  =   ", "key", ""),
+            ("key:", "key", ""),
+            ("key :", "key", ""),
+            ("key: ", "key", ""),
+            ("key : ", "key", ""),
+            ("key  :  ", "key", ""),
+            (" key  :   ", "key", ""),
         ]
 
-        for test in config_lines:
-            with self.subTest(test=test):
-                parsed_obj = p.parse(StringIO(test["line"]))
-                parsed_obj = dict(parsed_obj)
-                expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(
-                    parsed_obj, expected, msg="Line %r" % (test["line"])
-                )
+        self.assert_each_line_parses_to_key_and_value(config_lines)
 
     def testDefaultConfigFileParser_UnspecifiedValues(self):
-        p = configargparse.DefaultConfigFileParser()
-
         # test the all syntax case
         config_lines = [
-            {"line": "key ", "expected": ("key", "true", None)},
-            {"line": "key", "expected": ("key", "true", None)},
-            {"line": "key  ", "expected": ("key", "true", None)},
-            {"line": " key     ", "expected": ("key", "true", None)},
+            ("key ", "key", "true"),
+            ("key", "key", "true"),
+            ("key  ", "key", "true"),
+            (" key     ", "key", "true"),
         ]
 
-        for test in config_lines:
-            with self.subTest(test=test):
-                parsed_obj = p.parse(StringIO(test["line"]))
-                parsed_obj = dict(parsed_obj)
-                expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(
-                    parsed_obj, expected, msg="Line %r" % (test["line"])
-                )
+        self.assert_each_line_parses_to_key_and_value(config_lines)
 
     def testDefaultConfigFileParser_ColonEqualSignValue(self):
-        p = configargparse.DefaultConfigFileParser()
-
         # test the all syntax case
         config_lines = [
-            {"line": "key=:", "expected": ("key", ":", None)},
-            {"line": "key =:", "expected": ("key", ":", None)},
-            {"line": "key= :", "expected": ("key", ":", None)},
-            {"line": "key = :", "expected": ("key", ":", None)},
-            {"line": "key  =  :", "expected": ("key", ":", None)},
-            {"line": " key  =  : ", "expected": ("key", ":", None)},
-            {"line": "key:=", "expected": ("key", "=", None)},
-            {"line": "key :=", "expected": ("key", "=", None)},
-            {"line": "key: =", "expected": ("key", "=", None)},
-            {"line": "key : =", "expected": ("key", "=", None)},
-            {"line": "key  :  =", "expected": ("key", "=", None)},
-            {"line": " key  :  = ", "expected": ("key", "=", None)},
-            {"line": "key==", "expected": ("key", "=", None)},
-            {"line": "key ==", "expected": ("key", "=", None)},
-            {"line": "key= =", "expected": ("key", "=", None)},
-            {"line": "key = =", "expected": ("key", "=", None)},
-            {"line": "key  =  =", "expected": ("key", "=", None)},
-            {"line": " key  =  = ", "expected": ("key", "=", None)},
-            {"line": "key::", "expected": ("key", ":", None)},
-            {"line": "key ::", "expected": ("key", ":", None)},
-            {"line": "key: :", "expected": ("key", ":", None)},
-            {"line": "key : :", "expected": ("key", ":", None)},
-            {"line": "key  :  :", "expected": ("key", ":", None)},
-            {"line": " key  :  : ", "expected": ("key", ":", None)},
+            ("key=:", "key", ":"),
+            ("key =:", "key", ":"),
+            ("key= :", "key", ":"),
+            ("key = :", "key", ":"),
+            ("key  =  :", "key", ":"),
+            (" key  =  : ", "key", ":"),
+            ("key:=", "key", "="),
+            ("key :=", "key", "="),
+            ("key: =", "key", "="),
+            ("key : =", "key", "="),
+            ("key  :  =", "key", "="),
+            (" key  :  = ", "key", "="),
+            ("key==", "key", "="),
+            ("key ==", "key", "="),
+            ("key= =", "key", "="),
+            ("key = =", "key", "="),
+            ("key  =  =", "key", "="),
+            (" key  =  = ", "key", "="),
+            ("key::", "key", ":"),
+            ("key ::", "key", ":"),
+            ("key: :", "key", ":"),
+            ("key : :", "key", ":"),
+            ("key  :  :", "key", ":"),
+            (" key  :  : ", "key", ":"),
         ]
 
-        for test in config_lines:
-            with self.subTest(test=test):
-                parsed_obj = p.parse(StringIO(test["line"]))
-                parsed_obj = dict(parsed_obj)
-                expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(
-                    parsed_obj, expected, msg="Line %r" % (test["line"])
-                )
+        self.assert_each_line_parses_to_key_and_value(config_lines)
 
     def testDefaultConfigFileParser_ValuesWithComments(self):
-        p = configargparse.DefaultConfigFileParser()
-
         # test the all syntax case
         config_lines = [
-            {"line": "key=value#comment ", "expected": ("key", "value#comment", None)},
-            {"line": "key=value #comment", "expected": ("key", "value", "comment")},
-            {
-                "line": " key  =  value  #  comment",
-                "expected": ("key", "value", "comment"),
-            },
-            {"line": "key:value#comment", "expected": ("key", "value#comment", None)},
-            {"line": "key:value #comment", "expected": ("key", "value", "comment")},
-            {
-                "line": " key  :  value  #  comment",
-                "expected": ("key", "value", "comment"),
-            },
-            {"line": "key=value;comment ", "expected": ("key", "value;comment", None)},
-            {"line": "key=value ;comment", "expected": ("key", "value", "comment")},
-            {
-                "line": " key  =  value  ;  comment",
-                "expected": ("key", "value", "comment"),
-            },
-            {"line": "key:value;comment", "expected": ("key", "value;comment", None)},
-            {"line": "key:value ;comment", "expected": ("key", "value", "comment")},
-            {
-                "line": " key  :  value  ;  comment",
-                "expected": ("key", "value", "comment"),
-            },
-            {
-                "line": "key = value # comment # comment",
-                "expected": ("key", "value", "comment # comment"),
-            },
-            {
-                "line": 'key = "value # comment" # comment',
-                "expected": ("key", "value # comment", "comment"),
-            },
-            {"line": 'key = "#" ; comment', "expected": ("key", "#", "comment")},
-            {"line": 'key = ";" # comment', "expected": ("key", ";", "comment")},
+            ("key=value#comment ", "key", "value#comment"),
+            ("key=value #comment", "key", "value"),
+            (" key  =  value  #  comment", "key", "value"),
+            ("key:value#comment", "key", "value#comment"),
+            ("key:value #comment", "key", "value"),
+            (" key  :  value  #  comment", "key", "value"),
+            ("key=value;comment ", "key", "value;comment"),
+            ("key=value ;comment", "key", "value"),
+            (" key  =  value  ;  comment", "key", "value"),
+            ("key:value;comment", "key", "value;comment"),
+            ("key:value ;comment", "key", "value"),
+            (" key  :  value  ;  comment", "key", "value"),
+            ("key = value # comment # comment", "key", "value"),
+            ('key = "value # comment" # comment', "key", "value # comment"),
+            ('key = "#" ; comment', "key", "#"),
+            ('key = ";" # comment', "key", ";"),
         ]
 
-        for test in config_lines:
-            with self.subTest(test=test):
-                parsed_obj = p.parse(StringIO(test["line"]))
-                parsed_obj = dict(parsed_obj)
-                expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(
-                    parsed_obj, expected, msg="Line %r" % (test["line"])
-                )
+        self.assert_each_line_parses_to_key_and_value(config_lines)
 
     def testDefaultConfigFileParser_NegativeValues(self):
-        p = configargparse.DefaultConfigFileParser()
-
         # test the all syntax case
         config_lines = [
-            {"line": "key = -10", "expected": ("key", "-10", None)},
-            {"line": "key : -10", "expected": ("key", "-10", None)},
-            {"line": "key -10", "expected": ("key", "-10", None)},
-            {"line": 'key = "-10"', "expected": ("key", "-10", None)},
-            {"line": "key  =  '-10'", "expected": ("key", "-10", None)},
-            {"line": "key=-10", "expected": ("key", "-10", None)},
+            ("key = -10", "key", "-10"),
+            ("key : -10", "key", "-10"),
+            ("key -10", "key", "-10"),
+            ('key = "-10"', "key", "-10"),
+            ("key  =  '-10'", "key", "-10"),
+            ("key=-10", "key", "-10"),
         ]
 
-        for test in config_lines:
-            with self.subTest(test=test):
-                parsed_obj = p.parse(StringIO(test["line"]))
-                parsed_obj = dict(parsed_obj)
-                expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(
-                    parsed_obj, expected, msg="Line %r" % (test["line"])
-                )
+        self.assert_each_line_parses_to_key_and_value(config_lines)
 
     def testDefaultConfigFileParser_KeySyntax(self):
-        p = configargparse.DefaultConfigFileParser()
-
         # test the all syntax case
         config_lines = [
-            {
-                "line": "key_underscore = value",
-                "expected": ("key_underscore", "value", None),
-            },
-            {"line": "key_underscore=", "expected": ("key_underscore", "", None)},
-            {"line": "key_underscore", "expected": ("key_underscore", "true", None)},
-            {
-                "line": "_key_underscore = value",
-                "expected": ("_key_underscore", "value", None),
-            },
-            {"line": "_key_underscore=", "expected": ("_key_underscore", "", None)},
-            {"line": "_key_underscore", "expected": ("_key_underscore", "true", None)},
-            {
-                "line": "key_underscore_ = value",
-                "expected": ("key_underscore_", "value", None),
-            },
-            {"line": "key_underscore_=", "expected": ("key_underscore_", "", None)},
-            {"line": "key_underscore_", "expected": ("key_underscore_", "true", None)},
-            {"line": "key-dash = value", "expected": ("key-dash", "value", None)},
-            {"line": "key-dash=", "expected": ("key-dash", "", None)},
-            {"line": "key-dash", "expected": ("key-dash", "true", None)},
-            {"line": "key@word = value", "expected": ("key@word", "value", None)},
-            {"line": "key@word=", "expected": ("key@word", "", None)},
-            {"line": "key@word", "expected": ("key@word", "true", None)},
-            {"line": "key$word = value", "expected": ("key$word", "value", None)},
-            {"line": "key$word=", "expected": ("key$word", "", None)},
-            {"line": "key$word", "expected": ("key$word", "true", None)},
-            {"line": "key.word = value", "expected": ("key.word", "value", None)},
-            {"line": "key.word=", "expected": ("key.word", "", None)},
-            {"line": "key.word", "expected": ("key.word", "true", None)},
+            ("key_underscore = value", "key_underscore", "value"),
+            ("key_underscore=", "key_underscore", ""),
+            ("key_underscore", "key_underscore", "true"),
+            ("_key_underscore = value", "_key_underscore", "value"),
+            ("_key_underscore=", "_key_underscore", ""),
+            ("_key_underscore", "_key_underscore", "true"),
+            ("key_underscore_ = value", "key_underscore_", "value"),
+            ("key_underscore_=", "key_underscore_", ""),
+            ("key_underscore_", "key_underscore_", "true"),
+            ("key-dash = value", "key-dash", "value"),
+            ("key-dash=", "key-dash", ""),
+            ("key-dash", "key-dash", "true"),
+            ("key@word = value", "key@word", "value"),
+            ("key@word=", "key@word", ""),
+            ("key@word", "key@word", "true"),
+            ("key$word = value", "key$word", "value"),
+            ("key$word=", "key$word", ""),
+            ("key$word", "key$word", "true"),
+            ("key.word = value", "key.word", "value"),
+            ("key.word=", "key.word", ""),
+            ("key.word", "key.word", "true"),
         ]
 
-        for test in config_lines:
-            with self.subTest(test=test):
-                parsed_obj = p.parse(StringIO(test["line"]))
-                parsed_obj = dict(parsed_obj)
-                expected = {test["expected"][0]: test["expected"][1]}
-                self.assertDictEqual(
-                    parsed_obj, expected, msg="Line %r" % (test["line"])
-                )
+        self.assert_each_line_parses_to_key_and_value(config_lines)
 
+    @skip_unless_pyyaml_is_installed
     def testYAMLConfigFileParser_Basic(self):
-        try:
-            import yaml
-        except:
-            logging.warning(
-                "WARNING: PyYAML not installed. Couldn't test YAMLConfigFileParser"
-            )
-            return
-
         p = configargparse.YAMLConfigFileParser()
         self.assertGreater(len(p.get_syntax_description()), 0)
 
@@ -3468,15 +3395,8 @@ class TestConfigFileParsers(TestCase):
 
         self.assertDictEqual(parsed_obj, {"a": "3"})
 
+    @skip_unless_pyyaml_is_installed
     def testYAMLConfigFileParser_All(self):
-        try:
-            import yaml
-        except:
-            logging.warning(
-                "WARNING: PyYAML not installed. Couldn't test YAMLConfigFileParser"
-            )
-            return
-
         p = configargparse.YAMLConfigFileParser()
 
         # test the all syntax case
@@ -3498,15 +3418,8 @@ class TestConfigFileParsers(TestCase):
 
         self.assertDictEqual(parsed_obj, {"a": "3", "list_arg": [1, 2, 3]})
 
+    @skip_unless_pyyaml_is_installed
     def testYAMLConfigFileParser_w_ArgumentParser_parsed_values(self):
-        try:
-            import yaml
-        except:
-            raise AssertionError(
-                "WARNING: PyYAML not installed. Couldn't test YAMLConfigFileParser"
-            )
-            return
-
         parser = configargparse.ArgumentParser(
             config_file_parser_class=configargparse.YAMLConfigFileParser
         )
@@ -3517,27 +3430,42 @@ class TestConfigFileParsers(TestCase):
 
         config_lines = ["verbosity: 3", "verbose: true", "level: 35"]
         config_str = "\n".join(config_lines) + "\n"
-        config_file = tempfile.gettempdir() + "/temp_YAMLConfigFileParser.cfg"
-        with open(config_file, "w") as f:
-            f.write(config_str)
+        config_file = self.make_temp_file_holding_contents(config_str)
         args = parser.parse_args(["--config=%s" % config_file])
-        assert args.verbosity == 3
-        assert args.verbose == True
-        assert args.level == 35
+        self.assertEqual(args.verbosity, 3)
+        self.assertTrue(args.verbose)
+        self.assertEqual(args.level, 35)
+
+
+# TomlConfigParser.parse() reads TOML with tomllib (Python 3.11+), or else with
+# the toml package, and can't parse anything without one of them
+skip_unless_a_toml_reading_library_is_installed = unittest.skipUnless(
+    any(importlib.util.find_spec(name) is not None for name in ("tomllib", "toml")),
+    "neither tomllib nor the toml package is installed",
+)
+
+# TomlConfigParser.serialize() writes TOML with the toml package only, since
+# tomllib can't write
+skip_unless_the_toml_package_is_installed = unittest.skipUnless(
+    importlib.util.find_spec("toml") is not None, "toml package not installed"
+)
 
 
 class TestTomlConfigParser(unittest.TestCase):
-    def write_toml_file(self, content, obj=StringIO):
-        f = obj()
-        dedent = lambda x: x
-        if isinstance(content, str):
-            dedent = textwrap.dedent
-        f.write(dedent(content))
-        f.seek(0)
-        return f
+    def make_toml_stream(self, content):
+        """Return an in-memory text stream holding the given TOML.
 
+        Args:
+            content: The TOML text, which is dedented first.
+
+        Returns:
+            A StringIO positioned at the start of the dedented text.
+        """
+        return StringIO(textwrap.dedent(content))
+
+    @skip_unless_a_toml_reading_library_is_installed
     def test_section(self):
-        f = self.write_toml_file("""
+        f = self.make_toml_stream("""
             [section]
             key1 = 'toml1'
             key2 = 'toml2'
@@ -3545,8 +3473,9 @@ class TestTomlConfigParser(unittest.TestCase):
         parser = configargparse.TomlConfigParser(["section"])
         self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": "toml2"})
 
+    @skip_unless_a_toml_reading_library_is_installed
     def test_no_sections(self):
-        f = self.write_toml_file("""
+        f = self.make_toml_stream("""
             [section]
             key1 = 'toml1'
             key2 = 'toml2'
@@ -3554,28 +3483,30 @@ class TestTomlConfigParser(unittest.TestCase):
         parser = configargparse.TomlConfigParser([])
         self.assertEqual(parser.parse(f), {})
 
+    @skip_unless_a_toml_reading_library_is_installed
     def test_empty_section(self):
-        f = self.write_toml_file("[section]")
+        f = self.make_toml_stream("[section]")
         parser = configargparse.TomlConfigParser(["section"])
         self.assertEqual(parser.parse(f), {})
 
+    @skip_unless_a_toml_reading_library_is_installed
     def test_empty_file(self):
-        f = self.write_toml_file("")
+        f = self.make_toml_stream("")
         parser = configargparse.TomlConfigParser(["section"])
         self.assertEqual(parser.parse(f), {})
 
-    @unittest.expectedFailure  # Ints should be strings
+    @skip_unless_a_toml_reading_library_is_installed
     def test_advanced(self):
-        f = self.write_toml_file("""
+        f = self.make_toml_stream("""
             [tool.section]
             key1 = "toml1"
             key2 = [1, 2, 3]
             """)
         parser = configargparse.TomlConfigParser(["tool.section"])
-        self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": ["1", "2", "3"]})
+        self.assertEqual(parser.parse(f), {"key1": "toml1", "key2": [1, 2, 3]})
 
     def test_read_without_toml_packages(self):
-        f = self.write_toml_file("""
+        f = self.make_toml_stream("""
             [tool.section]
             key1 = "toml1"
             key2 = [1, 2, 3]
@@ -3586,56 +3517,43 @@ class TestTomlConfigParser(unittest.TestCase):
             with self.assertRaises(configargparse.ConfigFileParserMissingDependency):
                 parser.parse(f)
 
+    @skip_unless_a_toml_reading_library_is_installed
     def test_binary_read_works(self):
-        # Binary mode now works with tomllib (Python 3.11+)
-        f = self.write_toml_file(
-            b"""[tool.section]\nkey1 = "toml1"
-            """,
-            obj=BytesIO,
-        )
+        # parse() accepts a binary stream as well as a text one
+        f = BytesIO(b'[tool.section]\nkey1 = "toml1"\n')
         parser = configargparse.TomlConfigParser(["tool.section"])
         # Should successfully parse binary stream
         self.assertEqual(parser.parse(f), {"key1": "toml1"})
 
+    @skip_unless_the_toml_package_is_installed
     def test_serialize_with_section(self):
         parser = configargparse.TomlConfigParser(["section"])
-        try:
-            import toml
-        except ImportError:
-            self.skipTest("toml package not installed")
         items = OrderedDict([("key1", "val1"), ("key2", "val2")])
         result = parser.serialize(items)
         # Verify round-trip: parse the serialized output
         parsed = parser.parse(StringIO(result))
         self.assertEqual(parsed, {"key1": "val1", "key2": "val2"})
 
+    @skip_unless_the_toml_package_is_installed
     def test_serialize_nested_section(self):
         parser = configargparse.TomlConfigParser(["tool.section"])
-        try:
-            import toml
-        except ImportError:
-            self.skipTest("toml package not installed")
         items = OrderedDict([("key1", "val1")])
         result = parser.serialize(items)
         parsed = parser.parse(StringIO(result))
         self.assertEqual(parsed, {"key1": "val1"})
 
-    def test_serialize_no_sections(self):
+    @skip_unless_the_toml_package_is_installed
+    def test_serialize_without_sections_is_rejected(self):
+        # parse() reads nothing back from a file written with no section
         parser = configargparse.TomlConfigParser([])
-        try:
-            import toml
-        except ImportError:
-            self.skipTest("toml package not installed")
         items = OrderedDict([("key1", "val1")])
-        result = parser.serialize(items)
-        self.assertIn("key1", result)
+        with self.assertRaisesRegex(ValueError, "section"):
+            parser.serialize(items)
 
     def test_serialize_without_toml_package(self):
         parser = configargparse.TomlConfigParser(["section"])
         items = OrderedDict([("key1", "val1")])
         # Mock tomllib import succeeding but toml import failing
-        import unittest.mock as mock
-
         with mock.patch.dict(sys.modules, {"toml": None}):
             with self.assertRaises(configargparse.ConfigFileParserMissingDependency):
                 parser.serialize(items)
@@ -3661,14 +3579,15 @@ class TestIniConfigParserSerialize(unittest.TestCase):
         parser = configargparse.IniConfigParser(["section"], True)
         items = OrderedDict([("key1", ["a", "b", "c"])])
         result = parser.serialize(items)
-        # Should use multiline format
-        self.assertIn("\n", result.split("key1")[1])
+        # Should use multiline format: each element on its own indented line
+        self.assertEqual(result, "[section]\nkey1 = \n\ta\n\tb\n\tc\n\n")
 
-    def test_serialize_default_section(self):
+    def test_serialize_without_sections_is_rejected(self):
+        # parse() reads nothing back from a file written with no section
         parser = configargparse.IniConfigParser([], False)
         items = OrderedDict([("key1", "val1")])
-        result = parser.serialize(items)
-        self.assertIn("key1", result)
+        with self.assertRaisesRegex(ValueError, "section"):
+            parser.serialize(items)
 
     def test_serialized_percent_values_read_back_unchanged(self):
         for split_ml_text_to_list in (False, True):
@@ -3693,7 +3612,24 @@ class TestCompositeConfigParser(unittest.TestCase):
         self.tmpdir = tempfile.TemporaryDirectory()
         self.old_cwd = os.getcwd()
         os.chdir(self.tmpdir.name)
-        self.parser = configargparse.ArgParser(
+        self.parser = self.make_parser(ignore_unknown_config_file_keys=False)
+
+    def make_parser(self, ignore_unknown_config_file_keys):
+        """Make a parser that reads config.yaml, config.toml and config.ini.
+
+        Each file can be in any of the three formats, and a later file in that
+        list overrides an earlier one.
+
+        Args:
+            ignore_unknown_config_file_keys: Passed on to the parser. The TOML
+                file from write_toml_file() holds a 'special' table that no arg
+                is registered for, so a test that checks which file wins has
+                to set this to True to get past it.
+
+        Returns:
+            The new parser.
+        """
+        parser = configargparse.ArgParser(
             description="test",
             default_config_files=["config.yaml", "config.toml", "config.ini"],
             config_file_parser_class=configargparse.CompositeConfigParser(
@@ -3703,16 +3639,18 @@ class TestCompositeConfigParser(unittest.TestCase):
                     configargparse.IniConfigParser(["section"], False),
                 ]
             ),
+            ignore_unknown_config_file_keys=ignore_unknown_config_file_keys,
         )
-        self.parser.add_argument("--config", is_config_file=True)
-        self.parser.add_argument("--key1", type=str)
-        self.parser.add_argument("--key2", type=str)
+        parser.add_argument("--config", is_config_file=True)
+        parser.add_argument("--key1", type=str)
+        parser.add_argument("--key2", type=str)
+        return parser
 
     def tearDown(self):
         os.chdir(self.old_cwd)
         self.tmpdir.cleanup()
 
-    def write_yaml_file(self, content="[section]\nkey1: yaml1\nkey2: yaml2"):
+    def write_yaml_file(self, content="key1: yaml1\nkey2: yaml2"):
         with open("config.yaml", "w") as f:
             f.write(content)
 
@@ -3729,37 +3667,37 @@ class TestCompositeConfigParser(unittest.TestCase):
         with open("config.toml", "w") as f:
             f.write(content)
 
-    def write_toml_file_extra(self):
-        self.write_toml_file()
-        with open("config.toml", "a") as f:
-            f.write("\nkey3 = 'toml3'\nkey4 = 'toml4'")
-
     def test_plain(self):
         self.assertEqual(
             vars(self.parser.parse_args([])),
             {"config": None, "key1": None, "key2": None},
         )
 
-    @unittest.expectedFailure  # unknown fields should be ignored
+    @skip_unless_a_toml_reading_library_is_installed
+    @skip_unless_pyyaml_is_installed
     def test_with_all_configs(self):
         self.write_yaml_file()
         self.write_ini_file()
         self.write_toml_file()
+        parser = self.make_parser(ignore_unknown_config_file_keys=True)
         self.assertEqual(
-            vars(self.parser.parse_args([])),
+            vars(parser.parse_args([])),
             {"config": None, "key1": "ini1", "key2": "ini2"},
         )
 
-    @unittest.expectedFailure  # unknown fields should be ignored
+    @skip_unless_a_toml_reading_library_is_installed
+    @skip_unless_pyyaml_is_installed
     def test_with_all_configs_override(self):
         self.write_yaml_file()
         self.write_ini_file()
         self.write_toml_file()
+        parser = self.make_parser(ignore_unknown_config_file_keys=True)
         self.assertEqual(
-            vars(self.parser.parse_args(["--key1", "val1"])),
+            vars(parser.parse_args(["--key1", "val1"])),
             {"config": None, "key1": "val1", "key2": "ini2"},
         )
 
+    @skip_unless_pyyaml_is_installed
     def test_missing_primary_config(self):
         self.write_yaml_file()
         self.assertEqual(
@@ -3767,35 +3705,54 @@ class TestCompositeConfigParser(unittest.TestCase):
             {"config": None, "key1": "yaml1", "key2": "yaml2"},
         )
 
-    @unittest.expectedFailure  # unknown fields should be ignored
+    @skip_unless_a_toml_reading_library_is_installed
+    @skip_unless_pyyaml_is_installed
     def test_toml(self):
         self.write_yaml_file()
         self.write_toml_file()
+        parser = self.make_parser(ignore_unknown_config_file_keys=True)
         self.assertEqual(
-            vars(self.parser.parse_args([])),
+            vars(parser.parse_args([])),
             {"config": None, "key1": "toml1", "key2": "toml2"},
         )
 
-    @unittest.expectedFailure  # unknown fields should be ignored
+    @skip_unless_a_toml_reading_library_is_installed
+    @skip_unless_pyyaml_is_installed
     def test_override_primary_config(self):
         self.write_yaml_file()
         self.write_ini_file()
         self.write_toml_file()
+        parser = self.make_parser(ignore_unknown_config_file_keys=True)
         self.assertEqual(
-            vars(self.parser.parse_args(["--config", "config.yaml"])),
+            vars(parser.parse_args(["--config", "config.yaml"])),
             {"config": "config.yaml", "key1": "yaml1", "key2": "yaml2"},
         )
 
+    @skip_unless_a_toml_reading_library_is_installed
+    @skip_unless_pyyaml_is_installed
     def test_toml_extra(self):
         self.write_yaml_file()
         self.write_ini_file()
-        self.write_toml_file_extra()
-        with self.assertRaises(SystemExit):
-            self.parser.parse_args([])
+        # no 'special' table here, so the extra keys are the only unknown ones
+        self.write_toml_file(
+            "[section]\nkey1 = 'toml1'\nkey2 = 'toml2'\nkey3 = 'toml3'\nkey4 = 'toml4'\n"
+        )
+        with captured_output() as (_, err):
+            with self.assertRaises(SystemExit):
+                self.parser.parse_args([])
+        self.assertIn(
+            "unrecognized arguments: --key3=toml3 --key4=toml4\n", err.getvalue()
+        )
 
+    @skip_unless_pyyaml_is_installed
     def test_composite_warns_if_missing_dependency(self):
         self.write_yaml_file()
         self.write_ini_file()
+
+        # import PyYAML before patching: patch.dict restores the whole
+        # sys.modules dict on exit, dropping modules first imported inside it,
+        # which would leave PyYAML half-loaded for later tests
+        import yaml  # noqa: F401
 
         with mock.patch.dict(sys.modules, {"toml": None, "tomllib": None}):
             with self.assertWarnsRegex(UserWarning, "TomlConfigParser"):
@@ -3805,7 +3762,7 @@ class TestCompositeConfigParser(unittest.TestCase):
 
     def test_composite_warns_if_wrong_order(self):
         with self.assertWarns(SyntaxWarning):
-            composite = configargparse.CompositeConfigParser(
+            configargparse.CompositeConfigParser(
                 [
                     configargparse.IniConfigParser(["section"], False),
                     configargparse.TomlConfigParser(["section"]),
@@ -3830,8 +3787,42 @@ class TestCompositeConfigParser(unittest.TestCase):
         with self.assertRaises(configargparse.ConfigFileParserException):
             composite.serialize(OrderedDict())
 
+    def test_composite_syntax_description_names_each_format(self):
+        composite = configargparse.CompositeConfigParser(
+            [
+                configargparse.ConfigparserConfigFileParser,
+                configargparse.YAMLConfigFileParser,
+                configargparse.DefaultConfigFileParser,
+                configargparse.TomlConfigParser(["section"]),
+                configargparse.IniConfigParser(["section"], False),
+            ]
+        )()
+        format_names = [
+            line.split(":")[0]
+            for line in composite.get_syntax_description().splitlines()
+            if line.startswith("[")
+        ]
+        self.assertEqual(
+            format_names,
+            ["[1] CONFIGPARSER", "[2] YAML", "[3] DEFAULT", "[4] TOML", "[5] INI"],
+        )
+
 
 class TestCallableDefaultConfigFiles(TestCase):
+    def assert_number_of_config_file_sources(self, expected_count):
+        """Check how many config file sources the last parse recorded.
+
+        Args:
+            expected_count: How many keys of get_source_to_settings_dict()
+                should be config file sources.
+        """
+        config_file_sources = [
+            source_key
+            for source_key in self.parser.get_source_to_settings_dict()
+            if source_key.startswith(configargparse._CONFIG_FILE_SOURCE_KEY)
+        ]
+        self.assertEqual(len(config_file_sources), expected_count)
+
     def testCallableReturningStringIO(self):
         def loader():
             return StringIO("genome=hg19\n")
@@ -3865,8 +3856,8 @@ class TestCallableDefaultConfigFiles(TestCase):
 
     def testCallableRaisingMultiArgException(self):
         # Wrapping must not depend on the original exception class accepting a
-        # single string arg. CalledProcessError requires (returncode, cmd) and
-        # would have crashed type(e)(...) before this fix.
+        # single string arg. CalledProcessError requires (returncode, cmd), so
+        # rebuilding it with type(e)(...) would crash.
         import subprocess
 
         def boom_loader():
@@ -3898,8 +3889,8 @@ class TestCallableDefaultConfigFiles(TestCase):
                 self_inner._closed = True
                 closed.append(self_inner)
 
-        # name lives in NoNameStream's __slots__-less namespace, so any attempt
-        # to assign `stream.name = ...` raises AttributeError.
+        # NoNameStream's __slots__ allows only _closed and it has no __dict__,
+        # so assigning stream.name raises AttributeError.
         def slot_loader():
             return NoNameStream()
 
@@ -3930,60 +3921,46 @@ class TestCallableDefaultConfigFiles(TestCase):
         self.assertEqual(calls["count"], 3)
 
     def testCallableStreamIsClosed(self):
-        class TrackingStringIO(StringIO):
-            instances = []
-
-            def __init__(self_inner, *a, **kw):
-                super().__init__(*a, **kw)
-                self_inner.was_closed = False
-                TrackingStringIO.instances.append(self_inner)
-
-            def close(self_inner):
-                self_inner.was_closed = True
-                super().close()
+        opened = []
 
         def loader():
-            return TrackingStringIO("genome=hg19\n")
+            return TrackingStringIO("genome=hg19\n", opened)
 
         self.initParser(default_config_files=[loader])
         self.add_arg("--genome")
         self.parse("")
-        self.assertEqual(len(TrackingStringIO.instances), 1)
-        self.assertTrue(TrackingStringIO.instances[0].was_closed)
+        self.assertEqual(len(opened), 1)
+        self.assertTrue(opened[0].closed)
 
     def testMixedStringsAndCallables(self):
-        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".ini")
-        temp_cfg.write("genome=from_file\n")
-        temp_cfg.flush()
-        temp_cfg.close()
+        config_file_path = self.make_temp_file_holding_contents(
+            "genome=from_file\n", suffix=".ini"
+        )
 
         def loader():
             return StringIO("genome=from_callable\n")
 
         # Later entries override earlier ones, so the callable wins.
-        self.initParser(default_config_files=[temp_cfg.name, loader])
+        self.initParser(default_config_files=[config_file_path, loader])
         self.add_arg("--genome")
         ns = self.parse("")
         self.assertEqual(ns.genome, "from_callable")
 
         # Reverse order: the file should win.
-        self.initParser(default_config_files=[loader, temp_cfg.name])
+        self.initParser(default_config_files=[loader, config_file_path])
         self.add_arg("--genome")
         ns = self.parse("")
         self.assertEqual(ns.genome, "from_file")
 
-        os.unlink(temp_cfg.name)
-
     def testCallableWithRealFile(self):
-        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".ini")
-        temp_cfg.write("genome=hg19\n")
-        temp_cfg.flush()
-        temp_cfg.close()
+        config_file_path = self.make_temp_file_holding_contents(
+            "genome=hg19\n", suffix=".ini"
+        )
 
         opened = []
 
         def loader():
-            f = open(temp_cfg.name)
+            f = open(config_file_path)
             opened.append(f)
             return f
 
@@ -3993,8 +3970,6 @@ class TestCallableDefaultConfigFiles(TestCase):
         self.assertEqual(ns.genome, "hg19")
         self.assertEqual(len(opened), 1)
         self.assertTrue(opened[0].closed)
-
-        os.unlink(temp_cfg.name)
 
     def testInvalidEntryType(self):
         with self.assertRaisesRegex(TypeError, r"default_config_files\[0\]"):
@@ -4014,19 +3989,14 @@ class TestCallableDefaultConfigFiles(TestCase):
         self.assertNotIn("<function", help_text)
 
     def testPathLikeEntryAccepted(self):
-        import pathlib
+        config_file_path = self.make_temp_file_holding_contents(
+            "genome=hg19\n", suffix=".ini"
+        )
 
-        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".ini")
-        temp_cfg.write("genome=hg19\n")
-        temp_cfg.flush()
-        temp_cfg.close()
-
-        self.initParser(default_config_files=[pathlib.Path(temp_cfg.name)])
+        self.initParser(default_config_files=[pathlib.Path(config_file_path)])
         self.add_arg("--genome")
         ns = self.parse("")
         self.assertEqual(ns.genome, "hg19")
-
-        os.unlink(temp_cfg.name)
 
     def testTwoLambdasGetDistinctSourceKeys(self):
         # Two lambdas both have __name__ == "<lambda>"; without disambiguation
@@ -4038,29 +4008,15 @@ class TestCallableDefaultConfigFiles(TestCase):
         self.add_arg("--genome")
         self.add_arg("--vcf")
         self.parse("")
-        sources = self.parser.get_source_to_settings_dict()
-        config_file_sources = [
-            k for k in sources if k.startswith(configargparse._CONFIG_FILE_SOURCE_KEY)
-        ]
-        self.assertEqual(len(config_file_sources), 2)
+        self.assert_number_of_config_file_sources(2)
         # format_values should not crash either
         self.parser.format_values()
 
     def testEarlierStreamsClosedWhenLaterEntryFails(self):
         opened = []
 
-        class TrackingStringIO(StringIO):
-            def __init__(self_inner, *a, **kw):
-                super().__init__(*a, **kw)
-                self_inner.was_closed = False
-                opened.append(self_inner)
-
-            def close(self_inner):
-                self_inner.was_closed = True
-                super().close()
-
         def good_loader():
-            return TrackingStringIO("genome=hg19\n")
+            return TrackingStringIO("genome=hg19\n", opened)
 
         def bad_loader():
             raise RuntimeError("nope")
@@ -4070,10 +4026,10 @@ class TestCallableDefaultConfigFiles(TestCase):
         with self.assertRaises(configargparse.ConfigFileParserException):
             self.parse("")
         self.assertEqual(len(opened), 1)
-        self.assertTrue(opened[0].was_closed)
+        self.assertTrue(opened[0].closed)
 
     def testEarlierStreamsClosedWhenParserRaisesUnexpectedException(self):
-        # X5: a custom parser raising a non-ConfigFileParserException must not
+        # a custom parser raising a non-ConfigFileParserException must not
         # leak streams that were opened but not yet processed.
         class BadParser(configargparse.ConfigFileParser):
             def get_syntax_description(self):
@@ -4087,21 +4043,11 @@ class TestCallableDefaultConfigFiles(TestCase):
 
         opened = []
 
-        class TrackingStringIO(StringIO):
-            def __init__(self_inner, *a, **kw):
-                super().__init__(*a, **kw)
-                self_inner.was_closed = False
-                opened.append(self_inner)
-
-            def close(self_inner):
-                self_inner.was_closed = True
-                super().close()
-
         def loader_a():
-            return TrackingStringIO("genome=hg19\n")
+            return TrackingStringIO("genome=hg19\n", opened)
 
         def loader_b():
-            return TrackingStringIO("genome=hg20\n")
+            return TrackingStringIO("genome=hg20\n", opened)
 
         self.initParser(
             default_config_files=[loader_a, loader_b],
@@ -4111,7 +4057,7 @@ class TestCallableDefaultConfigFiles(TestCase):
         with self.assertRaises(ValueError):
             self.parse("")
         self.assertEqual(len(opened), 2)
-        self.assertTrue(all(s.was_closed for s in opened))
+        self.assertTrue(all(s.closed for s in opened))
 
     def testFormatValuesHandlesPipeInCallableName(self):
         def loader():
@@ -4129,50 +4075,25 @@ class TestCallableDefaultConfigFiles(TestCase):
     def testPathLikeAndCallableEntryTreatedAsPath(self):
         # An object that is both os.PathLike and callable should be treated as
         # a path; the callable branch must not be taken first.
-        temp_cfg = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".ini")
-        temp_cfg.write("genome=hg19\n")
-        temp_cfg.flush()
-        temp_cfg.close()
+        config_file_path = self.make_temp_file_holding_contents(
+            "genome=hg19\n", suffix=".ini"
+        )
 
-        class CallablePath:
-            def __init__(self_inner, p):
-                self_inner._p = p
-
-            def __fspath__(self_inner):
-                return self_inner._p
-
-            def __call__(self_inner):
-                # Must NOT be called; if we end up here the dispatch is wrong
-                # and the test should fail loudly.
-                raise AssertionError(
-                    "callable branch taken for a PathLike+callable entry"
-                )
-
-        self.initParser(default_config_files=[CallablePath(temp_cfg.name)])
+        self.initParser(
+            default_config_files=[PathLikeThatFailsIfCalled(config_file_path)]
+        )
         self.add_arg("--genome")
         ns = self.parse("")
         self.assertEqual(ns.genome, "hg19")
 
-        os.unlink(temp_cfg.name)
-
     def testDefaultStreamsClosedWhenUserConfigPhaseRaises(self):
-        # X3: when an is_config_file_arg's type= callback raises during the
+        # when an is_config_file_arg's type= callback raises during the
         # inner argparse phase of _open_config_files, the default config
         # streams already opened earlier must be closed.
         opened = []
 
-        class TrackingStringIO(StringIO):
-            def __init__(self_inner, *a, **kw):
-                super().__init__(*a, **kw)
-                self_inner.was_closed = False
-                opened.append(self_inner)
-
-            def close(self_inner):
-                self_inner.was_closed = True
-                super().close()
-
         def loader():
-            return TrackingStringIO("genome=hg19\n")
+            return TrackingStringIO("genome=hg19\n", opened)
 
         def bad_type(value):
             raise RuntimeError("type exploded")
@@ -4185,10 +4106,10 @@ class TestCallableDefaultConfigFiles(TestCase):
             self.parse(["--config", "anything"])
 
         self.assertEqual(len(opened), 1)
-        self.assertTrue(opened[0].was_closed)
+        self.assertTrue(opened[0].closed)
 
     def testTwoCallableStreamsWithSameNameDoNotCollide(self):
-        # X1: even if two callables both return streams whose .name attribute
+        # even if two callables both return streams whose .name attribute
         # is set to the same string, they must remain distinct sources.
         def loader_a():
             s = StringIO("genome=hg19\n")
@@ -4204,14 +4125,10 @@ class TestCallableDefaultConfigFiles(TestCase):
         self.add_arg("--genome")
         self.add_arg("--vcf")
         self.parse("")
-        sources = self.parser.get_source_to_settings_dict()
-        config_file_sources = [
-            k for k in sources if k.startswith(configargparse._CONFIG_FILE_SOURCE_KEY)
-        ]
-        self.assertEqual(len(config_file_sources), 2)
+        self.assert_number_of_config_file_sources(2)
 
     def testCallableStreamNameMatchingGeneratedFormatDoesNotCollide(self):
-        # X4: a callable whose returned stream's .name happens to match the
+        # a callable whose returned stream's .name happens to match the
         # library's generated "<entry_label>[<i>]" pattern must not collide
         # with another callable that would otherwise generate the same name.
         def loader_with_clashing_name():
@@ -4226,16 +4143,11 @@ class TestCallableDefaultConfigFiles(TestCase):
         self.add_arg("--genome")
         self.add_arg("--vcf")
         self.parse("")
-        sources = self.parser.get_source_to_settings_dict()
-        config_file_sources = [
-            k for k in sources if k.startswith(configargparse._CONFIG_FILE_SOURCE_KEY)
-        ]
-        self.assertEqual(len(config_file_sources), 2)
+        self.assert_number_of_config_file_sources(2)
 
     def testStreamClosedExactlyOnceOnSuccess(self):
-        # X2: on a successful parse, each stream's close() must be called
-        # exactly once (the previous design called it twice — once in the
-        # per-stream finally and once in the outer cleanup finally).
+        # on a successful parse, each stream's close() must be called
+        # exactly once.
         close_calls = []
 
         class CountingStringIO(StringIO):
@@ -4252,20 +4164,12 @@ class TestCallableDefaultConfigFiles(TestCase):
         self.assertEqual(len(close_calls), 1)
 
     def testFormatHelpShowsPathForPathLikeAndCallable(self):
-        # X3: an entry that's both PathLike and callable is treated as a path
+        # an entry that's both PathLike and callable is treated as a path
         # at runtime; format_help must label it the same way (not as
         # <callable>).
-        class CallablePath:
-            def __init__(self_inner, p):
-                self_inner._p = p
-
-            def __fspath__(self_inner):
-                return self_inner._p
-
-            def __call__(self_inner):
-                raise AssertionError("should not be called")
-
-        self.initParser(default_config_files=[CallablePath("/tmp/example.ini")])
+        self.initParser(
+            default_config_files=[PathLikeThatFailsIfCalled("/tmp/example.ini")]
+        )
         self.add_arg("--genome")
         help_text = self.format_help()
         self.assertIn("/tmp/example.ini", help_text)
@@ -4295,13 +4199,15 @@ class TestCallableDefaultConfigFiles(TestCase):
             def __fspath__(self_inner):
                 return None
 
+            # A short repr with no spaces, so help text wrapping can't split it
+            def __repr__(self_inner):
+                return "<BrokenPath>"
+
         self.initParser(default_config_files=[BrokenPath()])
         self.add_arg("--genome")
-        # Must not raise. Output should at least not contain a Python
-        # traceback marker; we just confirm it produces some text.
-        help_text = self.format_help()
-        self.assertIsInstance(help_text, str)
-        self.assertGreater(len(help_text), 0)
+        # The entry is shown by its repr() in the parenthesized list of
+        # default config files, which ends with a period
+        self.assertIn("(<BrokenPath>).", self.format_help())
 
 
 class TestStoreFalseConfigOutput(unittest.TestCase):
@@ -4320,12 +4226,7 @@ class TestStoreFalseConfigOutput(unittest.TestCase):
         return parser
 
     def assert_round_trip(self, parser, namespace, reader):
-        with tempfile.TemporaryDirectory() as directory:
-            path = os.path.join(directory, "settings.conf")
-            with captured_output():
-                parser.write_config_file(namespace, [path])
-            with open(path) as config_file:
-                contents = config_file.read()
+        contents = write_config_file_and_read_it_back(parser, namespace)
         restored = reader.parse_args([], config_file_contents=contents, env_vars={})
         self.assertEqual(vars(restored), vars(namespace))
         # assertEqual alone would accept 0 coming back as False
@@ -4495,9 +4396,6 @@ class TestBooleanOptionalAliases(unittest.TestCase):
     def test_environment_precedence_and_command_line_overrides(self):
         for aliases in self.aliases:
             parser = self.make_parser(aliases)
-            positive_options = [
-                option for option in aliases if not option.startswith("--no-")
-            ]
             negative_options = [
                 "--no-" + option[2:] for option in aliases if option.startswith("--")
             ]
@@ -4505,7 +4403,7 @@ class TestBooleanOptionalAliases(unittest.TestCase):
                 ("false", "true", False),
                 ("true", "false", True),
             ):
-                for option in (None, *positive_options, *negative_options):
+                for option in (None, *aliases, *negative_options):
                     with self.subTest(aliases=aliases, value=value, option=option):
                         args = [] if option is None else [option]
                         wanted = (
@@ -4536,12 +4434,7 @@ class TestBooleanOptionalAliases(unittest.TestCase):
                 with self.subTest(aliases=aliases, option=option):
                     parser = self.make_parser(aliases)
                     namespace = parser.parse_args([option], env_vars={})
-                    with tempfile.TemporaryDirectory() as directory:
-                        path = os.path.join(directory, "settings.conf")
-                        with captured_output():
-                            parser.write_config_file(namespace, [path])
-                        with open(path) as config_file:
-                            contents = config_file.read()
+                    contents = write_config_file_and_read_it_back(parser, namespace)
                     self.assertIs(
                         self.make_parser(aliases)
                         .parse_args([], env_vars={}, config_file_contents=contents)
@@ -4637,11 +4530,7 @@ class TestConfigparserDefaultSection(TestCase):
         expected = parser.parse_args(
             ["--name", "alice", "--count", "3", "--matrix", "[1, 2]", "[3, 4]"]
         )
-        with tempfile.TemporaryDirectory() as directory:
-            path = os.path.join(directory, "saved.ini")
-            parser.write_config_file(expected, [path])
-            with open(path) as stream:
-                contents = stream.read()
+        contents = write_config_file_and_read_it_back(parser, expected)
         actual = parser.parse_args([], config_file_contents=contents)
         self.assertEqual(actual, expected)
 
@@ -4664,7 +4553,7 @@ class TestConfigparserDefaultSection(TestCase):
             OrderedDict([("name", "bob"), ("shared", "value")]),
         )
 
-    def test_serialized_values_read_back_unchanged(self):
+    def test_serialized_values_read_back_as_the_expected_value_without_warnings(self):
         parser = configargparse.ConfigparserConfigFileParser()
         for value, expected in (
             ("file[0-9].txt", "file[0-9].txt"),
@@ -4690,7 +4579,8 @@ class TestConfigparserDefaultSection(TestCase):
             ("x\rother = injected", "x other = injected"),
         ):
             with self.subTest(value=value), warnings.catch_warnings():
-                # a value that reads back unchanged must not be warned about
+                # no case here is warned about, including those where newlines
+                # become spaces or a tuple or Path becomes its str()
                 warnings.simplefilter("error")
                 # newline=None reads a lone \r as a line break, the way open()
                 # does when parse_args reads a config file
@@ -4793,7 +4683,11 @@ class TestFalseFlagPrecedence(unittest.TestCase):
                         )
                         self.assertEqual(
                             parser.get_source_to_settings_dict(),
-                            {"config_file|" + str(higher): {"alias": (action, value)}},
+                            {
+                                f"{configargparse._CONFIG_FILE_SOURCE_KEY}|{higher}": {
+                                    "alias": (action, value)
+                                }
+                            },
                         )
                         self.assertNotIn(str(lower), parser.format_values())
 
@@ -4893,7 +4787,7 @@ class TestFalseFlagPrecedence(unittest.TestCase):
 
     def test_empty_list_does_not_override_lower_priority_list(self):
         # only flags are tracked, so an empty list still falls back to lower
-        # priority sources, as it did before false flags were tracked
+        # priority sources
         parser = configargparse.ArgumentParser()
         parser.add_argument("--item", action="append", env_var="ITEM")
         result = parser.parse_args(
@@ -4920,6 +4814,78 @@ class TestFalseFlagPrecedence(unittest.TestCase):
         self.assertIsNone(result.verbose)
 
 
+class TestOptionsBeforeARemainderPositional(TestCase):
+    """The options before a REMAINDER positional's args are this parser's own.
+
+    A REMAINDER positional takes every arg from its first one on, so the
+    values of the options before it, however many there are, must not be
+    mistaken for its first arg.
+    """
+
+    def make_parser_with_a_remainder_positional(self, **kwargs):
+        parser = configargparse.ArgumentParser(**kwargs)
+        parser.add_argument("--files", nargs="+")
+        parser.add_argument("--tag", action="append", env_var="TAG")
+        parser.add_argument("--output")
+        parser.add_argument("--level", nargs="?")
+        parser.add_argument("--name")
+        parser.add_argument("rest", nargs=argparse.REMAINDER)
+        return parser
+
+    def test_command_line_option_after_a_variable_length_option_overrides(self):
+        for args in (
+            ["--files", "a", "b", "--tag", "cli"],
+            ["--out", "x", "--tag", "cli"],
+            ["--level", "debug", "--tag", "cli"],
+        ):
+            with self.subTest(args=args):
+                parser = self.make_parser_with_a_remainder_positional()
+                ns = parser.parse_args(
+                    args, config_file_contents="tag = cfg", env_vars={}
+                )
+                self.assertEqual(ns.tag, ["cli"])
+                ns = parser.parse_args(args, env_vars={"TAG": "[env]"})
+                self.assertEqual(ns.tag, ["cli"])
+
+    def test_config_file_arg_after_a_variable_length_option_is_read(self):
+        config_file_path = self.make_temp_file_holding_contents("name = from_file\n")
+        parser = self.make_parser_with_a_remainder_positional()
+        parser.add_argument("-c", is_config_file=True)
+        ns = parser.parse_args(["--files", "a", "-c", config_file_path, "cmd"])
+        self.assertEqual(ns.name, "from_file")
+        self.assertEqual(ns.rest, ["cmd"])
+
+    def test_mutually_exclusive_option_after_a_variable_length_option(self):
+        parser = self.make_parser_with_a_remainder_positional()
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument("--fast", action="store_true")
+        group.add_argument("--slow", action="store_true")
+        ns = parser.parse_args(
+            ["--files", "x", "--slow"], config_file_contents="fast = true", env_vars={}
+        )
+        self.assertFalse(ns.fast)
+        self.assertTrue(ns.slow)
+
+    def test_written_config_file_holds_options_after_a_variable_length_option(self):
+        output_path = self.make_unused_path_in_a_new_temp_dir()
+        parser = self.make_parser_with_a_remainder_positional(
+            args_for_writing_out_config_file=["-w"]
+        )
+        with captured_output(), self.assertRaises(SystemExit):
+            parser.parse_args(
+                ["--files", "a", "--name", "x", "-w", output_path], env_vars={}
+            )
+        with open(output_path) as output_file:
+            self.assertEqual(output_file.read(), 'files = ["a"]\nname = x\n')
+
+    def test_ignore_help_args_drops_help_after_a_variable_length_option(self):
+        parser = self.make_parser_with_a_remainder_positional()
+        ns, _ = parser.parse_known_args(
+            ["--files", "a", "-h"], ignore_help_args=True, env_vars={}
+        )
+        self.assertEqual(ns.files, ["a"])
+
+
 ################################################################################
 # since configargparse should work as a drop-in replacement for argparse
 # in all situations, run argparse unittests on configargparse by modifying
@@ -4927,9 +4893,6 @@ class TestFalseFlagPrecedence(unittest.TestCase):
 
 try:
     import test.test_argparse
-
-    # Sig = test.test_argparse.Sig
-    # NS = test.test_argparse.NS
 except ImportError:
     logging.error(
         "\n\n"
@@ -4939,6 +4902,15 @@ except ImportError:
         " a package manager.\n"
         "============================\n"
     )
+
+    class TestArgparseOwnTestSuiteIsUnavailable(unittest.TestCase):
+        def test_argparse_own_test_suite_was_not_run(self):
+            """Show the missing argparse tests as a skip in the test summary."""
+            self.skipTest(
+                "'import test.test_argparse' failed, so argparse's own tests "
+                "weren't run against configargparse"
+            )
+
 else:
     test_argparse_source_file = inspect.getsourcefile(test.test_argparse)
     test_argparse_source_code = inspect.getsource(test.test_argparse)
@@ -4994,14 +4966,3 @@ else:
     # pulls in, which says nothing about configargparse, and its subprocess
     # scripts would call configargparse.ArgumentParser without importing it
     globals().pop("TestLazyImports", None)
-
-    # print argparse unittest source code
-    def print_source_code(source_code, line_numbers, context_lines=10):
-        for n in line_numbers:
-            logging.debug("##### Code around line %s #####" % n)
-            lines_to_print = set(range(n - context_lines, n + context_lines))
-            for n2, line in enumerate(source_code.split("\n"), 1):
-                if n2 in lines_to_print:
-                    logging.debug("%s %5d: %s" % ("**" if n2 == n else "  ", n2, line))
-
-    # print_source_code(test_argparse_source_code, [4540, 4565])

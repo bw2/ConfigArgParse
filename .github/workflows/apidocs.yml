@@ -21,13 +21,15 @@ jobs:
           persist-credentials: false
           # fetch the tags too, so setup.py -V can find the version
           fetch-depth: 0
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.13
 
       - name: Install requirements for documentation generation
-        run: python -m pip install --upgrade pip pydoctor
+        # apidocs.sh runs setup.py -V, which needs setuptools and setuptools-scm,
+        # and Python 3.12+ environments don't come with setuptools
+        run: python -m pip install --upgrade pip pydoctor setuptools setuptools-scm
 
       - name: Generate API documentation with pydoctor
         run: ./apidocs.sh
