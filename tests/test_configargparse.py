@@ -3642,6 +3642,48 @@ class TestTomlConfigParser(unittest.TestCase):
 
 
 class TestIniConfigParserSerialize(unittest.TestCase):
+    def test_write_config_file_preserves_scalar_values(self):
+        for split_ml_text_to_list in (False, True):
+            for value in ("", "[a-z]", "'quoted'", "first\nsecond"):
+                with self.subTest(split=split_ml_text_to_list, value=value):
+                    parser = configargparse.ArgumentParser(
+                        config_file_parser_class=configargparse.IniConfigParser(
+                            ["section"], split_ml_text_to_list
+                        )
+                    )
+                    parser.add_argument("--value")
+                    namespace = parser.parse_args(["--value", value])
+                    with tempfile.TemporaryDirectory() as directory:
+                        path = os.path.join(directory, "settings.ini")
+                        parser.write_config_file(namespace, [path], exit_after=False)
+                        with open(path) as stream:
+                            restored = parser.parse_args(
+                                [], config_file_contents=stream.read()
+                            )
+                    self.assertEqual(restored.value, value)
+
+    def test_serialized_ambiguous_strings_read_back_unchanged(self):
+        for split_ml_text_to_list in (False, True):
+            parser = configargparse.IniConfigParser(["section"], split_ml_text_to_list)
+            for value in (
+                "",
+                "   ",
+                "[data]",
+                "[1, 2]",
+                "'quoted'",
+                '"quoted"',
+                " leading",
+                "trailing ",
+                "first\nsecond",
+                "first\n# not a comment\nsecond",
+                "first\r\nsecond",
+                "[50%, %(asctime)s]",
+                "simple",
+            ):
+                with self.subTest(split=split_ml_text_to_list, value=value):
+                    contents = parser.serialize({"key": value})
+                    self.assertEqual(parser.parse(StringIO(contents)), {"key": value})
+
     def test_serialize_basic(self):
         parser = configargparse.IniConfigParser(["section"], False)
         items = OrderedDict([("key1", "val1"), ("key2", "val2")])

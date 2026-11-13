@@ -926,6 +926,17 @@ class IniConfigParser(ConfigFileParser):
                     value = str(value)
             else:
                 value = str(value)
+                # Quote scalar values that the reader would otherwise strip,
+                # unquote, split into lines, or interpret as a list.
+                if (
+                    not value
+                    or value != value.strip()
+                    or is_quoted(value)
+                    or (value.startswith("[") and value.endswith("]"))
+                    or "\n" in value
+                    or "\r" in value
+                ):
+                    value = repr(value)
             # parse() expands %(name)s references, so escape every %
             config.set(section_name, key, value.replace("%", "%%"))
 
