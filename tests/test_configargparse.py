@@ -3648,6 +3648,26 @@ class TestIniConfigParserSerialize(unittest.TestCase):
                     contents = parser.serialize({"key": value})
                     self.assertEqual(parser.parse(StringIO(contents)), {"key": value})
 
+    def test_serialized_list_elements_read_back_unchanged(self):
+        # with split_ml_text_to_list, each element is written on a line of its
+        # own, where it could be read as a comment, stripped, unquoted or split
+        for split_ml_text_to_list in (False, True):
+            parser = configargparse.IniConfigParser(["section"], split_ml_text_to_list)
+            for value in (
+                ["# not a comment", "; not a comment"],
+                ["", "   "],
+                [" leading", "trailing "],
+                ["[data]", "'quoted'", '"quoted"'],
+                ["first\nsecond", "third"],
+                # a lone element that looks like a list or a quoted string is
+                # written as a list literal instead
+                ["[data]"],
+                ["'quoted'"],
+            ):
+                with self.subTest(split=split_ml_text_to_list, value=value):
+                    contents = parser.serialize({"key": value})
+                    self.assertEqual(parser.parse(StringIO(contents)), {"key": value})
+
 
 class TestCompositeConfigParser(unittest.TestCase):
     def setUp(self):
