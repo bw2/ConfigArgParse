@@ -1468,7 +1468,9 @@ class ArgumentParser(argparse.ArgumentParser):
         subcommand or positional, they go before the first option on the
         command line instead, if there is one. Where a block that ends with
         such a list ends is recorded, so that parse_known_args() can check what
-        follows it once every source is in.
+        follows it once every source is in. When an earlier source's list is
+        still followed by a subcommand or positional, this source's args go
+        where that list ends, which ends it.
 
         Args:
             args: the command line args so far.
@@ -1484,6 +1486,16 @@ class ArgumentParser(argparse.ArgumentParser):
         """
         inserted_args = variable_length_list_args + other_args
         idx = self._find_insertion_index(args)
+        # argparse reads the subcommand or positional after such a list as one
+        # more of its values, so _find_insertion_index() no longer finds it
+        # there and would put this source's args before the list instead
+        list_ends_followed_by_a_value = [
+            end
+            for end, _ in variable_length_list_ends
+            if end < len(args) and not self._arg_is_read_as_an_option(args[end])
+        ]
+        if inserted_args and list_ends_followed_by_a_value:
+            idx = list_ends_followed_by_a_value[0]
         ends_with_variable_length_list = bool(variable_length_list_args) and not (
             other_args
         )
@@ -2700,9 +2712,13 @@ class ArgumentParser(argparse.ArgumentParser):
                     args += self._get_args_that_set_boolean_optional_action(
                         action, key, False
                     )
-            elif isinstance(action, argparse._CountAction) and value.isdecimal():
+            elif isinstance(action, argparse._CountAction) and (
+                _parse_number_of_times_to_give_a_count_flag(value) is not None
+            ):
                 # For count actions, repeat the flag the number of times specified
-                args += [action.option_strings[0]] * int(value)
+                args += [
+                    action.option_strings[0]
+                ] * _parse_number_of_times_to_give_a_count_flag(value)
             else:
                 self._report_error(
                     "Unexpected value for %s: '%s'. Expecting 'true', "
@@ -3323,6 +3339,27 @@ def _is_variable_length_list(action, value):
         # itself a list as '--key=element', which takes no more args after it
         return bool(value) and isinstance(value[-1], list)
     return True
+
+
+def _parse_number_of_times_to_give_a_count_flag(value):
+    """Read a config file or env var value for a count option as a number.
+
+    Accepts anything int() accepts, such as "2", "+2", " 2 ", "2\\n" (an env var
+    filled from a file often ends in a newline) or "1_000", as long as the
+    number isn't negative: a flag can't be given a negative number of times.
+
+    Args:
+        value: the string from the config file or env var.
+
+    Returns:
+        int or None: the number, or None if value isn't a whole number of 0 or
+        more
+    """
+    try:
+        number_of_times = int(value)
+    except ValueError:
+        return None
+    return number_of_times if number_of_times >= 0 else None
 
 
 def _close_config_streams(streams_and_source_labels):

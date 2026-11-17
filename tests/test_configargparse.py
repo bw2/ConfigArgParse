@@ -1299,6 +1299,35 @@ class TestBasicUseCases(TestCase):
         )
         self.assertEqual(ns.verbose, 3)
 
+    def testCounterAcceptsEveryWholeNumberIntAcceptsButNotANegativeOne(self):
+        # an env var filled from a file often ends in a newline
+        for value, expected_count in (
+            ("2", 2),
+            ("+2", 2),
+            (" 2 ", 2),
+            ("2\n", 2),
+            ("1_000", 1000),
+        ):
+            with self.subTest(value=value):
+                self.initParser()
+                self.add_arg("-v", "--verbose", action="count", env_var="VERBOSE")
+                ns = self.parse(args=[], env_vars={"VERBOSE": value})
+                self.assertEqual(ns.verbose, expected_count)
+
+        for value in ("-1", "lots"):
+            with self.subTest(value=value):
+                self.initParser()
+                self.add_arg("-v", "--verbose", action="count", env_var="VERBOSE")
+                self.assertParseArgsRaises(
+                    "Unexpected value for VERBOSE", args=[], env_vars={"VERBOSE": value}
+                )
+                self.assertParseArgsRaises(
+                    "Unexpected value for verbose",
+                    args=[],
+                    env_vars={},
+                    config_file_contents="verbose = %s" % value,
+                )
+
 
 class TestMisc(TestCase):
     # TODO test different action types with config file, env var
@@ -4946,6 +4975,74 @@ class TestOptionsBeforeARemainderPositional(TestCase):
             ["--files", "a", "-h"], ignore_help_args=True, env_vars={}
         )
         self.assertEqual(ns.files, ["a"])
+
+
+class TestListsForOptionsThatTakeAnyNumberOfValuesBeforeASubcommand(TestCase):
+    """A list for an option with nargs='+' must end before the subcommand.
+
+    argparse reads every arg after such a list as one more value until the
+    next option, so a list from a config file or env var needs an option after
+    it, from the command line or from any config file or env var, or the
+    subcommand would become part of the list.
+    """
+
+    def make_parser_with_a_list_option_and_a_subcommand(self, **kwargs):
+        self.initParser(**kwargs)
+        self.add_arg("--files", nargs="+", env_var="FILES")
+        self.add_arg("--name")
+        self.add_arg("-v", action="store_true")
+        self.parser.add_subparsers(dest="command").add_parser("run")
+
+    def test_list_with_nothing_to_end_it_is_an_error(self):
+        self.make_parser_with_a_list_option_and_a_subcommand()
+        self.assertParseArgsRaises(
+            "files sets a list .* would read the 'run' after it",
+            args=["run"],
+            env_vars={},
+            config_file_contents="files = [a, b]",
+        )
+
+    def test_option_on_the_command_line_ends_the_list(self):
+        self.make_parser_with_a_list_option_and_a_subcommand()
+        ns = self.parse(
+            args=["-v", "run"], env_vars={}, config_file_contents="files = [a, b]"
+        )
+        self.assertEqual(ns.files, ["a", "b"])
+        self.assertEqual(ns.command, "run")
+
+    def test_option_from_the_same_config_file_ends_the_list(self):
+        self.make_parser_with_a_list_option_and_a_subcommand()
+        ns = self.parse(
+            args=["run"], env_vars={}, config_file_contents="files = [a, b]\nname = x"
+        )
+        self.assertEqual(ns.files, ["a", "b"])
+        self.assertEqual(ns.name, "x")
+        self.assertEqual(ns.command, "run")
+
+    def test_option_from_a_config_file_ends_a_list_from_an_env_var(self):
+        self.make_parser_with_a_list_option_and_a_subcommand()
+        ns = self.parse(
+            args=["run"], env_vars={"FILES": "[a, b]"}, config_file_contents="name = x"
+        )
+        self.assertEqual(ns.files, ["a", "b"])
+        self.assertEqual(ns.name, "x")
+        self.assertEqual(ns.command, "run")
+
+    def test_option_from_either_config_file_ends_a_list_from_the_other(self):
+        list_file_path = self.make_temp_file_holding_contents("files = [a, b]\n")
+        option_file_path = self.make_temp_file_holding_contents("name = x\n")
+        for default_config_files in (
+            [option_file_path, list_file_path],
+            [list_file_path, option_file_path],
+        ):
+            with self.subTest(default_config_files=default_config_files):
+                self.make_parser_with_a_list_option_and_a_subcommand(
+                    default_config_files=default_config_files
+                )
+                ns = self.parse(args=["run"], env_vars={})
+                self.assertEqual(ns.files, ["a", "b"])
+                self.assertEqual(ns.name, "x")
+                self.assertEqual(ns.command, "run")
 
 
 ################################################################################
