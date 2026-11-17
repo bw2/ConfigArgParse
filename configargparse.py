@@ -2837,10 +2837,13 @@ class ArgumentParser(argparse.ArgumentParser):
             if (option_string in negative_option_strings) != value_to_set
         ]
         if not option_strings_that_set_value:
-            # eg. an arg with only short option strings has no negative form
+            # only False can be missing: every option string the user gave sets
+            # True, but eg. an arg with only short option strings has no
+            # negative form
             self._report_error(
-                "%s can't set %s to %s: none of %s does"
-                % (key, action.dest, value_to_set, "/".join(action.option_strings))
+                "%s cannot be set to false. %s has no --no- form, so it can only "
+                "be set to true. Set %s to true or remove it."
+                % (key, "/".join(action.option_strings), key)
             )
             # in case exit() was overridden and returned
             return []

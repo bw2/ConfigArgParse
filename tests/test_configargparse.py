@@ -4552,10 +4552,14 @@ class TestBooleanOptionalAliases(unittest.TestCase):
                 self.assertIs(
                     parser.parse_args([], env_vars={"FEATURE": "true"}).feature, True
                 )
-                with self.assertRaisesRegex(
-                    argparse.ArgumentError, "FEATURE can't set feature to False"
-                ):
+                with self.assertRaises(argparse.ArgumentError) as context:
                     parser.parse_args([], env_vars={"FEATURE": "false"})
+                self.assertEqual(
+                    str(context.exception),
+                    "FEATURE cannot be set to false. %s has no --no- form, so it can "
+                    "only be set to true. Set FEATURE to true or remove it."
+                    % "/".join(aliases),
+                )
 
     def test_negative_forms_that_dont_start_with_two_dashes(self):
         # From Python 3.15, argparse also adds '-nofeature' after '-feature' and
@@ -4576,10 +4580,12 @@ class TestBooleanOptionalAliases(unittest.TestCase):
                     parser.parse_args([], env_vars={"FEATURE": "true"}).feature, True
                 )
                 if len(action.option_strings) == 1:
-                    with self.assertRaisesRegex(
-                        argparse.ArgumentError, "FEATURE can't set feature to False"
-                    ):
+                    with self.assertRaises(argparse.ArgumentError) as context:
                         parser.parse_args([], env_vars={"FEATURE": "false"})
+                    self.assertIn(
+                        "FEATURE cannot be set to false. %s has no --no- form" % option,
+                        str(context.exception),
+                    )
                     continue
                 self.assertIs(
                     parser.parse_args([], env_vars={"FEATURE": "false"}).feature, False
