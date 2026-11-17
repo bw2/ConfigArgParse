@@ -8,7 +8,6 @@ import argparse
 import ast
 import configparser
 import copy
-import csv
 import enum
 import functools
 import json
@@ -735,10 +734,34 @@ def parse_toml_section_name(section_name):
         ' j . "ʞ" . "l" '  # same as [j."ʞ"."l"], double or simple quotes here are supported. -> returns ("j", "ʞ", "l")
     """
     section = []
-    for row in csv.reader([section_name], delimiter="."):
-        for a in row:
-            section.append(unquote_str(a.strip(), triple=False))
-    return tuple(section)
+    quote = None
+    escaped = False
+    start = 0
+    for index, char in enumerate(section_name):
+        if escaped:
+            escaped = False
+        elif quote == '"' and char == "\\":
+            escaped = True
+        elif quote is not None:
+            if char == quote:
+                quote = None
+        elif char in ("'", '"'):
+            quote = char
+        elif char == ".":
+            section.append(section_name[start:index].strip())
+            start = index + 1
+    section.append(section_name[start:].strip())
+
+    # TOML literal keys do not interpret backslash escapes. Basic quoted keys
+    # do, including Unicode escapes; CSV quoting follows neither rule.
+    return tuple(
+        (
+            part[1:-1]
+            if part.startswith("'") and part.endswith("'")
+            else unquote_str(part, triple=False)
+        )
+        for part in section
+    )
 
 
 def get_toml_section(data, section):
