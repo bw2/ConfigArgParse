@@ -1562,6 +1562,9 @@ class ArgumentParser(argparse.ArgumentParser):
         argparse's own pattern for a negative number, which differs by Python
         version (from 3.14 it also matches eg. "-1e5").
 
+        A non-string arg (eg. None, which argparse reads as a value) is never an
+        option.
+
         Args:
             arg_string: a single command line arg.
 
@@ -1570,7 +1573,8 @@ class ArgumentParser(argparse.ArgumentParser):
             a value
         """
         return (
-            len(arg_string) > 1
+            isinstance(arg_string, str)
+            and len(arg_string) > 1
             and arg_string[0] in self.prefix_chars
             and not (
                 self._negative_number_matcher.match(arg_string)
@@ -2384,7 +2388,11 @@ class ArgumentParser(argparse.ArgumentParser):
             # argparse's end-of-options separator, which it matches literally
             # rather than through prefix_chars, and never treats as an option
             return False
-        if len(arg_string) < 2 or arg_string[0] not in self.prefix_chars:
+        if (
+            not isinstance(arg_string, str)
+            or len(arg_string) < 2
+            or arg_string[0] not in self.prefix_chars
+        ):
             return False
 
         # argparse looks for an option matching the part before any '=' first,
