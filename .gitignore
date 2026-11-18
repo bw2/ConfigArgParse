@@ -50,5 +50,7 @@ docs/_build
 .claude
 .memory
 .code_review*
+CLAUDE.md
+.stfolder
 
 .eggs/
