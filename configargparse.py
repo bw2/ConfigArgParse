@@ -753,7 +753,7 @@ def parse_toml_section_name(section_name):
     section.append(section_name[start:].strip())
 
     # TOML literal keys do not interpret backslash escapes. Basic quoted keys
-    # do, including Unicode escapes; CSV quoting follows neither rule.
+    # do, including Unicode escapes.
     return tuple(
         (
             part[1:-1]

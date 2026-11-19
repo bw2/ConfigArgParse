@@ -4,6 +4,10 @@ from io import StringIO
 import unittest
 
 import configargparse
+from tests.test_configargparse import (
+    skip_unless_a_toml_reading_library_is_installed,
+    skip_unless_the_toml_package_is_installed,
+)
 
 
 class QuotedTomlSectionTests(unittest.TestCase):
@@ -43,6 +47,7 @@ class QuotedTomlSectionTests(unittest.TestCase):
             ("tool", "", "child"),
         )
 
+    @skip_unless_a_toml_reading_library_is_installed
     def test_read_literal_quoted_section(self):
         parser = configargparse.TomlConfigParser(["tool.'a.b'"])
         self.assertEqual(
@@ -50,6 +55,7 @@ class QuotedTomlSectionTests(unittest.TestCase):
             {"value": "configured"},
         )
 
+    @skip_unless_a_toml_reading_library_is_installed
     def test_read_basic_quoted_section_after_space(self):
         parser = configargparse.TomlConfigParser(['tool . "a.b"'])
         self.assertEqual(
@@ -57,6 +63,7 @@ class QuotedTomlSectionTests(unittest.TestCase):
             {"value": "configured"},
         )
 
+    @skip_unless_the_toml_package_is_installed
     def test_write_literal_quoted_section(self):
         parser = configargparse.TomlConfigParser(["tool.'a.b'"])
         text = parser.serialize({"value": "configured"})
