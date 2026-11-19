@@ -142,3 +142,47 @@ class TestEndOfOptions(TestCaseThatChecksParseArgsErrors):
                             parser, [prefix * 2 + "level", "debug"], **kwargs
                         ),
                     )
+
+
+class TestNonStringArgs(unittest.TestCase):
+    """argparse reads a falsy arg such as None as a value, and so must we."""
+
+    def make_parser(self):
+        parser = configargparse.ArgumentParser()
+        parser.add_argument("--foo")
+        parser.add_argument("--level", env_var="LEVEL")
+        return parser
+
+    def test_none_as_option_value(self):
+        for source, kwargs, expected_level in (
+            ("no other source", {"env_vars": {}}, None),
+            ("environment", {"env_vars": {"LEVEL": "info"}}, "info"),
+            (
+                "config",
+                {"config_file_contents": "level = info", "env_vars": {}},
+                "info",
+            ),
+        ):
+            with self.subTest(source=source):
+                result = self.make_parser().parse_args(["--foo", None], **kwargs)
+                self.assertIsNone(result.foo)
+                self.assertEqual(result.level, expected_level)
+
+    def test_none_does_not_stop_other_sources_from_being_overridden(self):
+        result = self.make_parser().parse_args(
+            ["--level", None, "--foo", "bar"],
+            config_file_contents="level = info",
+            env_vars={},
+        )
+        self.assertIsNone(result.level)
+        self.assertEqual(result.foo, "bar")
+
+    def test_none_after_subcommand(self):
+        parser = configargparse.ArgumentParser()
+        parser.add_argument("--level", env_var="LEVEL")
+        sub_parser = parser.add_subparsers(dest="command").add_parser("run")
+        sub_parser.add_argument("--foo")
+        kwargs = {"config_file_contents": "level = info", "env_vars": {}}
+        result = parser.parse_args(["run", "--foo", None], **kwargs)
+        self.assertIsNone(result.foo)
+        self.assertEqual(result.level, "info")
