@@ -344,3 +344,17 @@ def test_unregistered_traditional_help_keeps_legacy_ignore(tmp_path, option, pre
 
     assert args.port == 443
     assert unknown == []
+
+
+@pytest.mark.parametrize("option", ["-h", "--help"])
+def test_legacy_mode_survives_ignoring_traditional_help(tmp_path, capsys, option):
+    parser = parser_with_config(tmp_path, add_help=False, valid=False)
+    parser.add_argument("--usage", action="help")
+
+    with pytest.raises(SystemExit) as caught:
+        parser.parse_known_args([option, "--usage"], ignore_help_args=True, env_vars={})
+
+    assert caught.value.code == 2
+    output = capsys.readouterr()
+    assert output.out == ""
+    assert "error:" in output.err

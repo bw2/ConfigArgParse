@@ -1789,14 +1789,15 @@ class ArgumentParser(argparse.ArgumentParser):
             subcommand_index if subcommand_index is not None else end_of_options_index
         )
 
-    def _help_arg_indexes(self, args):
+    def _help_arg_indexes(self, args, legacy=False):
         """Find exact help options where their ownership is unambiguous.
 
         Args:
             args: the command line args to inspect.
+            legacy: keep the legacy mode chosen before filtering help args.
 
         Returns:
-            tuple: indexes of registered help options, and legacy help indexes.
+            tuple: help indexes and whether the previous literal filter is used.
             Scopes containing PARSER actions, nonexact short-option layouts,
             or unregistered literal -h/--help retain the previous literal filter
             and help-action gate. No subcommand or cluster dispatch is inferred.
@@ -1805,7 +1806,7 @@ class ArgumentParser(argparse.ArgumentParser):
         legacy_indexes = {
             i for i, arg in enumerate(option_args) if arg in ("-h", "--help")
         }
-        if (
+        if legacy or (
             any(a.nargs == argparse.PARSER for a in self._actions)
             or any(
                 self._arg_is_read_as_an_option(arg)
@@ -1820,14 +1821,14 @@ class ArgumentParser(argparse.ArgumentParser):
         ):
             # Keep the previous behavior when finding ownership would require
             # interpreting dispatch, clusters, attached values or abbreviations.
-            return set(), legacy_indexes
+            return legacy_indexes, True
         help_options = [
             option
             for action in self._actions
             if isinstance(action, argparse._HelpAction)
             for option in action.option_strings
         ]
-        return {i for i, arg in enumerate(option_args) if arg in help_options}, set()
+        return {i for i, arg in enumerate(option_args) if arg in help_options}, False
 
     def _option_strings_that_override(self, action):
         """Find the option strings that, when already on the command line, mean
@@ -2047,9 +2048,9 @@ class ArgumentParser(argparse.ArgumentParser):
 
         self._fill_in_action_attributes_this_module_reads()
 
+        legacy_help = False
         if ignore_help_args:
-            help_indexes, legacy_indexes = self._help_arg_indexes(args)
-            ignored_indexes = help_indexes | legacy_indexes
+            ignored_indexes, legacy_help = self._help_arg_indexes(args)
             args = [arg for i, arg in enumerate(args) if i not in ignored_indexes]
 
         # maps a string describing the source (eg. env var) to a settings dict
@@ -2117,9 +2118,9 @@ class ArgumentParser(argparse.ArgumentParser):
         supports_help_arg = any(
             a for a in self._actions if isinstance(a, argparse._HelpAction)
         )
-        help_indexes, legacy_indexes = self._help_arg_indexes(args)
-        skip_config_file_parsing = bool(help_indexes) or (
-            supports_help_arg and bool(legacy_indexes)
+        help_indexes, legacy_help = self._help_arg_indexes(args, legacy=legacy_help)
+        skip_config_file_parsing = bool(help_indexes) and (
+            not legacy_help or supports_help_arg
         )
 
         # prepare for reading config file(s)
