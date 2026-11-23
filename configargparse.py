@@ -1790,56 +1790,45 @@ class ArgumentParser(argparse.ArgumentParser):
         )
 
     def _help_arg_indexes(self, args):
-        """Find exact help options in the selected parser scopes.
+        """Find exact help options where their ownership is unambiguous.
 
         Args:
             args: the command line args to inspect.
 
         Returns:
             tuple: indexes of registered help options, and legacy help indexes.
-            Plain argparse children and scopes with non-dispatch PARSER actions
-            retain the previous literal -h/--help handling and parent help-action
-            gate. Custom help spellings are not interpreted in those scopes.
+            Scopes containing PARSER actions, nonexact short-option layouts,
+            or unregistered literal -h/--help retain the previous literal filter
+            and help-action gate. No subcommand or cluster dispatch is inferred.
         """
         option_args = args[: self._find_where_args_stop_being_read_as_options(args)]
-        if any(
-            a.nargs == argparse.PARSER and not _dispatches_to_subparsers(a)
-            for a in self._actions
+        legacy_indexes = {
+            i for i, arg in enumerate(option_args) if arg in ("-h", "--help")
+        }
+        if (
+            any(a.nargs == argparse.PARSER for a in self._actions)
+            or any(
+                self._arg_is_read_as_an_option(arg)
+                and len(arg) > 2
+                and arg[1] not in self.prefix_chars
+                and arg not in self._option_string_actions
+                for arg in option_args
+            )
+            or any(
+                option_args[i] not in self._option_string_actions
+                for i in legacy_indexes
+            )
         ):
-            # The existing boundary scanners do not model raw PARSER payloads.
-            # Preserve the old filter for this whole scope rather than guessing
-            # where its values start and removing a custom help spelling.
-            return set(), {
-                i for i, arg in enumerate(option_args) if arg in ("-h", "--help")
-            }
-        subcommand_index = self._find_subcommand_index(option_args)
-        own_args = option_args[:subcommand_index]
+            # Keep the previous behavior when finding ownership would require
+            # interpreting dispatch, clusters, attached values or abbreviations.
+            return set(), legacy_indexes
         help_options = [
             option
             for action in self._actions
             if isinstance(action, argparse._HelpAction)
             for option in action.option_strings
         ]
-        help_indexes = {i for i, arg in enumerate(own_args) if arg in help_options}
-        legacy_indexes = set()
-        if subcommand_index is not None:
-            action = next(
-                a for a in self._actions if _dispatches_to_subparsers(a) and a.choices
-            )
-            child = action.choices[option_args[subcommand_index]]
-            offset = subcommand_index + 1
-            child_args = option_args[offset:]
-            if isinstance(child, ArgumentParser):
-                child_help, child_legacy = child._help_arg_indexes(child_args)
-                help_indexes.update(offset + i for i in child_help)
-                legacy_indexes.update(offset + i for i in child_legacy)
-            else:
-                legacy_indexes.update(
-                    offset + i
-                    for i, arg in enumerate(child_args)
-                    if arg in ("-h", "--help")
-                )
-        return help_indexes, legacy_indexes
+        return {i for i, arg in enumerate(option_args) if arg in help_options}, set()
 
     def _option_strings_that_override(self, action):
         """Find the option strings that, when already on the command line, mean
@@ -2025,10 +2014,10 @@ class ArgumentParser(argparse.ArgumentParser):
             args: a list of args as in argparse, or a string (eg. "-x -y bla")
             config_file_contents (str). Used for testing.
             env_vars (dict). Used for testing.
-            ignore_help_args (bool): If False, registered help options print help and exit. If True, exact
-                help option spellings are ignored instead. Values after ``--`` or in a REMAINDER are kept.
-                Plain argparse children and raw PARSER scopes retain their previous literal ``-h``/``--help``
-                handling; custom help spellings are not interpreted there.
+            ignore_help_args (bool): If False, help options print help and exit. If True, exact registered
+                help spellings are ignored instead. Values after ``--`` or in a REMAINDER are kept.
+                Scopes with subparsers or other PARSER actions, nonexact short-option layouts, or
+                unregistered literal ``-h``/``--help`` retain their previous literal handling.
 
         Returns:
             tuple[argparse.Namespace, list[str]]: tuple namescpace, unknown_args
