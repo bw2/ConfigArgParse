@@ -300,6 +300,20 @@ def test_nonexact_short_layout_keeps_custom_help_payload(layout):
     assert unknown == []
 
 
+@pytest.mark.parametrize("option", ["-v", "-val"])
+def test_nonexact_short_abbreviation_keeps_remainder_payload(option):
+    parser = configargparse.ArgumentParser(add_help=False)
+    parser.add_argument("-value", nargs=argparse.REMAINDER)
+    parser.add_argument("--usage", action="help")
+
+    args, unknown = parser.parse_known_args(
+        [option, "--usage"], ignore_help_args=True, env_vars={}
+    )
+
+    assert args.value == ["--usage"]
+    assert unknown == []
+
+
 @pytest.mark.parametrize(
     "option, registered", [("--help", "--help-all"), ("-h", "-help")]
 )

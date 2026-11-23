@@ -1809,7 +1809,6 @@ class ArgumentParser(argparse.ArgumentParser):
             any(a.nargs == argparse.PARSER for a in self._actions)
             or any(
                 self._arg_is_read_as_an_option(arg)
-                and len(arg) > 2
                 and arg[1] not in self.prefix_chars
                 and arg not in self._option_string_actions
                 for arg in option_args
