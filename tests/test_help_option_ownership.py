@@ -358,3 +358,18 @@ def test_legacy_mode_survives_ignoring_traditional_help(tmp_path, capsys, option
     output = capsys.readouterr()
     assert output.out == ""
     assert "error:" in output.err
+
+
+def test_legacy_mode_does_not_leak_to_the_next_parse(tmp_path):
+    parser = parser_with_config(tmp_path, add_help=False)
+    parser.add_argument("--usage", action="help")
+
+    first, first_unknown = parser.parse_known_args(
+        ["--help"], ignore_help_args=True, env_vars={}
+    )
+    second, second_unknown = parser.parse_known_args(
+        ["--usage"], ignore_help_args=True, env_vars={}
+    )
+
+    assert first.port == second.port == 443
+    assert first_unknown == second_unknown == []
