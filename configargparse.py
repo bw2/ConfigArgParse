@@ -1789,6 +1789,58 @@ class ArgumentParser(argparse.ArgumentParser):
             subcommand_index if subcommand_index is not None else end_of_options_index
         )
 
+    def _help_arg_indexes(self, args):
+        """Find exact help options in the selected parser scopes.
+
+        Args:
+            args: the command line args to inspect.
+
+        Returns:
+            tuple: indexes of registered help options, and legacy help indexes.
+            Plain argparse children and scopes with non-dispatch PARSER actions
+            retain the previous literal -h/--help handling and parent help-action
+            gate. Custom help spellings are not interpreted in those scopes.
+        """
+        option_args = args[: self._find_where_args_stop_being_read_as_options(args)]
+        if any(
+            a.nargs == argparse.PARSER and not _dispatches_to_subparsers(a)
+            for a in self._actions
+        ):
+            # The existing boundary scanners do not model raw PARSER payloads.
+            # Preserve the old filter for this whole scope rather than guessing
+            # where its values start and removing a custom help spelling.
+            return set(), {
+                i for i, arg in enumerate(option_args) if arg in ("-h", "--help")
+            }
+        subcommand_index = self._find_subcommand_index(option_args)
+        own_args = option_args[:subcommand_index]
+        help_options = [
+            option
+            for action in self._actions
+            if isinstance(action, argparse._HelpAction)
+            for option in action.option_strings
+        ]
+        help_indexes = {i for i, arg in enumerate(own_args) if arg in help_options}
+        legacy_indexes = set()
+        if subcommand_index is not None:
+            action = next(
+                a for a in self._actions if _dispatches_to_subparsers(a) and a.choices
+            )
+            child = action.choices[option_args[subcommand_index]]
+            offset = subcommand_index + 1
+            child_args = option_args[offset:]
+            if isinstance(child, ArgumentParser):
+                child_help, child_legacy = child._help_arg_indexes(child_args)
+                help_indexes.update(offset + i for i in child_help)
+                legacy_indexes.update(offset + i for i in child_legacy)
+            else:
+                legacy_indexes.update(
+                    offset + i
+                    for i, arg in enumerate(child_args)
+                    if arg in ("-h", "--help")
+                )
+        return help_indexes, legacy_indexes
+
     def _option_strings_that_override(self, action):
         """Find the option strings that, when already on the command line, mean
         an env var or config file value for the given action should be dropped.
@@ -1973,8 +2025,10 @@ class ArgumentParser(argparse.ArgumentParser):
             args: a list of args as in argparse, or a string (eg. "-x -y bla")
             config_file_contents (str). Used for testing.
             env_vars (dict). Used for testing.
-            ignore_help_args (bool): This flag determines behavior when user specifies ``--help`` or ``-h``. If False,
-                it will have the default behavior - printing help and exiting. If True, it won't do either.
+            ignore_help_args (bool): If False, registered help options print help and exit. If True, exact
+                help option spellings are ignored instead. Values after ``--`` or in a REMAINDER are kept.
+                Plain argparse children and raw PARSER scopes retain their previous literal ``-h``/``--help``
+                handling; custom help spellings are not interpreted there.
 
         Returns:
             tuple[argparse.Namespace, list[str]]: tuple namescpace, unknown_args
@@ -2006,14 +2060,9 @@ class ArgumentParser(argparse.ArgumentParser):
         self._fill_in_action_attributes_this_module_reads()
 
         if ignore_help_args:
-            # argparse reads a '-h' after '--' or in a REMAINDER positional's or
-            # option's args as a value, not a request for help, so those are kept
-            end_of_option_args = self._find_where_args_stop_being_read_as_options(args)
-            if end_of_option_args is None:
-                end_of_option_args = len(args)
-            args = [
-                arg for arg in args[:end_of_option_args] if arg not in ("-h", "--help")
-            ] + args[end_of_option_args:]
+            help_indexes, legacy_indexes = self._help_arg_indexes(args)
+            ignored_indexes = help_indexes | legacy_indexes
+            args = [arg for i, arg in enumerate(args) if i not in ignored_indexes]
 
         # maps a string describing the source (eg. env var) to a settings dict
         # to keep track of where values came from (used by print_values()).
@@ -2080,12 +2129,9 @@ class ArgumentParser(argparse.ArgumentParser):
         supports_help_arg = any(
             a for a in self._actions if isinstance(a, argparse._HelpAction)
         )
-        # only a '-h' that argparse reads as an option asks for help
-        args_read_as_options = args[
-            : self._find_where_args_stop_being_read_as_options(args)
-        ]
-        skip_config_file_parsing = supports_help_arg and (
-            "-h" in args_read_as_options or "--help" in args_read_as_options
+        help_indexes, legacy_indexes = self._help_arg_indexes(args)
+        skip_config_file_parsing = bool(help_indexes) or (
+            supports_help_arg and bool(legacy_indexes)
         )
 
         # prepare for reading config file(s)
