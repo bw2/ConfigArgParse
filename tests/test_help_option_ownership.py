@@ -387,3 +387,22 @@ def test_legacy_mode_does_not_leak_to_the_next_parse(tmp_path):
 
     assert first.port == second.port == 443
     assert first_unknown == second_unknown == []
+
+
+@pytest.mark.parametrize("ignore_help", [False, True])
+def test_generated_env_args_do_not_change_help_mode(tmp_path, ignore_help):
+    parser = parser_with_config(tmp_path, add_help=False)
+    parser.add_argument("-h", dest="host")
+    parser.add_argument("--usage", action="help")
+    parser.add_argument("--tag", env_var="TAG")
+
+    args, unknown = parser.parse_known_args(
+        ["-h", "example.org"],
+        ignore_help_args=ignore_help,
+        env_vars={"TAG": "enabled"},
+    )
+
+    assert args.host == "example.org"
+    assert args.tag == "enabled"
+    assert args.port == 443
+    assert unknown == []

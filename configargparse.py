@@ -1789,12 +1789,13 @@ class ArgumentParser(argparse.ArgumentParser):
             subcommand_index if subcommand_index is not None else end_of_options_index
         )
 
-    def _help_arg_indexes(self, args, legacy=False):
+    def _help_arg_indexes(self, args, legacy=None):
         """Find exact help options where their ownership is unambiguous.
 
         Args:
             args: the command line args to inspect.
-            legacy: keep the legacy mode chosen before filtering help args.
+            legacy: a mode chosen from the expanded command line, or None
+                to select it before filtering help or adding environment args.
 
         Returns:
             tuple: help indexes and whether the previous literal filter is used.
@@ -1806,18 +1807,20 @@ class ArgumentParser(argparse.ArgumentParser):
         legacy_indexes = {
             i for i, arg in enumerate(option_args) if arg in ("-h", "--help")
         }
-        if legacy or (
-            any(a.nargs == argparse.PARSER for a in self._actions)
-            or any(
-                self._arg_is_read_as_an_option(arg)
-                and arg not in self._option_string_actions
-                for arg in option_args
+        if legacy is None:
+            legacy = (
+                any(a.nargs == argparse.PARSER for a in self._actions)
+                or any(
+                    self._arg_is_read_as_an_option(arg)
+                    and arg not in self._option_string_actions
+                    for arg in option_args
+                )
+                or any(
+                    option_args[i] not in self._option_string_actions
+                    for i in legacy_indexes
+                )
             )
-            or any(
-                option_args[i] not in self._option_string_actions
-                for i in legacy_indexes
-            )
-        ):
+        if legacy:
             # Keep the previous behavior when finding ownership would require
             # interpreting dispatch, clusters, attached values or abbreviations.
             return legacy_indexes, True
@@ -2047,10 +2050,9 @@ class ArgumentParser(argparse.ArgumentParser):
 
         self._fill_in_action_attributes_this_module_reads()
 
-        legacy_help = False
+        help_indexes, legacy_help = self._help_arg_indexes(args)
         if ignore_help_args:
-            ignored_indexes, legacy_help = self._help_arg_indexes(args)
-            args = [arg for i, arg in enumerate(args) if i not in ignored_indexes]
+            args = [arg for i, arg in enumerate(args) if i not in help_indexes]
 
         # maps a string describing the source (eg. env var) to a settings dict
         # to keep track of where values came from (used by print_values()).
