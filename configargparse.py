@@ -1695,17 +1695,25 @@ class ArgumentParser(argparse.ArgumentParser):
 
         Returns:
             argparse.Action or None: the option named exactly, or by an
-            unambiguous abbreviation of a long option, or None if the arg
-            names none or has its value attached with '='
+            unambiguous abbreviation of a long option, or at the end of a
+            bundle of short flags, or None if the arg names none or has its
+            value attached
         """
         if arg_string in self._option_string_actions:
             return self._option_string_actions[arg_string]
-        if (
-            "=" in arg_string
-            or not self.allow_abbrev
-            or len(arg_string) < 3
-            or arg_string[1] not in self.prefix_chars
-        ):
+        if "=" in arg_string or len(arg_string) < 3:
+            return None
+        if arg_string[1] not in self.prefix_chars:
+            # All but the final short option must be flags. Once an option
+            # takes a value, any remaining characters are that value.
+            for index, char in enumerate(arg_string[1:], 1):
+                action = self._option_string_actions.get(arg_string[0] + char)
+                if action is None:
+                    return None
+                if action.nargs != 0:
+                    return action if index == len(arg_string) - 1 else None
+            return None
+        if not self.allow_abbrev:
             return None
         matching_actions = {
             action
