@@ -314,6 +314,20 @@ def test_nonexact_short_abbreviation_keeps_remainder_payload(option):
     assert unknown == []
 
 
+@pytest.mark.parametrize("prefix", ["+", "/"])
+def test_nonexact_double_prefix_keeps_remainder_payload(prefix):
+    parser = configargparse.ArgumentParser(prefix_chars=prefix, add_help=False)
+    parser.add_argument(prefix * 2 + "value", nargs=argparse.REMAINDER)
+    parser.add_argument(prefix + "usage", action="help")
+
+    args, unknown = parser.parse_known_args(
+        [prefix * 2, prefix + "usage"], ignore_help_args=True, env_vars={}
+    )
+
+    assert args.value == [prefix + "usage"]
+    assert unknown == []
+
+
 @pytest.mark.parametrize(
     "option, registered", [("--help", "--help-all"), ("-h", "-help")]
 )

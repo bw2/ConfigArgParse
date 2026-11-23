@@ -1798,7 +1798,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         Returns:
             tuple: help indexes and whether the previous literal filter is used.
-            Scopes containing PARSER actions, nonexact short-option layouts,
+            Scopes containing PARSER actions, nonexact option spellings,
             or unregistered literal -h/--help retain the previous literal filter
             and help-action gate. No subcommand or cluster dispatch is inferred.
         """
@@ -1810,7 +1810,6 @@ class ArgumentParser(argparse.ArgumentParser):
             any(a.nargs == argparse.PARSER for a in self._actions)
             or any(
                 self._arg_is_read_as_an_option(arg)
-                and arg[1] not in self.prefix_chars
                 and arg not in self._option_string_actions
                 for arg in option_args
             )
@@ -2016,7 +2015,7 @@ class ArgumentParser(argparse.ArgumentParser):
             env_vars (dict). Used for testing.
             ignore_help_args (bool): If False, help options print help and exit. If True, exact registered
                 help spellings are ignored instead. Values after ``--`` or in a REMAINDER are kept.
-                Scopes with subparsers or other PARSER actions, nonexact short-option layouts, or
+                Scopes with subparsers or other PARSER actions, nonexact option spellings, or
                 unregistered literal ``-h``/``--help`` retain their previous literal handling.
 
         Returns:
